@@ -55,10 +55,14 @@ async function saveLocalTable(collection: string, data: any) {
 }
 
 const isServer = typeof window === 'undefined';
-const supabaseUrl = isServer ? (process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || '') : '';
+const supabaseUrl = isServer ? (process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL) : '';
 const supabaseKey = isServer 
-  ? (process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY || '').trim()
+  ? (process.env.SUPABASE_SERVICE_ROLE_KEY || '').trim()
   : '';
+
+if (isServer && !supabaseKey) {
+  throw new Error("SUPABASE_SERVICE_ROLE_KEY is required for adminDb operations.");
+}
 
 // Ensure the key is an actual JWT/ASCII string and not Thai text to prevent Node Headers ByteString crash
 const isValidKey = /^[A-Za-z0-9\-_.]+$/.test(supabaseKey);
@@ -66,7 +70,7 @@ const isValidKey = /^[A-Za-z0-9\-_.]+$/.test(supabaseKey);
 const isSupabaseAdminConfigured = !!(supabaseUrl && supabaseUrl.startsWith('http') && supabaseKey && isValidKey);
 
 if (!isSupabaseAdminConfigured) {
-  console.warn('[AdminDB] Supabase service role variables are missing or not configured. Running in local/mock-safe mode.');
+  console.warn('Supabase service role variables are missing, invalid, or contain non-ascii characters');
 }
 
 const safeUrl = isSupabaseAdminConfigured ? supabaseUrl : 'https://placeholder.supabase.co';
@@ -162,9 +166,6 @@ const forwardMap: Record<CamelField, DbColumn> = {
 const missingColumns = new Set<string>();
 
 export async function initializeAdminDb(): Promise<void> {
-  if (!isSupabaseAdminConfigured) {
-    return;
-  }
   await hydrateMissingColumns();
   console.log('[AdminDB] missingColumns hydrated:', Array.from(missingColumns));
 }
@@ -172,10 +173,7 @@ export async function initializeAdminDb(): Promise<void> {
 // Pre-hydrate from DB to persist across serverless instances
 let isMissingColumnsHydrated = false;
 async function hydrateMissingColumns() {
-  if (isMissingColumnsHydrated || !isSupabaseAdminConfigured) {
-    isMissingColumnsHydrated = true;
-    return;
-  }
+  if (isMissingColumnsHydrated) return;
   try {
     const { data } = await supabaseAdmin.from('custom_pages').select('content').eq('slug', '_sys:missing_columns').limit(1);
     if (data && data[0] && data[0].content) {
@@ -188,7 +186,6 @@ async function hydrateMissingColumns() {
 
 async function persistMissingColumn(colName: string) {
   missingColumns.add(colName);
-  if (!isSupabaseAdminConfigured) return;
   try {
     const arr = Array.from(missingColumns);
     const payload = { slug: '_sys:missing_columns', title: 'SystemConfig', content: JSON.stringify(arr) };
@@ -338,6 +335,7 @@ class SupabaseDoc {
     return { exists: false, data: () => null };
   }
   async update(data: any) {
+    if (!isSupabaseAdminConfigured) return;
     if (isVirtual(this.collection)) {
         const slug = getVirtualSlug(this.collection, this.id);
         const legacySlug = `v:${this.collection}:${this.id}`;
@@ -772,6 +770,9 @@ class SupabaseCollection extends SupabaseQuery {
     return new SupabaseDoc(this.collection, id || genId());
   }
   async add(data: any) {
+    if (!isSupabaseAdminConfigured) {
+        return { id: data.id || crypto.randomUUID() };
+    }
     if (isVirtual(this.collection)) {
         const docId = data.id || crypto.randomUUID();
         const slug = getVirtualSlug(this.collection, docId);

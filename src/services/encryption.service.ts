@@ -4,7 +4,11 @@ import util from "node:util";
 const pbkdf2Async = util.promisify(crypto.pbkdf2);
 
 export const getEncryptionKey = () => {
-  const key = process.env.BACKEND_ENCRYPTION_KEY || 'default-store-secret-dev-encryption-key-32b';
+  const key = process.env.BACKEND_ENCRYPTION_KEY;
+  if (!key)
+    throw new Error(
+      "Missing BACKEND_ENCRYPTION_KEY environment variable. This is required for security.",
+    );
   return key;
 };
 

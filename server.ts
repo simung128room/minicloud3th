@@ -47,11 +47,6 @@ __name(fetchFreeProxies, "fetchFreeProxies");
 fetchFreeProxies();
 setInterval(fetchFreeProxies, 15 * 60 * 1e3);
 import { adminDb as admin, supabaseAdmin, initializeAdminDb } from "./src/lib/admindb.js";
-import { createAuthRouter } from "./src/routes/auth.route.js";
-import { createProductsRouter } from "./src/routes/products.route.js";
-import { createPaymentsRouter } from "./src/routes/payments.route.js";
-import { createUsersRouter } from "./src/routes/users.route.js";
-import { createAdminRouter } from "./src/routes/admin.route.js";
 const _dirname = typeof __dirname !== "undefined" ? __dirname : process.cwd();
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -249,13 +244,75 @@ app.get("/metrics", async (req, res) => {
   res.set("Content-Type", client.register.contentType);
   res.end(await client.register.metrics());
 });
+app.use((req, res, next) => {
+  const nonce = crypto.randomBytes(16).toString("base64");
+  res.locals.cspNonce = nonce;
+  const originalSend = res.send;
+  res.send = function (body) {
+    if (typeof body === "string" && body.includes("<html")) {
+      const updatedBody = body.replace(
+        /<script(?!\s+nonce\b)/gi,
+        `<script nonce="${nonce}"`,
+      );
+      return originalSend.call(this, updatedBody);
+    }
+    return originalSend.call(this, body);
+  };
+  next();
+});
 app.use(
   helmet({
-    contentSecurityPolicy: false,
     frameguard: false,
-    crossOriginEmbedderPolicy: false,
-    crossOriginResourcePolicy: false,
     crossOriginOpenerPolicy: false,
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'", "https:", "http:", "data:", "blob:"],
+        scriptSrc: [
+          "'self'",
+          "'unsafe-inline'",
+          "'unsafe-eval'",
+      // @ts-ignore
+          (req, res) => `'nonce-${res.locals.cspNonce}'`,
+          "https:",
+          "http:",
+        ],
+        styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https:"],
+        imgSrc: ["'self'", "data:", "https:", "blob:", "http:"],
+        mediaSrc: ["'self'", "https:", "data:", "blob:", "http:"],
+        connectSrc: [
+          "'self'",
+          "https://*.supabase.co",
+          "https://api.ipify.org",
+          "wss://*.supabase.co",
+          "ws:",
+          "wss:",
+          "https://*.google.com",
+          "https://*.run.app",
+          "https:",
+          "http:",
+        ],
+        frameSrc: [
+          "'self'",
+          "https://www.youtube.com",
+          "https://discord.com",
+          "https://www.youtube-nocookie.com",
+          "https:",
+        ],
+        frameAncestors: [
+          "'self'",
+          "https://*.google.com",
+          "https://ai.studio",
+          "https://*.aistudio.google.com",
+          "https://*.run.app",
+          "https://localhost.corp.google.com:26001",
+        ],
+        fontSrc: ["'self'", "https://fonts.gstatic.com", "data:", "https:"],
+        objectSrc: ["'none'"],
+        upgradeInsecureRequests: [],
+      },
+    },
+    crossOriginEmbedderPolicy: false,
+    crossOriginResourcePolicy: { policy: "cross-origin" },
   }),
 );
 app.use(compression());
@@ -502,15 +559,11 @@ app.get("/ready", async (req, res) => {
     res.status(503).json({ status: "not ready", error: String(err) });
   }
 });
-const userRateLimitKeyGenerator = __name((req, res) => {
-  return req.headers["x-forwarded-for"] ? (req.headers["x-forwarded-for"] as string).split(',')[0] : req.socket.remoteAddress || "127.0.0.1";
-}, "userRateLimitKeyGenerator");
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1e3,
   max: 50,
   standardHeaders: true,
   legacyHeaders: false,
-  keyGenerator: userRateLimitKeyGenerator,
   validate: { trustProxy: true },
   message: {
     error:
@@ -536,7 +589,6 @@ const mutationLimiter = rateLimit({
   max: 30,
   standardHeaders: true,
   legacyHeaders: false,
-  keyGenerator: userRateLimitKeyGenerator,
   validate: { trustProxy: true },
   message: {
     error:
@@ -562,7 +614,6 @@ const checkLimiter = rateLimit({
   max: 100,
   standardHeaders: true,
   legacyHeaders: false,
-  keyGenerator: userRateLimitKeyGenerator,
   validate: { trustProxy: true },
   message: {
     error:
@@ -711,13 +762,22 @@ const requireAdmin = __name(async (req, res, next) => {
 }, "requireAdmin");
 import healthRoute from "./src/routes/health.route.js";
 app.use("/api", healthRoute);
-const corsOptions: cors.CorsOptions = {
-  origin: (origin, callback) => {
-    // Allow requests with no origin (like mobile apps, curl, server-to-server) or any origin in dev
-    callback(null, true);
-  },
-  credentials: true,
-};
+const rawOrigins = [];
+if (process.env.ALLOWED_ORIGINS) {
+  const splitOrigins = process.env.ALLOWED_ORIGINS.split(",")
+    .map((url) => url.trim())
+    .filter(Boolean);
+  splitOrigins.forEach((origin) => {
+    if (!rawOrigins.includes(origin)) {
+      rawOrigins.push(origin);
+    }
+  });
+}
+if (process.env.ALLOW_LOCALHOST === "true") {
+  rawOrigins.push("http://localhost:3000");
+}
+const corsOrigins = rawOrigins.length > 0 ? rawOrigins : true;
+const corsOptions = { origin: corsOrigins, credentials: true };
 app.use(cors(corsOptions));
 app.options("*", cors(corsOptions));
 app.use(express.json({ limit: "5mb" }));
@@ -982,17 +1042,16 @@ if (isSupabaseConfigured) {
       console.error("Caught error:", err);
     }
   }, "loadSiteSettings");
-  loadSiteSettings()
-    .then(() => {
-      console.log("Loaded initial site settings from DB", siteSettings);
-      setInterval(loadSiteSettings, 1e4);
-    })
-    .catch((err) => {
-      console.warn(
-        "Could not load initial site settings from DB (might not exist yet).",
-        err.message || err,
-      );
-    });
+  try {
+    await loadSiteSettings();
+    console.log("Loaded initial site settings from DB", siteSettings);
+    setInterval(loadSiteSettings, 1e4);
+  } catch (err) {
+    console.warn(
+      "Could not load initial site settings from DB (might not exist yet).",
+      err.message || err,
+    );
+  }
 } else {
   console.log(
     "Skipping site settings loading from Supabase: Supabase is not configured.",
@@ -1256,7 +1315,6 @@ const topupLimiter = rateLimit({
   max: 5,
   standardHeaders: true,
   legacyHeaders: false,
-  keyGenerator: userRateLimitKeyGenerator,
   validate: { xForwardedForHeader: false, trustProxy: false },
 });
 app.post(
@@ -1480,682 +1538,6 @@ app.post("/api/check", checkLimiter, requireAuth, async (req, res) => {
         "\u0E23\u0E30\u0E1A\u0E1A\u0E15\u0E23\u0E27\u0E08\u0E2A\u0E2D\u0E1A\u0E19\u0E35\u0E49\u0E16\u0E39\u0E01\u0E1B\u0E34\u0E14\u0E43\u0E0A\u0E49\u0E07\u0E32\u0E19\u0E2D\u0E22\u0E48\u0E32\u0E07\u0E16\u0E32\u0E27\u0E23\u0E40\u0E1E\u0E37\u0E48\u0E2D\u0E04\u0E27\u0E32\u0E21\u0E1B\u0E25\u0E2D\u0E14\u0E20\u0E31\u0E22",
     });
 });
-const ___dep_check = __name(async (req, res) => {
-  const account = req.body.account?.toString().trim();
-  const password = req.body.password?.toString().trim();
-  const turnstileToken = req.body.turnstileToken;
-  const apiKey =
-    req.headers["x-api-key"]?.toString().trim() ||
-    req.body.apiKey?.toString().trim();
-  if (
-    !account ||
-    typeof account !== "string" ||
-    account.length > 64 ||
-    !/^[a-zA-Z0-9_\-@.]+$/.test(account)
-  ) {
-    return res
-      .status(400)
-      .json({
-        error:
-          "\u0E1A\u0E31\u0E0D\u0E0A\u0E35\u0E1C\u0E39\u0E49\u0E43\u0E0A\u0E49\u0E44\u0E21\u0E48\u0E16\u0E39\u0E01\u0E15\u0E49\u0E2D\u0E07 (\u0E04\u0E27\u0E32\u0E21\u0E22\u0E32\u0E27 1-64 \u0E15\u0E31\u0E27\u0E2D\u0E31\u0E01\u0E29\u0E23, \u0E2D\u0E19\u0E38\u0E0D\u0E32\u0E15\u0E40\u0E09\u0E1E\u0E32\u0E30 a-z, 0-9, _, -, @, .)",
-      });
-  }
-  if (!password || typeof password !== "string" || password.length > 64) {
-    return res
-      .status(400)
-      .json({
-        error:
-          "\u0E23\u0E2B\u0E31\u0E2A\u0E1C\u0E48\u0E32\u0E19\u0E44\u0E21\u0E48\u0E16\u0E39\u0E01\u0E15\u0E49\u0E2D\u0E07 (\u0E04\u0E27\u0E32\u0E21\u0E22\u0E32\u0E27 1-64 \u0E15\u0E31\u0E27\u0E2D\u0E31\u0E01\u0E29\u0E23)",
-      });
-  }
-  if (!account || !password)
-    return res.status(400).json({ error: "Missing credentials" });
-  let isApiKeyValid = false;
-  if (apiKey) {
-    if (!admin.firestore()) {
-      return res.status(500).json({ error: "Database connection error" });
-    }
-    try {
-      const apiKeyDoc = await admin
-        .firestore()
-        .collection("api_keys")
-        .doc(apiKey)
-        .get();
-      if (apiKeyDoc.exists) {
-        const data = apiKeyDoc.data();
-        if (data?.status === "active") {
-          if (data?.expires_at && new Date(data.expires_at) < new Date()) {
-            await admin
-              .firestore()
-              .collection("api_keys")
-              .doc(apiKey)
-              .update({ status: "expired" })
-              .catch((e) => console.error(e));
-            return res.status(401).json({ error: "API Key has expired" });
-          }
-          isApiKeyValid = true;
-          admin
-            .firestore()
-            .collection("api_keys")
-            .doc(apiKey)
-            .update({ last_used: new Date().toISOString() })
-            .catch((e) => console.error(e));
-        } else {
-          return res
-            .status(401)
-            .json({ error: "API Key is disabled or expired" });
-        }
-      } else {
-        return res.status(401).json({ error: "Invalid API Key" });
-      }
-    } catch (err) {
-      console.error("Error verifying API Key:", err);
-      return res.status(500).json({ error: "Error verifying API Key" });
-    }
-  }
-  if (!isApiKeyValid) {
-    if (!turnstileToken) {
-      return res
-        .status(403)
-        .json({
-          error:
-            "Missing Captcha token. Please refresh the page and verify you are human. (Or provide valid API Key)",
-        });
-    }
-    const now = Date.now();
-    const cacheKey = turnstileToken + "_" + req.user.uid;
-    const cacheEntry = turnstileCache.get(cacheKey);
-    if (cacheEntry && now - cacheEntry.time < 500 && cacheEntry.uses < 0) {
-      cacheEntry.uses++;
-    } else {
-      const secretKey = process.env.TURNSTILE_SECRET_KEY || "";
-      if (!secretKey) {
-        turnstileCache.set(cacheKey, { time: now, uses: 1 });
-      } else {
-        try {
-          const params = new URLSearchParams();
-          params.append("secret", secretKey);
-          params.append("response", turnstileToken);
-          if (req.ip) params.append("remoteip", req.ip);
-          const turnstileResponse = await axios.post(
-            "https://challenges.cloudflare.com/turnstile/v0/siteverify",
-            params,
-            {
-              headers: { "Content-Type": "application/x-www-form-urlencoded" },
-            },
-          );
-          if (!turnstileResponse.data.success) {
-            console.error(
-              "Turnstile verification failed:",
-              turnstileResponse.data,
-            );
-            return res
-              .status(403)
-              .json({
-                error:
-                  "Turnstile verification failed. Please refresh the page and try again.",
-              });
-          }
-          turnstileCache.set(cacheKey, { time: now, uses: 1 });
-          if (turnstileCache.size > 1e3) {
-            for (const [key, val] of turnstileCache.entries()) {
-              if (now - val.time > 5 * 60 * 1e3) {
-                turnstileCache.delete(key);
-              }
-            }
-          }
-        } catch (error) {
-          console.error("Error verifying Turnstile token:", error);
-          return res
-            .status(500)
-            .json({
-              error: "Internal server error during captcha verification.",
-            });
-        }
-      }
-    }
-  }
-  const jar = new CookieJar();
-  const userAgents = [
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36 Edg/130.0.0.0",
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36",
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36",
-    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36",
-    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36",
-  ];
-  const randomUserAgent =
-    userAgents[Math.floor(Math.random() * userAgents.length)];
-  const isEdge = randomUserAgent.includes("Edg/");
-  const isMac = randomUserAgent.includes("Mac OS");
-  const chromeVer = randomUserAgent.match(/Chrome\/(\d+)\./)?.[1] || "130";
-  let secChUa = isEdge
-    ? `"Chromium";v="${chromeVer}", "Microsoft Edge";v="${chromeVer}", "Not?A_Brand";v="99"`
-    : `"Chromium";v="${chromeVer}", "Google Chrome";v="${chromeVer}", "Not?A_Brand";v="99"`;
-  let secChPlatform = isMac ? '"macOS"' : '"Windows"';
-  if (freeProxies.length === 0) {
-    await fetchFreeProxies();
-  }
-  let proxyUrl = "";
-  const availableProxies = [];
-  if (
-    siteSettings.proxies &&
-    Array.isArray(siteSettings.proxies) &&
-    siteSettings.proxies.length > 0
-  ) {
-    availableProxies.push(...siteSettings.proxies);
-  }
-  if (siteSettings.auto_proxy !== false && freeProxies.length > 0) {
-    availableProxies.push(...freeProxies);
-  } else if (!siteSettings.proxies || siteSettings.proxies.length === 0) {
-    availableProxies.push(...freeProxies);
-  }
-  if (availableProxies.length > 0) {
-    proxyUrl =
-      availableProxies[Math.floor(Math.random() * availableProxies.length)];
-  }
-  let agent;
-  try {
-    if (proxyUrl) {
-      agent = new HttpsProxyAgent(proxyUrl, {
-        timeout: 1e4,
-        rejectUnauthorized: true,
-      });
-    } else {
-      agent = new https.Agent({ rejectUnauthorized: true });
-    }
-  } catch (err) {
-    agent = new https.Agent({ rejectUnauthorized: true });
-  }
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 2e4);
-  res.on("finish", () => clearTimeout(timeoutId));
-  res.on("close", () => clearTimeout(timeoutId));
-  const axiosConfig = {
-    headers: {
-      "User-Agent": randomUserAgent,
-      Accept: "application/json, text/plain, */*",
-      "Accept-Language": "th-TH,th;q=0.9,en-US;q=0.8,en;q=0.7",
-      Referer: "https://sso.garena.com/",
-    },
-    httpsAgent: agent,
-    httpAgent: agent,
-    proxy: false,
-    timeout: 1e4,
-    signal: controller.signal,
-    validateStatus: __name((status) => status < 500, "validateStatus"),
-  };
-  const { wrapper } = await import("axios-cookiejar-support").then((s) => {
-    const e = "default";
-    return s[e] && typeof s[e] == "object" && "__esModule" in s[e] ? s[e] : s;
-  });
-      // @ts-ignore
-  let client2 = wrapper(axios.create(axiosConfig));
-  client2.defaults.jar = jar;
-  const setupFallbackClient = __name(() => {
-    const directAgent = new https.Agent({ rejectUnauthorized: true });
-    const fbClient = wrapper(
-      // @ts-ignore
-      axios.create({
-        ...axiosConfig,
-        httpsAgent: directAgent,
-        httpAgent: directAgent,
-      }),
-    );
-    fbClient.defaults.jar = jar;
-    return fbClient;
-  }, "setupFallbackClient");
-  try {
-    const getDatadomeCookie = __name(async (httpClient) => {
-      const url = "https://dd.garena.com/js/";
-      const headers = {
-        accept: "*/*",
-        "accept-encoding": "gzip, deflate, br, zstd",
-        "accept-language": "en-US,en;q=0.9",
-        "cache-control": "no-cache",
-        "content-type": "application/x-www-form-urlencoded",
-        origin: "https://account.garena.com",
-        pragma: "no-cache",
-        referer: "https://account.garena.com/",
-        "sec-ch-ua": secChUa,
-        "sec-ch-ua-mobile": "?0",
-        "sec-ch-ua-platform": secChPlatform,
-        "sec-fetch-dest": "empty",
-        "sec-fetch-mode": "cors",
-        "sec-fetch-site": "same-site",
-        "user-agent": randomUserAgent,
-      };
-      const jsDataPayload = {
-        ttst: 76.70000004768372,
-        ifov: false,
-        hc: 4,
-        br_oh: 824,
-        br_ow: 1536,
-        ua: randomUserAgent,
-        wbd: false,
-        dp0: true,
-        tagpu: 5.738121195951787,
-        wdif: false,
-        wdifrm: false,
-        npmtm: false,
-        br_h: 738,
-        br_w: 260,
-        isf: false,
-        nddc: 1,
-        rs_h: 864,
-        rs_w: 1536,
-        rs_cd: 24,
-        phe: false,
-        nm: false,
-        jsf: false,
-        lg: "en-US",
-        pr: 1.25,
-        ars_h: 824,
-        ars_w: 1536,
-        tz: -480,
-        str_ss: true,
-        str_ls: true,
-        str_idb: true,
-        str_odb: false,
-        plgod: false,
-        plg: 5,
-        plgne: true,
-        plgre: true,
-        plgof: false,
-        plggt: false,
-        pltod: false,
-        hcovdr: false,
-        hcovdr2: false,
-        plovdr: false,
-        plovdr2: false,
-        ftsovdr: false,
-        ftsovdr2: false,
-        lb: false,
-        eva: 33,
-        lo: false,
-        ts_mtp: 0,
-        ts_tec: false,
-        ts_tsa: false,
-        vnd: "Google Inc.",
-        bid: "NA",
-        mmt: "application/pdf,text/pdf",
-        plu: "PDF Viewer,Chrome PDF Viewer,Chromium PDF Viewer,Microsoft Edge PDF Viewer,WebKit built-in PDF",
-        hdn: false,
-        awe: false,
-        geb: false,
-        dat: false,
-        med: "defined",
-        aco: "probably",
-        acots: false,
-        acmp: "probably",
-        acmpts: true,
-        acw: "probably",
-        acwts: false,
-        acma: "maybe",
-        acmats: false,
-        acaa: "probably",
-        acaats: true,
-        ac3: "",
-        ac3ts: false,
-        acf: "probably",
-        acfts: false,
-        acmp4: "maybe",
-        acmp4ts: false,
-        acmp3: "probably",
-        acmp3ts: false,
-        acwm: "maybe",
-        acwmts: false,
-        ocpt: false,
-        vco: "",
-        vcots: false,
-        vch: "probably",
-        vchts: true,
-        vcw: "probably",
-        vcwts: true,
-        vc3: "maybe",
-        vc3ts: false,
-        vcmp: "",
-        vcmpts: false,
-        vcq: "maybe",
-        vcqts: false,
-        vc1: "probably",
-        vc1ts: true,
-        dvm: 8,
-        sqt: false,
-        so: "landscape-primary",
-        bda: false,
-        wdw: true,
-        prm: true,
-        tzp: true,
-        cvs: true,
-        usb: true,
-        cap: true,
-        tbf: false,
-        lgs: true,
-        tpd: true,
-      };
-      const payload = {
-        jsData: JSON.stringify(jsDataPayload),
-        eventCounters: "[]",
-        jsType: "ch",
-        cid: "KOWn3t9QNk3dJJJEkpZJpspfb2HPZIVs0KSR7RYTscx5iO7o84cw95j40zFFG7mpfbKxmfhAOs~bM8Lr8cHia2JZ3Cq2LAn5k6XAKkONfSSad99Wu36EhKYyODGCZwae",
-        ddk: "AE3F04AD3F0D3A462481A337485081",
-        Referer: "https://account.garena.com/",
-        request: "/",
-        responsePage: "origin",
-        ddv: "4.35.4",
-      };
-      const dataParams = new URLSearchParams();
-      for (const key in payload) {
-        dataParams.append(key, payload[key]);
-      }
-      const ddRes = await httpClient.post(url, dataParams.toString(), {
-        headers,
-        timeout: 1e4,
-      });
-      if (ddRes.data && typeof ddRes.data === "string") {
-        try {
-          return JSON.parse(ddRes.data);
-        } catch (e) {
-          console.error("Caught error:", e);
-        }
-      }
-      return ddRes.data;
-    }, "getDatadomeCookie");
-    let ddJson = await getDatadomeCookie(client2);
-    let activeClient = client2;
-    if (!ddJson || !ddJson.cookie || ddJson.status === 403) {
-      console.log(
-        `Proxy failed DataDome. Using direct connection for DataDome...`,
-      );
-      activeClient = setupFallbackClient();
-      ddJson = await getDatadomeCookie(activeClient);
-    }
-    if (ddJson && ddJson.cookie) {
-      const datadomeValue = ddJson.cookie.split(";")[0];
-      await jar.setCookie(datadomeValue, "https://sso.garena.com");
-    }
-    const preloginHeaders = {
-      accept: "application/json, text/plain, */*",
-      "accept-encoding": "gzip, deflate, br, zstd",
-      "accept-language": "en-US,en;q=0.9",
-      connection: "keep-alive",
-      host: "sso.garena.com",
-      referer: `https://sso.garena.com/universal/login?app_id=10100&redirect_uri=https%3A%2F%2Faccount.garena.com%2F&locale=en-SG&account=${account}`,
-      "sec-ch-ua": secChUa,
-      "sec-ch-ua-mobile": "?0",
-      "sec-ch-ua-platform": secChPlatform,
-      "sec-fetch-dest": "empty",
-      "sec-fetch-mode": "cors",
-      "sec-fetch-site": "same-origin",
-      "user-agent": randomUserAgent,
-    };
-    let preloginRes = await activeClient.get(
-      "https://sso.garena.com/api/prelogin",
-      {
-        params: {
-          app_id: "10100",
-          account: account,
-          format: "json",
-          id: Date.now().toString(),
-        },
-        headers: preloginHeaders,
-      },
-    );
-    if (preloginRes.status === 403 && activeClient === client2) {
-      console.log(`Proxy blocked at Prelogin. Switching to Direct...`);
-      activeClient = setupFallbackClient();
-      ddJson = await getDatadomeCookie(activeClient);
-      if (ddJson && ddJson.cookie) {
-        await jar.setCookie(
-          ddJson.cookie.split(";")[0],
-          "https://sso.garena.com",
-        );
-      }
-      preloginRes = await activeClient.get(
-        "https://sso.garena.com/api/prelogin",
-        {
-          params: {
-            app_id: "10100",
-            account: account,
-            format: "json",
-            id: Date.now().toString(),
-          },
-          headers: preloginHeaders,
-        },
-      );
-    }
-    if (preloginRes.status === 403) {
-      return res.json({
-        success: false,
-        error:
-          "\u0E23\u0E30\u0E1A\u0E1A\u0E42\u0E14\u0E19\u0E08\u0E33\u0E01\u0E31\u0E14\u0E01\u0E32\u0E23\u0E40\u0E02\u0E49\u0E32\u0E16\u0E36\u0E07 (403 Forbidden)",
-      });
-    }
-    const preData = preloginRes.data;
-    if (preData.error) {
-      return res.json({ success: false, error: `Prelogin: ${preData.error}` });
-    }
-    if (!preData.v1 || !preData.v2) {
-      return res.json({
-        success: false,
-        error:
-          "\u0E23\u0E30\u0E1A\u0E1A\u0E15\u0E23\u0E27\u0E08\u0E1E\u0E1A\u0E42\u0E1B\u0E23\u0E41\u0E01\u0E23\u0E21\u0E2D\u0E31\u0E15\u0E42\u0E19\u0E21\u0E31\u0E15\u0E34 (DataDome / Captcha).",
-      });
-    }
-    const hashed_password = "dummy";
-    const loginParams = {
-      app_id: "10100",
-      account: account,
-      password: hashed_password,
-      redirect_uri: "https://account.garena.com/",
-      format: "json",
-      id: Date.now().toString(),
-    };
-    const loginRes = await activeClient.get(
-      "https://sso.garena.com/api/login",
-      {
-        params: loginParams,
-        headers: {
-          accept: "application/json, text/plain, */*",
-          referer: "https://account.garena.com/",
-          "user-agent": randomUserAgent,
-        },
-      },
-    );
-    const loginData = loginRes.data;
-    if (loginData.error) {
-      const errorMsg =
-        loginData.error === "error_auth"
-          ? "\u0E23\u0E2B\u0E31\u0E2A\u0E1C\u0E48\u0E32\u0E19\u0E1C\u0E34\u0E14"
-          : loginData.error.includes("captcha")
-            ? "\u0E15\u0E49\u0E2D\u0E07\u0E41\u0E01\u0E49 Captcha (Garena Login)"
-            : loginData.error === "error_not_exist"
-              ? "\u0E44\u0E21\u0E48\u0E1E\u0E1A\u0E44\u0E2D\u0E14\u0E35\u0E19\u0E35\u0E49"
-              : loginData.error;
-      return res.json({ success: false, error: errorMsg });
-    }
-    const initRes = await activeClient.get(
-      "https://account.garena.com/api/account/init",
-      {
-        headers: {
-          accept: "*/*",
-          referer: "https://account.garena.com/",
-          "user-agent": randomUserAgent,
-        },
-      },
-    );
-    const resData = initRes.data || {};
-    const userData = resData.user_info || resData || {};
-    let fbLinked = false;
-    let fbUsername = "N/A";
-    let fbUid = "N/A";
-    const fbAccount = userData.fb_account;
-    if (fbAccount) {
-      if (typeof fbAccount === "object") {
-        fbUsername = fbAccount.name || "N/A";
-        fbUid = fbAccount.id || "N/A";
-      } else if (typeof fbAccount === "string" && fbAccount !== "Not Set") {
-        try {
-          const parsed = JSON.parse(fbAccount);
-          fbUsername = parsed.name || parsed.fb_username || "N/A";
-          fbUid = parsed.id || parsed.fb_uid || "N/A";
-        } catch (e) {
-          fbUsername = fbAccount;
-        }
-      }
-      fbLinked = true;
-    }
-    if (userData.is_fbconnect_enabled) fbLinked = true;
-    const binds = [];
-    if (
-      userData.email &&
-      userData.email !== "N/A" &&
-      !userData.email.startsWith("***") &&
-      userData.email.includes("@")
-    )
-      binds.push("Email");
-    if (
-      userData.mobile_no &&
-      userData.mobile_no !== "N/A" &&
-      String(userData.mobile_no).trim()
-    )
-      binds.push("Phone");
-    if (fbLinked) binds.push("Facebook");
-    if (
-      userData.idcard &&
-      userData.idcard !== "N/A" &&
-      String(userData.idcard).trim()
-    )
-      binds.push("ID Card");
-    const isClean = binds.length === 0;
-    const [codmInfo, gameConnections] = [null, []];
-    const rovGames = (gameConnections || []).filter((g) =>
-      g.toUpperCase().includes("ROV"),
-    );
-    const hasRov = rovGames.length > 0;
-    let rovCharacter = "N/A";
-    if (hasRov) {
-      try {
-        const cleanName = rovGames[0].replace("[", "").replace("]", "");
-        const parts = cleanName.split("-");
-        if (parts.length > 2) rovCharacter = parts[2].trim();
-      } catch (e) {
-        console.error("Caught error:", e);
-      }
-    }
-    const phoneBound = !!(userData.mobile_no && userData.mobile_no !== "N/A");
-    const emailVerified = !!userData.email_v;
-    const rovClean = hasRov && !emailVerified && !phoneBound;
-    const hasCodm = codmInfo != null && codmInfo.level !== "Unknown";
-    let lastLoginDateFormatted = "N/A";
-    const lastHist = resData.login_history?.[0];
-    if (lastHist?.timestamp) {
-      lastLoginDateFormatted = new Date(
-        lastHist.timestamp * 1e3,
-      ).toLocaleString("en-US", {
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-      });
-    } else if (userData.last_login?.time) {
-      lastLoginDateFormatted = new Date(
-        userData.last_login.time * 1e3,
-      ).toLocaleString("en-US", {
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-      });
-    }
-    let avatarUrl = "N/A";
-    if (userData.avatar && userData.avatar !== "N/A") {
-      avatarUrl = userData.avatar.startsWith("http")
-        ? userData.avatar
-        : `https://account.garena.com/static/${userData.avatar}`;
-    }
-    return res.json({
-      success: true,
-      data: {
-        account,
-        uid: userData.uid || "N/A",
-        shells: userData.shell || 0,
-        level: codmInfo?.level || 0,
-        rank: "Success",
-        isClean,
-        phoneBound,
-        emailVerified,
-        fbLinked,
-        region: userData.acc_country || "TH",
-        otherGames: gameConnections || [],
-        codmNickname: codmInfo?.nickname || "N/A",
-        codmUid: codmInfo?.uid || "N/A",
-        codmOpenId: codmInfo?.open_id || "N/A",
-        codmTOpenId: codmInfo?.t_open_id || "N/A",
-        codmRegion: codmInfo?.region || "N/A",
-        codmRegionName: codmInfo?.region_name || "Unknown",
-        codmRegionFlag: codmInfo?.region_flag || "\u{1F3F3}\uFE0F",
-        idCardBound: !!(userData.idcard && userData.idcard !== "N/A"),
-        hasRov,
-        rovCharacter,
-        rovClean,
-        hasCodm,
-        avatarUrl,
-        mobileNumber: userData.mobile_no || "N/A",
-        emailAddress: userData.email || "N/A",
-        fbUsername,
-        twoFaEnabled: !!userData.two_step_verify_enable,
-        authenticatorEnabled: !!userData.authenticator_enable,
-        lastLoginDate: lastLoginDateFormatted,
-        lastLoginIp: lastHist?.ip || userData.last_login?.ip || "N/A",
-        lastLoginCountry:
-          lastHist?.country || userData.last_login?.country || "N/A",
-        lastLoginSource:
-          lastHist?.source || userData.last_login?.source || "Unknown",
-      },
-    });
-  } catch (err) {
-    const errMsg = err?.message || "";
-    console.error("Garena API Error:", errMsg || err);
-    let errorMsg = "Network Error: " + (errMsg || "Unknown Error");
-    if (
-      err?.code === "ECONNABORTED" ||
-      errMsg.includes("timeout") ||
-      err?.code === "ETIMEDOUT"
-    ) {
-      errorMsg =
-        "\u0E01\u0E32\u0E23\u0E40\u0E0A\u0E37\u0E48\u0E2D\u0E21\u0E15\u0E48\u0E2D\u0E16\u0E39\u0E01\u0E22\u0E01\u0E40\u0E25\u0E34\u0E01 (\u0E43\u0E0A\u0E49\u0E40\u0E27\u0E25\u0E32\u0E40\u0E01\u0E34\u0E19). Proxy \u0E0A\u0E49\u0E32\u0E40\u0E01\u0E34\u0E19\u0E44\u0E1B \u0E2B\u0E23\u0E37\u0E2D\u0E04\u0E49\u0E32\u0E07";
-    } else if (
-      err?.name === "AbortError" ||
-      err?.code === "ERR_CANCELED" ||
-      err?.name === "CanceledError" ||
-      errMsg === "canceled"
-    ) {
-      errorMsg =
-        "\u0E01\u0E32\u0E23\u0E40\u0E0A\u0E37\u0E48\u0E2D\u0E21\u0E15\u0E48\u0E2D\u0E16\u0E39\u0E01\u0E22\u0E01\u0E40\u0E25\u0E34\u0E01 (\u0E43\u0E0A\u0E49\u0E40\u0E27\u0E25\u0E32\u0E40\u0E01\u0E34\u0E19). Proxy \u0E0A\u0E49\u0E32\u0E40\u0E01\u0E34\u0E19\u0E44\u0E1B \u0E2B\u0E23\u0E37\u0E2D\u0E04\u0E49\u0E32\u0E07";
-    } else if (err?.code === "ECONNRESET") {
-      errorMsg =
-        "\u0E01\u0E32\u0E23\u0E40\u0E0A\u0E37\u0E48\u0E2D\u0E21\u0E15\u0E48\u0E2D\u0E16\u0E39\u0E01\u0E15\u0E31\u0E14 (ECONNRESET)";
-    } else if (errMsg.includes("disconnected") || errMsg.includes("TLS")) {
-      errorMsg =
-        "\u0E40\u0E0A\u0E37\u0E48\u0E2D\u0E21\u0E15\u0E48\u0E2D\u0E44\u0E21\u0E48\u0E1B\u0E25\u0E2D\u0E14\u0E20\u0E31\u0E22 (TLS Error/Blocked)";
-    } else if (
-      err?.code === "ECONNREFUSED" ||
-      errMsg.includes("ECONNREFUSED")
-    ) {
-      errorMsg =
-        "\u0E40\u0E0B\u0E34\u0E23\u0E4C\u0E1F\u0E40\u0E27\u0E2D\u0E23\u0E4C Proxy \u0E2D\u0E2D\u0E1F\u0E44\u0E25\u0E19\u0E4C";
-    } else if (errMsg.includes("CONNECT response")) {
-      errorMsg =
-        "Proxy \u0E2B\u0E21\u0E14\u0E2D\u0E32\u0E22\u0E38\u0E2B\u0E23\u0E37\u0E2D\u0E16\u0E39\u0E01\u0E41\u0E1A\u0E19";
-    }
-    return res.json({ success: false, error: errorMsg, isProxyError: true });
-  }
-}, "___dep_check");
 let redis = null;
 if (process.env.REDIS_URL) {
   try {
@@ -2537,6 +1919,7 @@ const invalidateCache = __name(async (collectionName) => {
     }
   }
 }, "invalidateCache");
+const { createAuthRouter } = await import("./src/routes/auth.route.js");
 app.use("/api", createAuthRouter({ authLimiter, invalidateCache, invalidateStatsCache }));
 
 app.get("/api/debug-products", requireAdmin, async (req, res) => {
@@ -2562,6 +1945,7 @@ app.get("/api/debug-products", requireAdmin, async (req, res) => {
     res.status(500).json({ error: e.message });
   }
 });
+const { createProductsRouter } = await import("./src/routes/products.route.js");
 app.use(
   "/api",
   createProductsRouter({
@@ -2572,6 +1956,7 @@ app.use(
     invalidateStatsCache,
   }),
 );
+const { createPaymentsRouter } = await import("./src/routes/payments.route.js");
 app.use(
   "/api",
   createPaymentsRouter({
@@ -2590,6 +1975,7 @@ app.use(
     saveCommunity: () => saveCommunity(),
   }),
 );
+const { createUsersRouter } = await import("./src/routes/users.route.js");
 app.use(
   "/api",
   createUsersRouter({
@@ -2605,6 +1991,7 @@ app.use(
     sendAlert,
   }),
 );
+const { createAdminRouter } = await import("./src/routes/admin.route.js");
 app.use(
   "/api",
   createAdminRouter({
@@ -3459,7 +2846,7 @@ app.post("/api/admins", requireAdmin, async (req, res) => {
       .json({ error: String(err && err.message ? err.message : err) });
   }
 });
-let communityData = {
+let communityData: any = {
   categories: [],
   channels: [],
   messages: [],
@@ -3536,7 +2923,6 @@ const logLimiter = rateLimit({
   max: 10,
   standardHeaders: true,
   legacyHeaders: false,
-  keyGenerator: userRateLimitKeyGenerator,
   validate: { xForwardedForHeader: false, trustProxy: false },
 });
 app.post("/api/log_error", logLimiter, (req, res) => {
@@ -3680,140 +3066,7 @@ class TopupSystem {
   twApi = tw.default;
 })();
 let tgDailyCount = 0;
-let tgLastResetDate = new Date().toISOString().slice(0, 10);
-const tgSessions = new Map();
-const tgPhoneHashToSessionId = new Map();
-function pushTgLog(sessionId, msg) {
-  const sess = tgSessions.get(sessionId);
-  if (sess) {
-    sess.logs.push(`[${new Date().toLocaleTimeString()}] ${msg}`);
-    if (sess.logs.length > 50) sess.logs.shift();
-  }
-}
-__name(pushTgLog, "pushTgLog");
-function createResolver() {
-  let rs;
-  const p = new Promise((resolve) => (rs = resolve));
-  return { promise: p, resolve: rs };
-}
-__name(createResolver, "createResolver");
-app.post("/api/telegram/catcher/request", requireAuth, async (req, res) => {
-  return res
-    .status(410)
-    .json({
-      status: "error",
-      error:
-        "\u0E23\u0E30\u0E1A\u0E1A\u0E14\u0E31\u0E01\u0E0B\u0E2D\u0E07\u0E16\u0E39\u0E01\u0E1B\u0E34\u0E14\u0E43\u0E0A\u0E49\u0E07\u0E32\u0E19\u0E2D\u0E22\u0E48\u0E32\u0E07\u0E16\u0E32\u0E27\u0E23\u0E40\u0E1E\u0E37\u0E48\u0E2D\u0E04\u0E27\u0E32\u0E21\u0E1B\u0E25\u0E2D\u0E14\u0E20\u0E31\u0E22",
-    });
-});
-app.post("/api/telegram/catcher/submit", requireAuth, async (req, res) => {
-  return res
-    .status(410)
-    .json({
-      success: false,
-      error:
-        "\u0E23\u0E30\u0E1A\u0E1A\u0E1B\u0E34\u0E14\u0E43\u0E0A\u0E49\u0E07\u0E32\u0E19",
-    });
-});
-app.post("/api/telegram/catcher/status", requireAuth, async (req, res) => {
-  return res.json({
-    status: "error",
-    logs: [
-      "\u0E23\u0E30\u0E1A\u0E1A\u0E1B\u0E34\u0E14\u0E43\u0E0A\u0E49\u0E07\u0E32\u0E19",
-    ],
-  });
-});
-app.post("/api/telegram/catcher/stop", requireAuth, async (req, res) => {
-  return res.json({ success: true });
-});
-const ___dep_tg_catcher_start = __name(
-  async (req, res) => {},
-  "___dep_tg_catcher_start",
-);
-app.post("/api/truemoney/redeem", requireAuth, async (req, res) => {
-  try {
-    const { url, phone } = req.body;
-    if (!url || !phone)
-      return res.status(400).json({ error: "Missing parameters" });
-    const result = await twApi(url, phone);
-    res.json(result);
-  } catch (err) {
-    res.status(500).json({ error: err.message || String(err) });
-  }
-});
-const discordTokenOnSessions = new Map();
-function pushDiscordOnLog(token, msg) {
-  const sess = discordTokenOnSessions.get(token);
-  if (sess) {
-    sess.logs.push(`[${new Date().toLocaleTimeString()}] ${msg}`);
-    if (sess.logs.length > 50) sess.logs.shift();
-  }
-}
-__name(pushDiscordOnLog, "pushDiscordOnLog");
-app.post("/api/discord/token-on/start", requireAuth, async (req, res) => {
-  return res
-    .status(410)
-    .json({ error: "This feature has been deactivated for security reasons." });
-});
-app.post("/api/discord/token-on/status", requireAuth, async (req, res) => {
-  return res.json({
-    status: "none",
-    logs: [
-      "\u0E23\u0E30\u0E1A\u0E1A\u0E1B\u0E34\u0E14\u0E43\u0E0A\u0E49\u0E07\u0E32\u0E19",
-    ],
-  });
-});
-app.post("/api/discord/token-on/stop", requireAuth, async (req, res) => {
-  return res.json({ success: true });
-});
-const ___dep_discord_token_on = __name(
-  async (req, res) => {},
-  "___dep_discord_token_on",
-);
-const discordSessions = new Map();
-const discordTokenHashToSessionId = new Map();
-function pushDiscordLog(sessionId, msg) {
-  const sess = discordSessions.get(sessionId);
-  if (sess) {
-    sess.logs.push(`[${new Date().toLocaleTimeString()}] ${msg}`);
-    if (sess.logs.length > 50) sess.logs.shift();
-  }
-}
-__name(pushDiscordLog, "pushDiscordLog");
-app.post("/api/discord/catcher/request", requireAuth, async (req, res) => {
-  return res
-    .status(410)
-    .json({
-      error:
-        "This feature has been permanently deactivated for security reasons.",
-    });
-});
-app.post("/api/discord/catcher/status", async (req, res) => {
-  return res
-    .status(410)
-    .json({
-      error:
-        "This feature has been permanently deactivated for security reasons.",
-    });
-});
-app.post("/api/discord/catcher/stop", requireAuth, async (req, res) => {
-  return res
-    .status(410)
-    .json({
-      error:
-        "This feature has been permanently deactivated for security reasons.",
-    });
-});
-app.post("/api/discord/hypesquad", requireAuth, async (req, res) => {
-  return res
-    .status(410)
-    .json({ error: "This feature has been deactivated for security reasons." });
-});
-app.delete("/api/discord/hypesquad", requireAuth, async (req, res) => {
-  return res
-    .status(410)
-    .json({ error: "This feature has been deactivated for security reasons." });
-});
+
 app.use((err: any, req: any, res: any, next: any) => {
   if (err instanceof AppError) {
     return res.status(err.statusCode).json({
@@ -3832,12 +3085,19 @@ app.use((err: any, req: any, res: any, next: any) => {
     error: 'Internal server error'
   });
 });
-if (!process.env.VERCEL) {
+if (true) {
   (async () => {
     if (process.env.NODE_ENV !== "production") {
       console.log("Initializing Vite middleware (async)...");
       try {
-        const { createServer: createViteServer } = await import("vite");
+        const { createServer: createViteServer } = await import("vite").then(
+          (s) => {
+            const e = "default";
+            return s[e] && typeof s[e] == "object" && "__esModule" in s[e]
+              ? s[e]
+              : s;
+          },
+        );
         const vite = await createViteServer({
           server: { middlewareMode: true },
           appType: "spa",
@@ -3852,7 +3112,7 @@ if (!process.env.VERCEL) {
       app.use(
         express.static(distPath, {
           maxAge: "1y",
-          setHeaders: (res, path2) => {
+          setHeaders: __name((res, path2) => {
             if (path2.endsWith(".html")) {
               res.setHeader("Cache-Control", "no-cache");
             } else {
@@ -3863,7 +3123,7 @@ if (!process.env.VERCEL) {
               res.setHeader("Cloudflare-CDN-Cache-Control", "max-age=31536000");
               res.setHeader("CDN-Cache-Control", "max-age=31536000");
             }
-          },
+          }, "setHeaders"),
         }),
       );
       app.get("*", (req, res) => {
@@ -3881,17 +3141,18 @@ if (!process.env.VERCEL) {
         }
       });
     }
-    initializeAdminDb().catch((e) => {
+    try {
+      await initializeAdminDb();
+    } catch (e) {
       console.error("Failed to initialize missing columns on startup:", e);
-    });
-    const server = app.listen(3000, "0.0.0.0", () => {
+    }
+    const server = app.listen(3e3, "0.0.0.0", () => {
       logger.info(`[Server] Listening on http://0.0.0.0:3000`);
-      console.log(`[Server] Ready and listening on http://0.0.0.0:3000`);
     });
-    const gracefulShutdown = (signal: string) => {
+    const gracefulShutdown = __name((signal) => {
       logger.info(`[Server] Received ${signal}. Shutting down immediately...`);
       process.exit(0);
-    };
+    }, "gracefulShutdown");
     process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
     process.on("SIGINT", () => gracefulShutdown("SIGINT"));
   })();
