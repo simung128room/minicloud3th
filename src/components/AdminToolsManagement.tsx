@@ -181,8 +181,8 @@ export const AdminToolsManagement = () => {
           )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {categories.map((c) => (
-              <div key={c.id} className="bg-[#121212] border border-[#374151]  p-5 relative ">
+            {categories.map((c, cIdx) => (
+              <div key={`adm-tool-cat-${c.id}-${cIdx}`} className="bg-[#121212] border border-[#374151]  p-5 relative ">
                 <div className="flex justify-between items-start mb-3">
                   <h3 className="text-lg font-semibold text-white">{c.name}</h3>
                   <div className="flex items-center gap-2">
@@ -219,7 +219,7 @@ export const AdminToolsManagement = () => {
                   <label className="block text-xs font-medium text-muted-foreground mb-1">หมวดหมู่</label>
                   <select value={itemCategoryId} onChange={e=>setItemCategoryId(e.target.value)} className="w-full bg-[#121212] border border-[#374151]  px-4 py-2 text-white ">
                     <option value="">-- เลือกหมวดหมู่ --</option>
-                    {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                    {categories.map((c, cIdx) => <option key={`adm-tool-cat-opt-${c.id}-${cIdx}`} value={c.id}>{c.name}</option>)}
                   </select>
                 </div>
                 <div>
@@ -240,7 +240,7 @@ export const AdminToolsManagement = () => {
                 {attachments.length > 0 && (
                   <div className="space-y-2 mb-4">
                     {attachments.map((a, i) => (
-                      <div key={i} className="flex items-center justify-between bg-[#121212] border border-[#374151]  p-2 px-3 ">
+                      <div key={`adm-tool-data-${i}`} className="flex items-center justify-between bg-[#121212] border border-[#374151]  p-2 px-3 ">
                         <div className="flex items-center gap-3 truncate text-sm text-muted-foreground">
                           {a.type === 'text' && <FileText className="w-4 h-4 text-[#364153]"/>}
                           {a.type === 'image' && <ImageIcon className="w-4 h-4 text-sky-400"/>}
@@ -271,10 +271,10 @@ export const AdminToolsManagement = () => {
           )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {items.map((item) => {
+            {items.map((item, i) => {
               const cat = categories.find(c => c.id === item.categoryId);
               return (
-              <div key={item.id} className="bg-[#121212] border border-[#374151]  p-5 relative overflow-hidden group ">
+              <div key={`adm-tool-item-${item.id}-${i}`} className="bg-[#121212] border border-[#374151]  p-5 relative overflow-hidden group ">
                 <div className="flex justify-between items-start mb-3">
                   <div className="flex gap-2">
                     <span className="text-[10px] font-medium bg-[#121212] text-[#364153] px-2 py-0.5 uppercase ">{cat?.name || 'ไม่ระบุ'}</span>
@@ -287,7 +287,7 @@ export const AdminToolsManagement = () => {
                 <h3 className="text-lg font-medium text-white mb-2">{item.title}</h3>
                 <div className="bg-[#121212] border border-[#374151]  p-3 space-y-2 max-h-32 overflow-y-auto mt-2 ">
                   {(item.attachments || [(item as any)]).map((att: any, i: number) => (
-                    <div key={i} className="text-xs text-muted-foreground truncate border-b border-[#374151]  pb-2 last:border-0 last:pb-0">
+                    <div key={`adm-tool-stock-${i}`} className="text-xs text-muted-foreground truncate border-b border-[#374151]  pb-2 last:border-0 last:pb-0">
                       <span className="font-medium text-muted-foreground mr-2 uppercase">{att.type}:</span>{att.data}
                     </div>
                   ))}

@@ -176,8 +176,8 @@ export const AdminPagesManagement: React.FC<AdminPagesManagementProps> = ({ cust
           </div>
         ) : (
           <div className="divide-y divide-zinc-850/60 text-sm text-zinc-400">
-            {customPages.map(page => (
-              <div key={page.id} className="p-4 flex items-center justify-between hover:bg-[#050505]/10 transition-colors group">
+            {customPages.map((page, i) => (
+              <div key={`adm-page-${page.id}-${i}`} className="p-4 flex items-center justify-between hover:bg-[#050505]/10 transition-colors group">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-zinc-950 border border-[#374151] rounded-md text-[#364153] flex items-center justify-center">
                     <FileText className="w-5 h-5" />

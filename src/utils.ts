@@ -37,14 +37,24 @@ export function generateGradient(inputStr: string): string {
  */
 export function sanitizeCategories(categories: any[]): Category[] {
   if (!Array.isArray(categories)) return [];
-  return categories
-    .filter(c => c && (c.id || c.name || c.title))
-    .map(c => ({
-      id: String(c.id || c.name || Math.random().toString(36).substring(2, 11)),
+  const seenIds = new Set<string>();
+  const sanitized: Category[] = [];
+
+  for (const c of categories) {
+    if (!c || (!c.id && !c.name && !c.title)) continue;
+    let id = String(c.id || c.name || Math.random().toString(36).substring(2, 11));
+    if (seenIds.has(id)) {
+      id = `${id}-${Math.random().toString(36).substring(2, 7)}`;
+    }
+    seenIds.add(id);
+    sanitized.push({
+      id,
       name: String(c.name || c.title || "general"),
       title: String(c.title || c.name || "ทั่วไป"),
       subtitle: String(c.subtitle || c.description || ""),
       bannerUrl: String(c.bannerUrl || c.banner_url || "https://img2.pic.in.th/IMG_7177176d5344301b32a1.png"),
       imageUrl: String(c.imageUrl || c.image_url || c.bannerUrl || "https://img2.pic.in.th/IMG_7177176d5344301b32a1.png")
-    }));
+    });
+  }
+  return sanitized;
 }

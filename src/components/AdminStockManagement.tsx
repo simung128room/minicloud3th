@@ -162,7 +162,7 @@ export default function AdminStockManagement({ products, categories, setProducts
               ) : (
                  <div className="space-y-2 max-h-[600px] overflow-y-auto pr-1">
                      {paginated.map(({item, originalIndex}, idx) => (
-                         <div key={idx} className="flex bg-zinc-950/40 p-3 border border-zinc-850 hover:border-[#374151]/80 items-center justify-between rounded-md transition-all group">
+                         <div key={`adm-stock-item-${originalIndex}-${idx}`} className="flex bg-zinc-950/40 p-3 border border-zinc-850 hover:border-[#374151]/80 items-center justify-between rounded-md transition-all group">
                              <span className="text-zinc-400 font-mono text-xs max-w-[80%] truncate select-all">{item}</span>
                              <div className="flex gap-2">
                                  <button 

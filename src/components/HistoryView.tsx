@@ -172,9 +172,9 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ purchaseHistory = [], 
 
               <div className="p-4 md:p-6 bg-transparent">
                 <div className="grid grid-cols-1 gap-3">
-                  {categories.map((cat) => (
+                  {categories.map((cat, idx) => (
                     <button
-                      key={cat.id}
+                      key={`hist-cat-${cat.id}-${idx}`}
                       onClick={() => setCurrentCategory(cat.id)}
                       className="group flex items-center justify-between p-4 bg-white border border-zinc-200 hover:border-blue-400 rounded-2xl cursor-pointer hover:-translate-y-0.5 transition-all duration-150 shadow-sm hover:shadow-md"
                     >
@@ -225,7 +225,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ purchaseHistory = [], 
                 {isLoading ? (
                   <div className="space-y-3">
                     {[1, 2, 3].map((i) => (
-                      <div key={i} className="bg-white border border-zinc-200 p-5 flex flex-col gap-4 rounded-2xl shadow-sm">
+                      <div key={`hist-skel-${i}`} className="bg-white border border-zinc-200 p-5 flex flex-col gap-4 rounded-2xl shadow-sm">
                         <div className="flex gap-4 items-center">
                           <Skeleton className="w-14 h-14 rounded-xl" />
                           <div className="flex-1 space-y-2">

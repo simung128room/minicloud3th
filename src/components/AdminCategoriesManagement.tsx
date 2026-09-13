@@ -278,8 +278,8 @@ export const AdminCategoriesManagement: React.FC<AdminCategoriesManagementProps>
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-850/60">
-              {categories.map((c) => (
-                <tr key={c.id} className="hover:bg-[#050505]/10 transition-all group">
+              {categories.map((c, i) => (
+                <tr key={`adm-cat-row-${c.id}-${i}`} className="hover:bg-[#050505]/10 transition-all group">
                   <td className="px-6 py-4">
                     {c.bannerUrl ? (
                       <div className="w-20 h-11 overflow-hidden rounded-md border border-zinc-850 group-hover:border-[#364153]/40 transition-colors">
@@ -378,11 +378,11 @@ export const AdminCategoriesManagement: React.FC<AdminCategoriesManagementProps>
                     <p className="text-xs mt-1">กรุณาสร้างสินค้าในหน้าสินค้าก่อน</p>
                   </div>
                 ) : (
-                  products.map((p) => {
+                  products.map((p, i) => {
                     const isChecked = selectedProductIds.has(p.id);
                     return (
                       <div 
-                        key={p.id} 
+                        key={`adm-cat-prod-${p.id}-${i}`} 
                         onClick={() => toggleProductSelection(p.id)}
                         className={`flex items-center gap-3.5 p-3 rounded-md border cursor-pointer transition-all ${ 
                           isChecked 

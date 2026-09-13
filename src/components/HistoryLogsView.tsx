@@ -264,7 +264,7 @@ export const HistoryLogsView: React.FC<HistoryLogsViewProps> = ({
     );
   };
 
-  const renderCard = (item: any, type: string) => {
+  const renderCard = (item: any, type: string, index?: number) => {
     let title = "";
     let amountNode = null;
     let iconNode = null;
@@ -305,7 +305,7 @@ export const HistoryLogsView: React.FC<HistoryLogsViewProps> = ({
 
     return (
       <div 
-        key={item.id} 
+        key={`${type}-${item.id || 'log'}-${index ?? 0}`} 
         className="bg-white border border-zinc-200/80 hover:border-zinc-350 rounded-2xl p-5 hover:shadow-xs transition-all flex flex-col md:flex-row md:items-center justify-between gap-5 group relative overflow-hidden text-zinc-800"
       >
         <div className="flex flex-row items-center gap-4 flex-1 min-w-0">
@@ -359,7 +359,7 @@ export const HistoryLogsView: React.FC<HistoryLogsViewProps> = ({
     }
     return (
       <div className="flex flex-col gap-4">
-        {list.map((item) => renderCard(item, type))}
+        {list.map((item, idx) => renderCard(item, type, idx))}
       </div>
     );
   };
@@ -505,7 +505,7 @@ export const HistoryLogsView: React.FC<HistoryLogsViewProps> = ({
                 </div>
               ) : (
                 <div className="flex flex-col gap-4">
-                  {getFilteredList().map((key) => renderCard(key, 'key_use'))}
+                  {getFilteredList().map((key, idx) => renderCard(key, 'key_use', idx))}
                 </div>
               )}
             </motion.div>
@@ -532,7 +532,7 @@ export const HistoryLogsView: React.FC<HistoryLogsViewProps> = ({
                 </div>
               ) : (
                 <div className="flex flex-col gap-4">
-                  {getFilteredList().map((item) => renderCard(item, 'topup'))}
+                  {getFilteredList().map((item, idx) => renderCard(item, 'topup', idx))}
                 </div>
               )}
             </motion.div>

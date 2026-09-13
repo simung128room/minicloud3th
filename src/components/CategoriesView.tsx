@@ -208,12 +208,12 @@ export const CategoriesView: React.FC<CategoriesViewProps> = ({
             </button>
 
             {/* List of Custom Categories */}
-            {categories.map((c) => {
+            {categories.map((c, cIdx) => {
               const isActive = activeCategory === c.id || activeCategory === c.name || activeCategory === c.title;
               const count = getProductCountText(c);
               return (
                 <button
-                  key={c.id || c.name}
+                  key={c.id ? `cat-side-${c.id}-${cIdx}` : `cat-side-${cIdx}`}
                   onClick={() => handleSelectCategory(c.id || c.name || c.title)}
                   className={`w-full text-left flex items-center justify-between p-3.5 rounded-xl text-xs font-bold transition-all group cursor-pointer border ${
                     isActive 
@@ -264,12 +264,12 @@ export const CategoriesView: React.FC<CategoriesViewProps> = ({
           </button>
 
           {/* Scroll items of categories */}
-          {categories.map((c) => {
+          {categories.map((c, cIdx) => {
             const isActive = activeCategory === c.id || activeCategory === c.name || activeCategory === c.title;
             const count = getProductCountText(c);
             return (
               <button
-                key={c.id || c.name}
+                key={c.id ? `cat-scroll-${c.id}-${cIdx}` : `cat-scroll-${cIdx}`}
                 onClick={() => handleSelectCategory(c.id || c.name || c.title)}
                 className={`flex items-center gap-2 px-5 py-3 rounded-full text-xs font-bold whitespace-nowrap transition-all border cursor-pointer ${
                   isActive
@@ -410,7 +410,7 @@ export const CategoriesView: React.FC<CategoriesViewProps> = ({
               >
                 {visibleProducts.map((product, i) => (
                   <ProductCard
-                    key={product.id}
+                    key={product.id ? `cat-prod-${product.id}-${i}` : `cat-prod-${i}`}
                     product={product}
                     onProductClick={onProductClick}
                     index={i}

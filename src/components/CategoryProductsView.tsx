@@ -115,7 +115,7 @@ export const CategoryProductsView: React.FC<CategoryProductsViewProps> = ({
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
             {visibleProducts.map((product, i) => (
               <ProductCard
-                key={product.id}
+                key={product.id ? `cat-prod-view-${product.id}-${i}` : `cat-prod-view-${i}`}
                 product={product}
                 onProductClick={onProductClick}
                 index={i}

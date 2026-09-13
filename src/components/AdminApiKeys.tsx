@@ -223,8 +223,8 @@ export const AdminApiKeys: React.FC = () => {
                   <td colSpan={7} className="text-center py-12 text-zinc-600 font-semibold text-xs">ยังไม่มีกุญแจเชื่อมต่อสถิติในหน้าเพจนี้</td>
                 </tr>
               ) : (
-                apiKeys.map(k => (
-                  <tr key={k.key} className="hover:bg-[#050505]/10 transition-colors">
+                apiKeys.map((k, i) => (
+                  <tr key={`adm-api-key-${k.key}-${i}`} className="hover:bg-[#050505]/10 transition-colors">
                     <td className="px-5 py-3.5">
                       {k.status === 'active' ? (
                         <span className="bg-[#364153]/10 text-[#364153] px-2 py-0.5 rounded text-[10px] uppercase font-medium border border-emerald-500/20">Active</span>

@@ -90,9 +90,9 @@ export const SearchView: React.FC<SearchViewProps> = ({ products, onClose, onPro
                 </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {filteredProducts.map(product => (
+                  {filteredProducts.map((product, pIdx) => (
                     <div 
-                      key={product.id}
+                      key={product.id ? `search-prod-${product.id}-${pIdx}` : `search-prod-${pIdx}`}
                       onClick={() => {
                         onProductClick(product.id);
                         onClose();

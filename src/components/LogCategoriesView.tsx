@@ -136,11 +136,11 @@ export const LogCategoriesView: React.FC<LogCategoriesViewProps> = ({ userPlan, 
                 </div>
              </div>
 
-             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-               {currentItems.map((item) => {
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+               {currentItems.map((item, itemIdx) => {
                   const isLocked = item.type === 'premium' && !isVip;
                   return (
-                     <div key={item.id} onClick={() => handleOpenItem(item)} className={`bg-white border border-zinc-200 rounded-2xl p-5 cursor-pointer hover:border-blue-500 hover:shadow-md transition-all ${isLocked ? 'opacity-80' : 'hover:-translate-y-1 '}`}>
+                     <div key={item.id ? `log-item-${item.id}-${itemIdx}` : `log-item-${itemIdx}`} onClick={() => handleOpenItem(item)} className={`bg-white border border-zinc-200 rounded-2xl p-5 cursor-pointer hover:border-blue-500 hover:shadow-md transition-all ${isLocked ? 'opacity-80' : 'hover:-translate-y-1 '}`}>
                        <div className="flex justify-between items-start mb-3">
                          <span className={`text-[10px] font-bold px-2.5 py-1 rounded-md uppercase ${item.type === 'premium' ? 'bg-amber-100 text-amber-700' : 'bg-blue-50 text-blue-600'}`}>
                            {item.type === 'premium' ? 'Premium' : 'Free'}
@@ -162,7 +162,7 @@ export const LogCategoriesView: React.FC<LogCategoriesViewProps> = ({ userPlan, 
                 const catItemsCount = items.filter(it => it.categoryId === c.id).length;
                 return (
                   <motion.div
-                    key={c.id} 
+                    key={c.id ? `log-cat-${c.id}-${i}` : `log-cat-${i}`} 
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.05 }}

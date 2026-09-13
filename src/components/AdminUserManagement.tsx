@@ -159,7 +159,7 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({ purcha
               </thead>
               <tbody className="divide-y divide-zinc-850/40">
                 {filteredUsers.length > 0 ? filteredUsers.map((u, i) => (
-                  <tr key={i} className="hover:bg-[#050505]/10 transition-colors">
+                  <tr key={`adm-usr-row-${u.id || u.username}-${i}`} className="hover:bg-[#050505]/10 transition-colors">
                     <td className="px-5 py-3.5 font-medium text-white">
                       <div className="flex items-center gap-2">
                         <span>{u.email}</span>
@@ -425,7 +425,7 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({ purcha
               {actionTab === 'purchase' && (
                 <div className="space-y-3">
                   {userPurchaseHistory.length > 0 ? userPurchaseHistory.map((h, i) => (
-                    <div key={i} className="flex justify-between items-center p-4 bg-zinc-950/40 border border-zinc-850 rounded-md">
+                    <div key={`adm-usr-po-${h.id || i}`} className="flex justify-between items-center p-4 bg-zinc-950/40 border border-zinc-850 rounded-md">
                       <div>
                         <p className="text-sm font-medium text-white">{h.productName}</p>
                         <p className="text-xs text-zinc-500 mt-1">{new Date(h.date).toLocaleString('th-TH')}</p>
@@ -439,7 +439,7 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({ purcha
               {actionTab === 'topup' && (
                 <div className="space-y-3">
                   {userTopupHistory.length > 0 ? userTopupHistory.map((h, i) => (
-                    <div key={i} className="flex justify-between items-center p-4 bg-zinc-950/40 border border-zinc-850 rounded-md">
+                    <div key={`adm-usr-topup-${h.id || i}`} className="flex justify-between items-center p-4 bg-zinc-950/40 border border-zinc-850 rounded-md">
                       <div>
                         <p className="text-sm font-medium text-white">เติมเงิน ({h.method})</p>
                         <p className="text-xs text-zinc-500 mt-1">{new Date(h.date).toLocaleString('th-TH')}</p>
@@ -453,7 +453,7 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({ purcha
               {actionTab === 'keys' && (
                 <div className="space-y-3">
                   {userKeysHistory.length > 0 ? userKeysHistory.map((k, i) => (
-                    <div key={i} className="flex justify-between items-center p-4 bg-zinc-950/40 border border-zinc-850 rounded-md">
+                    <div key={`adm-usr-key-${k.id || k.key || i}`} className="flex justify-between items-center p-4 bg-zinc-950/40 border border-zinc-850 rounded-md">
                       <div>
                         <p className="text-sm font-medium font-mono text-zinc-300">{k.key || k.code || k.name || 'Key-' + i}</p>
                         <p className="text-xs text-zinc-500 mt-1">{new Date(k.used_at || k.date || new Date()).toLocaleString('th-TH')}</p>

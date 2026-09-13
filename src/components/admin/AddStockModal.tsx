@@ -284,7 +284,7 @@ export const AddStockModal = ({
             {singleFilesPreview.length > 0 && (
               <div className="flex flex-col gap-2 max-h-32 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-zinc-800">
                 {singleFilesPreview.map((f, i) => (
-                  <div key={i} className="bg-[#121212] border border-[#374151] border p-2.5 flex items-center justify-between">
+                  <div key={`file-preview-${f.name}-${i}`} className="bg-[#121212] border border-[#374151] border p-2.5 flex items-center justify-between">
                     <span className="text-xs font-medium truncate max-w-[200px] text-zinc-400">{f.name}</span>
                     <span className="text-[10px] text-[#364153] font-medium bg-[#364153] text-black px-2 py-0.5 rounded">Ready</span>
                   </div>

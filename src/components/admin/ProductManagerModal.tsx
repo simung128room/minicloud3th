@@ -112,8 +112,8 @@ export const ProductManagerModal = ({
                 className="w-full bg-[#121212] border border-[#374151] border px-4 py-3 text-white font-medium focus:outline-none focus:border-[#364153] focus:ring-1 focus:ring-[#364153]/50 transition-all text-sm appearance-none"
               >
                 <option value="">เลือกหมวดหมู่</option>
-                {categories.map((cat: any) => (
-                  <option key={cat.id} value={cat.id}>{cat.name}</option>
+                {categories.map((cat: any, cIdx: number) => (
+                  <option key={cat.id ? `modal-cat-${cat.id}-${cIdx}` : `modal-cat-${cIdx}`} value={cat.id}>{cat.name}</option>
                 ))}
               </select>
             </div>
@@ -183,7 +183,7 @@ export const ProductManagerModal = ({
                 <span className="font-semibold">ตัวอย่างที่จะแสดง:</span>
                 {(formData.preOrderOptions || []).length > 0 ? (
                   (formData.preOrderOptions || []).map((o: string, idx: number) => (
-                    <span key={idx} className="bg-[#0a0a0a] text-zinc-300 px-1.5 py-0.5 rounded text-[9px]">{o}</span>
+                    <span key={`preorder-opt-${idx}-${o}`} className="bg-[#0a0a0a] text-zinc-300 px-1.5 py-0.5 rounded text-[9px]">{o}</span>
                   ))
                 ) : (
                   <span className="italic">ระบบจะให้ลูกค้าพิมเลือกประเภทเองหากว่างไว้</span>

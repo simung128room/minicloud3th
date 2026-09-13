@@ -59,8 +59,8 @@ export const ToastContainer: React.FC = () => {
     <div className="fixed top-6 right-6 z-[200] flex flex-col gap-3 pointer-events-none">
       <div className="flex flex-col gap-3 pointer-events-auto">
         <AnimatePresence mode="popLayout">
-          {toasts.map((toast) => (
-            <Toast key={toast.id} toast={toast} onClose={removeToast} />
+          {toasts.map((toast, i) => (
+            <Toast key={`toast-item-${toast.id}-${i}`} toast={toast} onClose={removeToast} />
           ))}
         </AnimatePresence>
       </div>

@@ -353,7 +353,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 { label: 'คำสั่งซื้อทั้งหมด', value: purchaseHistory.length.toLocaleString(), icon: ShoppingCart, color: 'text-amber-400', bg: 'bg-amber-500/10', border: 'hover:border-amber-500/40' },
                 { label: 'สินค้าประเภทสต็อก', value: products.filter(p => !p.isPreOrder && p.stock > 0).length.toLocaleString(), icon: Database, color: 'text-indigo-400', bg: 'bg-indigo-500/10', border: 'hover:border-indigo-500/40' }
               ].map((stat, i) => (
-                <div key={i} className={`bg-zinc-900/40 backdrop-blur-md border border-zinc-800/80 rounded-2xl p-6 relative overflow-hidden group transition-all duration-300 hover:translate-y-[-4px] hover:shadow-lg ${stat.border}`}>
+                <div key={`dash-stat-${i}-${stat.label}`} className={`bg-zinc-900/40 backdrop-blur-md border border-zinc-800/80 rounded-2xl p-6 relative overflow-hidden group transition-all duration-300 hover:translate-y-[-4px] hover:shadow-lg ${stat.border}`}>
                   <div className="flex items-center justify-between relative z-10">
                     <div>
                       <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-wider mb-2">{stat.label}</p>
@@ -403,7 +403,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                             { id: 'settings', label: 'ตั้งค่าเว็บไซต์', desc: 'แก้ไขชื่อเว็บ ช่องทางติดต่อ', icon: Settings, color: 'text-[#364153]', bg: 'bg-[#364153]/5' },
                         ].map((item, i) => (
                            <button 
-                             key={i}
+                             key={`quick-act-${i}-${item.id}`}
                              onClick={() => setAdminTab(item.id)}
                              className="flex items-center gap-4 p-4 border border-[#374151]/80 bg-[#050505]/30 hover:bg-zinc-950 hover:border-[#374151] transition-all text-left group rounded-md"
                            >
@@ -729,7 +729,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     </thead>
                     <tbody>
                       {products.map((p, i) => (
-                        <tr key={i} className="border-b border-[#374151]/80 hover:bg-[#050505]/30 transition-all duration-200">
+                        <tr key={p.id ? `adm-prod-row-${p.id}-${i}` : `adm-prod-row-${i}`} className="border-b border-[#374151]/80 hover:bg-[#050505]/30 transition-all duration-200">
                           <td className="px-5 py-4 flex items-center gap-3">
                             <img 
                               loading="lazy" 
@@ -867,7 +867,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   {/* Mobile Card Layout */}
                   <div className="grid grid-cols-1 gap-4 md:hidden p-4">
                     {products.map((p, i) => (
-                      <div key={i} className="bg-[#121212] border border-[#374151] border p-4 flex flex-col gap-3">
+                      <div key={p.id ? `adm-prod-card-${p.id}-${i}` : `adm-prod-card-${i}`} className="bg-[#121212] border border-[#374151] border p-4 flex flex-col gap-3">
                         <div className="flex items-center gap-3">
                           <img 
                             loading="lazy" 
@@ -1040,7 +1040,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   </thead>
                   <tbody className="text-xs">
                     {licenseKeys.length > 0 ? licenseKeys.map((key, i) => (
-                      <tr key={i} className="border-b border-[#374151] border hover:bg-[#121212]/50 transition-colors">
+                      <tr key={key.id ? `lic-key-${key.id}-${i}` : `lic-key-${key.key}-${i}`} className="border-b border-[#374151] border hover:bg-[#121212]/50 transition-colors">
                         <td className="p-4">
                           <div className="flex items-center gap-3">
                              <div className="w-2 h-2 bg-[#364153]"></div>
@@ -1105,7 +1105,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   </thead>
                   <tbody className="text-xs font-mono">
                     {usedKeysHistory.length > 0 ? usedKeysHistory.map((h, i) => (
-                      <tr key={i} className="border-b border-[#374151] border hover:bg-[#121212]/50 transition-colors">
+                      <tr key={h.id ? `used-key-${h.id}-${i}` : `used-key-${h.key}-${i}`} className="border-b border-[#374151] border hover:bg-[#121212]/50 transition-colors">
                         <td className="p-4">
                           <span className="text-white font-medium">{h.key}</span>
                         </td>
@@ -1387,7 +1387,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     </thead>
                     <tbody className="font-mono text-xs">
                       {blockedIPs.length > 0 ? blockedIPs.map((ip, i) => (
-                        <tr key={i} className="border-b border-[#374151] border hover:bg-[#121212]/50 transition-colors">
+                        <tr key={`blocked-ip-${ip.ip}-${i}`} className="border-b border-[#374151] border hover:bg-[#121212]/50 transition-colors">
                           <td className="p-4">
                             <div className="flex items-center gap-2">
                               <span className="text-[#364153] font-medium tracking-tight">{ip.ip}</span>
@@ -1881,7 +1881,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       { label: "Network IO", value: "24 Mbps", icon: Activity, color: "text-[#364153]", bg: "bg-emerald-50" },
                       { label: "Uptime", value: "94 Days", icon: BarChart3, color: "text-[#364153]", bg: "bg-cyan-50" }
                     ].map((stat, i) => (
-                      <div key={i} className="bg-[#121212] border border-[#374151] border p-4 flex items-center gap-4 transition-colors hover:bg-[#121212]/50">
+                      <div key={`sys-stat-${i}-${stat.label}`} className="bg-[#121212] border border-[#374151] border p-4 flex items-center gap-4 transition-colors hover:bg-[#121212]/50">
                         <div className={`p-3 ${stat.bg} ${stat.color}`}>
                           <stat.icon className="w-5 h-5" />
                         </div>

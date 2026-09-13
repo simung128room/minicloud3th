@@ -180,12 +180,12 @@ export const HomeView = (props: any) => {
             <span>ทั้งหมด ({products.length})</span>
           </button>
 
-          {categories.map((c: any) => {
+          {categories.map((c: any, cIdx: number) => {
             const count = products.filter((p: any) => p.category === c.id || p.category === c.name || p.category === c.title).length;
             const isActive = activeCategory === c.id || activeCategory === c.name || activeCategory === c.title;
             return (
               <button
-                key={c.id || c.name}
+                key={c.id ? `home-cat-${c.id}-${cIdx}` : `home-cat-${cIdx}`}
                 onClick={() => setActiveCategory(c.id || c.name || c.title)}
                 className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-bold whitespace-nowrap transition-all border cursor-pointer ${
                   isActive
@@ -213,7 +213,7 @@ export const HomeView = (props: any) => {
           >
             {visibleProducts.map((p: any, idx: number) => (
                <ProductCard 
-                 key={p.id} 
+                 key={p.id ? `home-prod-${p.id}-${idx}` : `home-prod-${idx}`} 
                  product={p} 
                  onProductClick={onProductClick}
                  index={idx}

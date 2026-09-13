@@ -21,7 +21,7 @@ export const HomeViewSkeleton: React.FC = () => {
       <section className="px-4 py-8 max-w-7xl mx-auto -mt-12 relative z-20">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="bg-white border border-[#e2e8f0] p-5 rounded-2xl flex flex-col gap-2 shadow-sm">
+            <div key={`home-skel-stat-${i}`} className="bg-white border border-[#e2e8f0] p-5 rounded-2xl flex flex-col gap-2 shadow-sm">
               <div className="w-10 h-10 rounded-full bg-zinc-100 mb-2"></div>
               <div className="w-16 h-3 bg-zinc-200 rounded-full"></div>
               <div className="w-20 h-6 bg-zinc-200 rounded-lg"></div>
@@ -44,7 +44,7 @@ export const HomeViewSkeleton: React.FC = () => {
         {/* Products Grid */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mt-6">
           {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-            <div key={i} className="bg-white rounded-2xl border border-zinc-200 overflow-hidden shadow-sm flex flex-col">
+            <div key={`home-skel-prod-${i}`} className="bg-white rounded-2xl border border-zinc-200 overflow-hidden shadow-sm flex flex-col">
               {/* Product Cover */}
               <div className="aspect-[4/3] w-full bg-zinc-200"></div>
               {/* Product Info */}
@@ -89,7 +89,7 @@ export const CategoriesViewSkeleton: React.FC = () => {
         <div className="w-full md:w-64 shrink-0 flex flex-col gap-3">
           <div className="w-32 h-6 bg-zinc-200 rounded-lg mb-2"></div>
           {[1, 2, 3, 4, 5].map((i) => (
-            <div key={i} className="w-full h-12 bg-zinc-200 rounded-xl"></div>
+            <div key={`cat-skel-nav-${i}`} className="w-full h-12 bg-zinc-200 rounded-xl"></div>
           ))}
         </div>
 
@@ -102,7 +102,7 @@ export const CategoriesViewSkeleton: React.FC = () => {
           
           <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {[1, 2, 3, 4, 5, 6].map((i) => (
-              <div key={i} className="bg-white rounded-2xl border border-zinc-200 overflow-hidden shadow-sm flex flex-col">
+              <div key={`cat-skel-prod-${i}`} className="bg-white rounded-2xl border border-zinc-200 overflow-hidden shadow-sm flex flex-col">
                 <div className="aspect-[4/3] w-full bg-zinc-200"></div>
                 <div className="p-4 flex flex-col gap-3 flex-1">
                   <div className="w-full h-5 bg-zinc-200 rounded-lg"></div>

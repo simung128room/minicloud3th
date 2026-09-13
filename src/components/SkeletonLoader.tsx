@@ -23,7 +23,7 @@ export const SkeletonHomeLoader: React.FC = () => {
       {/* Stats Cards Row Skeleton */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4" id="skeleton-stats-row">
         {[...Array(4)].map((_, i) => (
-          <div key={i} className="relative bg-[#0d0d0d] border border-[#374151] rounded-md p-5 overflow-hidden flex flex-col gap-2 shimmer-bg">
+          <div key={`sk-stat-${i}`} className="relative bg-[#0d0d0d] border border-[#374151] rounded-md p-5 overflow-hidden flex flex-col gap-2 shimmer-bg">
             <div className="w-16 h-3.5 rounded bg-card/[0.06] " />
             <div className="w-24 h-8 rounded bg-card/[0.08] " />
             <div className="w-12 h-3 rounded bg-card/[0.06] " />
@@ -34,7 +34,7 @@ export const SkeletonHomeLoader: React.FC = () => {
       {/* Shortcuts Grid Skeleton */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4" id="skeleton-shortcuts-row">
         {[...Array(4)].map((_, i) => (
-          <div key={i} className="bg-[#0d0d0d] border border-[#374151] rounded-md p-4 flex items-center gap-3.5 overflow-hidden relative shimmer-bg">
+          <div key={`sk-short-${i}`} className="bg-[#0d0d0d] border border-[#374151] rounded-md p-4 flex items-center gap-3.5 overflow-hidden relative shimmer-bg">
             <div className="w-10 h-10 rounded-md bg-card/[0.05] shrink-0 " />
             <div className="flex-1 flex flex-col gap-1.5 min-w-0">
               <div className="w-20 h-3.5 rounded bg-card/[0.06] " />
@@ -53,7 +53,7 @@ export const SkeletonHomeLoader: React.FC = () => {
       {/* Categories Grid Skeleton */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4" id="skeleton-categories-row">
         {[...Array(2)].map((_, i) => (
-          <div key={i} className="border border-[#374151] bg-[#121212] rounded-md overflow-hidden shadow-sm flex flex-col relative h-[160px] shimmer-bg">
+          <div key={`sk-cat-${i}`} className="border border-[#374151] bg-[#121212] rounded-md overflow-hidden shadow-sm flex flex-col relative h-[160px] shimmer-bg">
             <div className="w-full h-16 bg-card/[0.04] border-b border-[#374151] " />
             <div className="p-4 flex flex-col justify-between flex-1">
               <div className="w-1/3 h-5 rounded bg-card/[0.06] " />
@@ -75,7 +75,7 @@ export const SkeletonHomeLoader: React.FC = () => {
       {/* Products Grid Skeleton */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4" id="skeleton-products-row">
         {[...Array(8)].map((_, i) => (
-          <div key={i} className="bg-[#121212] border border-[#374151] rounded-md p-3 flex flex-col relative h-[280px] overflow-hidden shimmer-bg">
+          <div key={`sk-prod-${i}`} className="bg-[#121212] border border-[#374151] rounded-md p-3 flex flex-col relative h-[280px] overflow-hidden shimmer-bg">
             <div className="w-full h-32 rounded-md bg-card/[0.04] mb-3 " />
             <div className="w-2/3 h-4 rounded bg-card/[0.06] mb-1.5 " />
             <div className="w-1/3 h-3 rounded bg-card/[0.06] mb-4 " />
@@ -99,7 +99,7 @@ export const SkeletonGenericLoader: React.FC = () => {
       </div>
       <div className="bg-card/[0.01] border border-[#374151] rounded-md p-6 flex flex-col gap-4 relative overflow-hidden shimmer-bg">
         {[...Array(5)].map((_, i) => (
-          <div key={i} className="flex flex-col gap-2 py-3 border-b border-[#374151] last:border-0 shadow-sm">
+          <div key={`sk-gen-${i}`} className="flex flex-col gap-2 py-3 border-b border-[#374151] last:border-0 shadow-sm">
             <div className="w-1/4 h-4 rounded bg-card/[0.05] " />
             <div className="w-3/4 h-3 rounded bg-card/[0.06] " />
           </div>
