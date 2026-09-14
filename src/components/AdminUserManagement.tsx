@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Users, Search, Edit, CheckCircle, Ban, Wallet, ArrowRightLeft, Eye, RefreshCw, HandCoins, Copy, Calendar } from 'lucide-react';
+import { Users, Search, Edit, CheckCircle, Ban, Wallet, ArrowRightLeft, Eye, RefreshCw, HandCoins, Copy } from 'lucide-react';
 import Swal from 'sweetalert2';
 import { motion, AnimatePresence } from 'motion/react';
 import axios from 'axios';
@@ -25,17 +25,13 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({ purcha
 
   const handleUpdateBalance = async (user: any, type: 'add' | 'deduct') => {
     const { value } = await Swal.fire({
-      title: type === 'add' ? 'เพิ่มวงเงิน (Add Balance)' : 'หักวงเงิน (Deduct Balance)',
+      title: type === 'add' ? 'เพิ่มเงิน (Add Balance)' : 'หักเงิน (Deduct Balance)',
       input: 'number',
-      inputLabel: 'จำนวนเงินสะสม (บาท)',
+      inputLabel: 'จำนวนเงิน (บาท)',
       inputAttributes: { min: '1', step: '1' },
       showCancelButton: true,
-      confirmButtonText: 'อัปเดตข้อมูล',
-      cancelButtonText: 'ยกเลิก',
-      confirmButtonColor: '#364153',
-      cancelButtonColor: '#71717a',
-      background: '#121212',
-      color: '#fff'
+      confirmButtonText: 'ยืนยัน',
+      confirmButtonColor: type === 'add' ? '#10b981' : '#dc2626'
     });
 
     if (value) {
@@ -47,16 +43,16 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({ purcha
         await axios.post(`/api/users/${user.id || user.uid}`, { balance: newBalance });
         setSelectedUser({ ...user, balance: newBalance });
         onRefresh();
-        Swal.fire({ icon: 'success', title: 'อัปเดตเครดิตเรียบร้อย!', showConfirmButton: false, timer: 1200, background: '#121212', color: '#fff' });
+        Swal.fire({ icon: 'success', title: 'สำเร็จ!', showConfirmButton: false, timer: 1500 });
       } catch (err) {
-        Swal.fire({ title: 'Error', text: 'ไม่สามารถบันทึกข้อมูลได้', icon: 'error', background: '#121212', color: '#fff' });
+        Swal.fire('Error', 'ไม่สามารถบันทึกข้อมูลได้', 'error');
       }
     }
   };
 
   const handleEditUser = async (user: any) => {
     const { value } = await Swal.fire({
-      title: 'แก้ไขบทบาทและสถานะ',
+      title: 'แก้ไขข้อมูลผู้ใช้',
       html: `
         <div class="space-y-4">
           <input id="swal-role" class="swal2-input w-full" placeholder="Role (Member, Admin, Premium)" value="${user.role || 'Member'}">
@@ -64,11 +60,8 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({ purcha
         </div>
       `,
       showCancelButton: true,
-      confirmButtonText: 'ยืนยัน',
-      confirmButtonColor: '#364153',
-      cancelButtonColor: '#71717a',
-      background: '#121212',
-      color: '#fff',
+      confirmButtonText: 'บันทึก',
+      confirmButtonColor: '#dc2626',
       preConfirm: () => {
         return {
           role: (document.getElementById('swal-role') as HTMLInputElement).value,
@@ -83,9 +76,9 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({ purcha
         await axios.post(`/api/users/${user.id || user.uid}`, value);
         setSelectedUser({ ...user, ...value });
         onRefresh();
-        Swal.fire({ icon: 'success', title: 'อัปเดตข้อมูลแล้ว', showConfirmButton: false, timer: 1200, background: '#121212', color: '#fff' });
+        Swal.fire({ icon: 'success', title: 'อัปเดตข้อมูลแล้ว', showConfirmButton: false, timer: 1500 });
       } catch (err) {
-        Swal.fire({ title: 'Error', text: 'ไม่สามารถอัปเดตได้', icon: 'error', background: '#121212', color: '#fff' });
+        Swal.fire('Error', 'ไม่สามารถบันทึกข้อมูลได้', 'error');
       }
     }
   };
@@ -93,15 +86,12 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({ purcha
   const handleToggleBan = async (user: any) => {
     const isBanned = user.status === 'banned';
     const result = await Swal.fire({
-      title: isBanned ? 'ปลดระงับบัญชีนี้?' : 'ระงับบัญชีผู้ใช้นี้?',
-      text: isBanned ? 'ผู้ใช้จะสามารถเข้าสู่ระบบและสั่งซื้อสินค้าได้ตามปกติ' : 'ผู้ใช้จะไม่สามารถสั่งซื้อสินค้าหรือใช้งานหน้าเว็บได้อีก',
+      title: isBanned ? 'ปลดแบนผู้ใช้นี้?' : 'แบนผู้ใช้นี้เข้าสู่ระบบ?',
+      text: isBanned ? 'ผู้ใช้จะสามารถเข้าสู่ระบบและใช้งานได้ตามปกติ' : 'ผู้ใช้จะไม่สามารถเข้าสู่ระบบและใช้บริการได้อีก',
       icon: 'warning',
       showCancelButton: true,
-      confirmButtonText: isBanned ? 'ปลดระงับ' : 'สกัดกั้นบัญชี',
-      confirmButtonColor: isBanned ? '#364153' : '#EF4444',
-      cancelButtonColor: '#71717a',
-      background: '#121212',
-      color: '#fff'
+      confirmButtonText: isBanned ? 'ปลดแบน' : 'ยืนยันการแบน',
+      confirmButtonColor: isBanned ? '#10b981' : '#dc2626'
     });
 
     if (result.isConfirmed) {
@@ -111,13 +101,14 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({ purcha
         await axios.post(`/api/users/${user.id || user.uid}`, { status: newStatus });
         setSelectedUser({ ...user, status: newStatus });
         onRefresh();
-        Swal.fire({ icon: 'success', title: 'เสร็จสิ้นการตั้งค่า', showConfirmButton: false, timer: 1200, background: '#121212', color: '#fff' });
+        Swal.fire({ icon: 'success', title: 'สำเร็จ!', showConfirmButton: false, timer: 1500 });
       } catch (err) {
-        Swal.fire({ title: 'Error', text: 'ไม่สามารถเปลี่ยนสถานะได้', icon: 'error', background: '#121212', color: '#fff' });
+        Swal.fire('Error', 'ไม่สามารถบันทึกข้อมูลได้', 'error');
       }
     }
   };
 
+  // Match history by ID
   const selectedUID = selectedUser?.id || selectedUser?.uid;
   const userPurchaseHistory = purchaseHistory.filter(h => (h.userId === selectedUID || h.uid === selectedUID));
   const userTopupHistory = topupHistory.filter(h => (h.uid === selectedUID || h.userId === selectedUID));
@@ -126,86 +117,74 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({ purcha
   return (
     <div className="space-y-6">
       {!selectedUser ? (
-        <div className="bg-[#121212] border border-[#374151] rounded-md p-6 relative overflow-hidden flex flex-col min-h-[500px]">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4 border-b border-zinc-850 pb-4">
-            <div>
-               <h3 className="font-medium text-white flex items-center gap-2"><Users className="w-5 h-5 text-[#364153]" /> บัญชีสมาชิก (User Accounts)</h3>
-               <p className="text-xs text-zinc-500 mt-1">บริหารสถิติผู้ซื้อ กำหนดบทบาท หรือปรับลดพอร์ตวงเงินแบบรายบุคคล</p>
-            </div>
-            
-            <div className="relative w-full sm:w-64">
-              <Search className="w-4 h-4 text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2" />
+        <div className="bg-card border border-border border-2 p-6 relative overflow-hidden flex flex-col min-h-[500px] brut-card">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+            <h3 className="font-bold text-white flex items-center gap-2"><Users className="w-5 h-5 text-[#2563EB]" /> จัดการผู้ใช้ (User Management)</h3>
+            <div className="flex bg-card border border-border border-2 p-1 overflow-hidden shrink-0 w-full sm:w-64 relative brut-card">
+              <Search className="w-4 h-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2" />
               <input 
                 type="text" 
-                placeholder="ค้นหาชื่อ, อีเมลสมาชก..."
-                className="w-full bg-zinc-950 border border-zinc-850 focus:border-[#364153] text-xs px-3 py-2 pl-9 rounded-md text-white focus:outline-none transition-colors"
+                placeholder="ค้นหาอีเมล, บทบาท..."
+                className="w-full bg-transparent border-none focus:ring-0 text-xs px-3 py-2 pl-9 font-medium"
                 value={search}
                 onChange={e => setSearch(e.target.value)}
               />
             </div>
           </div>
 
-          <div className="overflow-x-auto border border-zinc-850 rounded-md">
-            <table className="w-full text-left text-sm text-zinc-400">
-              <thead className="text-xs uppercase bg-zinc-950 text-zinc-550 border-b border-zinc-850">
+          <div className="overflow-x-auto border border-border border-2 flex-1">
+            <table className="w-full text-left text-sm text-muted-foreground">
+              <thead className="text-xs uppercase bg-card text-muted-foreground font-bold tracking-wider brut-card">
                 <tr>
-                  <th className="px-5 py-3 font-semibold">สมาชิก</th>
-                  <th className="px-5 py-3 font-semibold text-center">ไอพีล่าสุด</th>
-                  <th className="px-5 py-3 font-semibold">บทบาท</th>
-                  <th className="px-5 py-3 font-semibold">สถานะ</th>
-                  <th className="px-5 py-3 font-semibold text-right">ยอดคงเหลือ</th>
-                  <th className="px-5 py-3 font-semibold text-right">ข้อมูลเชิงลึก</th>
+                  <th className="px-4 py-3 border-b border-border border-2">อีเมล/ผู้ใช้</th>
+                  <th className="px-4 py-3 border-b border-border border-2 text-center">ไอพีล่าสุด</th>
+                  <th className="px-4 py-3 border-b border-border border-2">บทบาท</th>
+                  <th className="px-4 py-3 border-b border-border border-2">สถานะ</th>
+                  <th className="px-4 py-3 border-b border-border border-2 text-right">ยอดเงิน (บาท)</th>
+                  <th className="px-4 py-3 border-b border-border border-2 text-right">จัดการ</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-850/40">
+              <tbody>
                 {filteredUsers.length > 0 ? filteredUsers.map((u, i) => (
-                  <tr key={`adm-usr-row-${u.id || u.username}-${i}`} className="hover:bg-[#050505]/10 transition-colors">
-                    <td className="px-5 py-3.5 font-medium text-white">
-                      <div className="flex items-center gap-2">
-                        <span>{u.email}</span>
-                        <button 
-                           onClick={(e) => {
-                             e.stopPropagation();
-                             navigator.clipboard.writeText(u.email);
-                             Swal.fire({ title: 'Copied!', text: 'คัดลอกอีเมลแล้ว', icon: 'success', timer: 1000, showConfirmButton: false, background: '#121212', color: '#fff' });
-                           }}
-                           className="text-zinc-500 hover:text-white transition-colors"
-                        >
-                           <Copy className="w-3 h-3" />
-                        </button>
-                      </div>
+                  <tr key={i} className="border-b border-border border-2 hover:bg-[#121212]/50 transition-colors">
+                    <td className="px-4 py-4 font-bold text-white flex items-center gap-2">
+                      {u.email}
+                      <button 
+                         onClick={(e) => {
+                           e.stopPropagation();
+                           navigator.clipboard.writeText(u.email);
+                           Swal.fire({ title: 'Copied!', text: 'คัดลอกอีเมลแล้ว', icon: 'success', timer: 1000, showConfirmButton: false, background: '#09090b', color: '#fff' });
+                         }}
+                         className="text-muted-foreground hover:text-zinc-500 transition-colors"
+                      >
+                         <Copy className="w-3 h-3" />
+                      </button>
                     </td>
-                    <td className="px-5 py-3.5 text-center">
-                       <span className="font-mono text-xs text-zinc-500 bg-zinc-950/65 border border-zinc-850 rounded px-2.5 py-0.5">{u.lastLoginIp || u.last_login_ip || 'ไม่ทราบ'}</span>
+                    <td className="px-4 py-4 text-center">
+                       <span className="font-mono text-xs text-muted-foreground bg-card px-2 py-1 border border-border border-2 brut-card">{u.lastLoginIp || u.last_login_ip || 'ไม่ทราบ'}</span>
                     </td>
-                    <td className="px-5 py-3.5">
-                      <span className={`px-2 py-0.5 rounded text-[10px] uppercase tracking-wider font-medium ${
-                        u.role === 'Admin' 
-                          ? 'bg-zinc-500/10 text-zinc-400 border border-[#374151]/20' 
-                          : u.role === 'Premium' 
-                            ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' 
-                            : 'bg-[#0a0a0a]/40 text-zinc-400 border border-[#374151]'
-                      }`}>
-                        {u.role || 'Member'}
+                    <td className="px-4 py-4">
+                      <span className={`px-2 py-1 text-[10px] uppercase tracking-widest font-bold ${u.role === 'Admin' ? 'bg-purple-600/10 text-blue-600 border border-white/10' : u.role === 'Premium' ? 'bg-amber-500/10 text-amber-600 border-amber-100' : 'bg-[#121212] text-muted-foreground border-white/10'}`}>
+                        {u.role}
                       </span>
                     </td>
-                    <td className="px-5 py-3.5">
+                    <td className="px-4 py-4">
                       {u.status === 'banned' ? (
-                         <span className="px-2 py-0.5 text-[10px] rounded uppercase font-medium bg-rose-500/10 border border-rose-500/20 text-rose-400 inline-flex items-center gap-1"><Ban className="w-2.5 h-2.5"/> ระงับส่งออก</span>
+                         <span className="px-2 py-1 text-[10px] uppercase font-bold bg-card text-muted-foreground flex items-center gap-1 w-max brut-card"><Ban className="w-3 h-3"/> ระงับห้ามใช้</span>
                       ) : (
-                         <span className="px-2 py-0.5 text-[10px] rounded uppercase font-medium bg-[#364153]/10 border border-emerald-500/20 text-[#364153] inline-flex items-center gap-1"><CheckCircle className="w-2.5 h-2.5"/> เปิดบริการ</span>
+                         <span className="px-2 py-1 text-[10px] uppercase font-bold bg-primary text-primary-foreground text-emerald-600 flex items-center gap-1 w-max"><CheckCircle className="w-3 h-3"/> ปกติ</span>
                       )}
                     </td>
-                    <td className="px-5 py-3.5 font-medium font-mono text-[#364153] text-right">฿{(u.balance || 0).toLocaleString()}</td>
-                    <td className="px-5 py-3.5 text-right">
-                       <button onClick={() => setSelectedUser(u)} className="px-3 py-1 bg-[#050505] hover:bg-[#0a0a0a] text-zinc-300 hover:text-white text-xs font-medium transition-all inline-flex items-center gap-1.5 rounded border border-[#374151]">
-                          <Eye className="w-3.5 h-3.5" /> ตรวจสอบ
+                    <td className="px-4 py-4 font-bold font-mono text-emerald-600 text-right">{(u.balance || 0).toLocaleString()}</td>
+                    <td className="px-4 py-4 text-right">
+                       <button onClick={() => setSelectedUser(u)} className="px-3 py-1.5 bg-card hover:bg-[#1e1e1e] text-white text-xs font-bold transition-all flex items-center gap-1 ml-auto active:scale-95 brut-card">
+                          <Eye className="w-3 h-3" /> ดูข้อมูล
                        </button>
                     </td>
                   </tr>
                 )) : (
                   <tr>
-                    <td colSpan={6} className="text-center py-12 text-zinc-600 text-xs font-semibold">ไม่พบข้อมูลสมาชิกตรงตามคำค้นหา</td>
+                    <td colSpan={5} className="text-center py-12 text-muted-foreground font-medium text-xs">ไม่พบข้อมูลผู้ใช้</td>
                   </tr>
                 )}
               </tbody>
@@ -219,50 +198,45 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({ purcha
             initial={{ opacity: 0, scale: 0.98 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.98 }}
-            className="bg-[#121212] border border-[#374151] rounded-md overflow-hidden flex flex-col shadow-md"
+            className="bg-card border border-border border-2 overflow-hidden flex flex-col brut-card"
           >
-            <div className="p-6 md:p-8 bg-zinc-950 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 border-b border-zinc-850">
+            <div className="p-6 md:p-8 bg-card border-b border-border border-2 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 brut-card">
               <div className="flex items-center gap-4">
-                <div className="w-14 h-14 bg-[#050505] border border-[#374151] rounded-md text-zinc-400 flex items-center justify-center shrink-0">
-                  <Users className="w-6 h-6 text-[#364153]" />
+                <div className="w-16 h-16 bg-card border border-border border-2 flex items-center justify-center p-1 shrink-0 relative overflow-hidden brut-card">
+                   <div className="bg-card w-full h-full flex items-center justify-center text-muted-foreground brut-card">
+                     <Users className="w-6 h-6" />
+                   </div>
                 </div>
                 <div>
-                  <h2 className="text-base font-medium text-white mb-1">{selectedUser.email}</h2>
-                  <div className="flex items-center gap-2 text-[10px] font-medium mt-1">
-                    <span className={`px-2 py-0.5 rounded border ${selectedUser.role === 'Admin' ? 'bg-zinc-500/10 border-[#374151]/20 text-zinc-400' : selectedUser.role === 'Premium' ? 'bg-amber-500/10 border-amber-500/20 text-amber-400' : 'bg-zinc-850 text-zinc-400 border-[#374151]'}`}>
-                      {selectedUser.role || 'Member'}
+                  <h2 className="text-xl font-bold text-white mb-1">{selectedUser.email}</h2>
+                  <div className="flex items-center gap-2 text-xs font-bold">
+                    <span className={`px-2 py-0.5 rounded uppercase tracking-widest ${selectedUser.role === 'Admin' ? 'bg-purple-600/20 text-blue-600' : selectedUser.role === 'Premium' ? 'bg-amber-100 text-amber-600' : 'bg-zinc-200 text-muted-foreground'}`}>
+                      {selectedUser.role}
                     </span>
-                    <span className={`px-2 py-0.5 rounded border ${selectedUser.status === 'banned' ? 'bg-rose-500/10 border-rose-500/20 text-rose-400' : 'bg-[#364153]/10 border-emerald-500/20 text-[#364153]'}`}>
-                      {selectedUser.status === 'banned' ? 'ACCOUNT BANNED' : 'ACCOUNT ACTIVE'}
+                    <span className={`px-2 py-0.5 rounded uppercase tracking-widest flex items-center gap-1 ${selectedUser.status === 'banned' ? 'bg-zinc-200 text-muted-foreground' : 'bg-emerald-100 text-emerald-600'}`}>
+                      {selectedUser.status === 'banned' ? <><Ban className="w-3 h-3"/> Banned</> : <><CheckCircle className="w-3 h-3"/> Active</>}
                     </span>
                   </div>
                 </div>
               </div>
               
-              <button 
-                onClick={() => setSelectedUser(null)} 
-                className="px-4 py-2 border border-[#374151] bg-[#050505] hover:bg-zinc-850 text-zinc-400 hover:text-white text-xs font-medium transition-all rounded-md"
-              >
-                กลับไปหน้ารายชื่อ
-              </button>
+              <div className="flex flex-wrap gap-2">
+                <button onClick={() => setSelectedUser(null)} className="px-4 py-2 border border-border border-2 bg-card hover:bg-[#121212] text-muted-foreground text-xs font-bold transition-all brut-card">กลับไปหน้ารายชื่อ</button>
+              </div>
             </div>
 
-            <div className="border-b border-zinc-850 bg-[#050505]/10 px-6 overflow-x-auto">
-              <div className="flex items-center gap-2 py-3 w-max">
+            <div className="border-b border-border border-2 bg-card px-6 overflow-x-auto no-scrollbar brut-card">
+              <div className="flex items-center gap-2 py-4 w-max">
                 {[
-                  { id: 'info', label: 'ฟังก์ชันการจัดการ' },
-                  { id: 'purchase', label: 'ข้อมูลจัดซื้อ' },
-                  { id: 'topup', label: 'ยอดโอนเข้า' },
-                  { id: 'keys', label: 'รหัสเติมสะสม' }
+                  { id: 'info', label: 'ข้อมูลทั่วไป & จัดการ' },
+                  { id: 'purchase', label: 'ประวัติซื้อสินค้า' },
+                  { id: 'topup', label: 'ประวัติเติมเงิน' },
+                  { id: 'keys', label: 'ประวัติใช้คีย์' }
                 ].map(tab => (
                   <button
                     key={tab.id}
                     onClick={() => setActionTab(tab.id as any)}
-                    className={`px-4 py-1.5 text-xs font-medium transition-all rounded-md border ${ 
-                      actionTab === tab.id 
-                        ? 'bg-zinc-950 text-white border-[#374151] font-medium' 
-                        : 'bg-[#050505]/30 border-transparent text-zinc-500 hover:text-zinc-300' 
-                    }`}
+                    className={`px-4 py-2 text-xs font-bold transition-all whitespace-nowrap ${ actionTab === tab.id ? 'bg-[#0a0a0a] text-white ring-1 ring-zinc-900' : 'bg-[#121212] text-muted-foreground hover:bg-[#121212] hover:text-zinc-400' }`}
                   >
                     {tab.label}
                   </button>
@@ -270,150 +244,139 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({ purcha
               </div>
             </div>
 
-            <div className="p-6 md:p-8 min-h-[300px]">
+            <div className="p-6 md:p-8 bg-card min-h-[300px] brut-card">
               {actionTab === 'info' && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  {/* Financial Controls */}
+                  {/* Info */}
                   <div className="space-y-6">
-                    <div className="bg-zinc-950/45 border border-zinc-850 p-6 rounded-md shadow-sm">
-                      <h4 className="text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-4 flex items-center gap-2 border-b border-[#374151] pb-2.5">
-                        <Wallet className="w-3.5 h-3.5 text-[#364153]" /> สถานะพอร์ตและวงเงิน
-                      </h4>
-                      <div className="mb-6">
-                         <p className="text-[10px] font-medium text-zinc-500 uppercase tracking-wider mb-1">เงินคงค้างกระเป๋า</p>
-                         <p className="text-2xl font-semibold font-mono text-[#364153]">฿{(selectedUser.balance || 0).toLocaleString()}</p>
-                      </div>
-                      <div className="flex gap-2.5">
-                        <button 
-                          onClick={() => handleUpdateBalance(selectedUser, 'add')} 
-                          className="flex-1 py-2 border border-emerald-500/30 bg-[#364153]/5 text-[#364153] hover:bg-[#364153]/15 rounded-md text-xs font-medium transition-all flex items-center justify-center gap-2"
-                        >
-                          <HandCoins className="w-4 h-4" /> เพิ่มพวงกระเป๋าเงิน
-                        </button>
-                        <button 
-                          onClick={() => handleUpdateBalance(selectedUser, 'deduct')} 
-                          className="flex-1 py-2 border border-[#374151] bg-[#050505] text-zinc-400 hover:bg-[#0a0a0a] rounded-md text-xs font-medium transition-all flex items-center justify-center gap-1.5"
-                        >
-                          <ArrowRightLeft className="w-4 h-4" /> หักเครดิต
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="p-4 border border-zinc-850 flex justify-between items-center bg-zinc-950/20 rounded-md">
-                      <div>
-                        <p className="text-[10px] font-medium text-zinc-500 uppercase tracking-widest">วันที่สมัครสมาชก</p>
-                        <p className="text-sm font-medium text-zinc-300 mt-1">{new Date(selectedUser.registered || Date.now()).toLocaleString('th-TH')}</p>
-                      </div>
-                      <Calendar className="w-4 h-4 text-zinc-500" />
-                    </div>
-
-                    <div className="p-4 border border-zinc-850 bg-zinc-950/20 space-y-3.5 rounded-md">
-                      <div>
-                        <p className="text-[10px] font-medium text-zinc-500 uppercase">ตำแหน่งไอพีสุดท้าย</p>
-                        <p className="text-xs font-mono text-[#364153] font-medium bg-zinc-950 w-max px-2.5 py-0.5 rounded border border-zinc-850 mt-1">{selectedUser.lastLoginIp || selectedUser.last_login_ip || 'ไม่ระบุ'}</p>
-                      </div>
-                      <div className="grid grid-cols-2 gap-4 pt-1.5 border-t border-[#374151]/60">
+                    <div className="bg-card border border-border border-2 p-6 brut-card">
+                      <h4 className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-4 flex items-center gap-2"><Wallet className="w-4 h-4"/> ข้อมูลการเงิน</h4>
+                      <div className="flex items-end justify-between mb-6">
                         <div>
-                           <p className="text-[10px] font-medium text-zinc-500 uppercase">บราวเซอร์อุปกรณ์</p>
-                           <p className="text-xs font-semibold text-zinc-400 mt-0.5">{selectedUser.lastLoginSource || selectedUser.last_login_source || 'ไม่ระบุ'}</p>
+                           <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">ยอดเงินคงเหลือ</p>
+                           <p className="text-3xl font-black font-mono text-blue-500">฿{(selectedUser.balance || 0).toLocaleString()}</p>
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <button onClick={() => handleUpdateBalance(selectedUser, 'add')} className="flex-1 py-2.5 bg-primary text-primary-foreground border border-emerald-500/30 text-emerald-600 hover:bg-emerald-100 text-xs font-bold transition-all flex items-center justify-center gap-2 outline-none">
+                          <HandCoins className="w-4 h-4" /> เพิ่มเงิน
+                        </button>
+                        <button onClick={() => handleUpdateBalance(selectedUser, 'deduct')} className="flex-1 py-2.5 bg-primary text-primary-foreground border border-[#3B82F6]/30 text-blue-600 hover:bg-purple-600/20 text-xs font-bold transition-all flex items-center justify-center gap-2 outline-none">
+                          <ArrowRightLeft className="w-4 h-4" /> หักเงิน
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="p-4 border border-border border-2 flex justify-between items-center bg-card brut-card">
+                      <div>
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">วันที่ลงทะเบียน</p>
+                        <p className="text-sm font-bold text-muted-foreground mt-0.5">{new Date(selectedUser.registered).toLocaleString('th-TH')}</p>
+                      </div>
+                      <CalendarIcon className="w-5 h-5 text-muted-foreground" />
+                    </div>
+
+                    <div className="p-4 border border-border border-2 bg-card space-y-3 brut-card">
+                      <div>
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">ไอพีล่าสุด</p>
+                        <p className="text-sm font-mono text-white bg-card w-max px-2 py-1 rounded border border-border border-2 brut-card">{selectedUser.lastLoginIp || selectedUser.last_login_ip || 'ไม่ทราบ'}</p>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                           <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">อุปกรณ์</p>
+                           <p className="text-xs font-bold text-muted-foreground">{selectedUser.lastLoginSource || selectedUser.last_login_source || 'ไม่ทราบ'}</p>
                         </div>
                         <div>
-                           <p className="text-[10px] font-medium text-zinc-500 uppercase">ตำแหน่งเซสชัน</p>
-                           <p className="text-xs font-semibold text-zinc-400 mt-0.5">{selectedUser.lastLoginCountry || selectedUser.last_login_country || 'ประเทศไทย'}</p>
+                           <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">ประเทศ</p>
+                           <p className="text-xs font-bold text-muted-foreground flex items-center gap-1">
+                             {selectedUser.lastLoginCountry || selectedUser.last_login_country || 'ไม่ทราบ'}
+                           </p>
                         </div>
                       </div>
                     </div>
                   </div>
 
-                  {/* Actions column */}
+                  {/* Actions */}
                   <div className="space-y-6">
-                    <div className="bg-zinc-950/45 border border-zinc-850 p-6 rounded-md">
-                      <h4 className="text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-4 border-b border-[#374151] pb-2.5">การควบคุมเครือข่ายบัญชี</h4>
+                    <div className="bg-card border border-border border-2 p-6 brut-card">
+                      <h4 className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-4">การจัดการบัญชี</h4>
                       
-                      <div className="space-y-3.5">
-                        <button onClick={() => handleEditUser(selectedUser)} className="w-full flex items-center justify-between p-3.5 bg-[#050505]/50 border border-zinc-850 hover:border-[#374151] rounded-md transition-all group">
+                      <div className="space-y-3">
+                        <button onClick={() => handleEditUser(selectedUser)} className="w-full flex items-center justify-between p-3.5 bg-card border border-border border-2 hover:border-white/20 transition-all group brut-card">
                            <div className="flex items-center gap-3">
-                             <div className="p-2 bg-zinc-950 rounded-md text-zinc-500"><Edit className="w-4 h-4" /></div>
-                             <div className="flex flex-col items-start text-left leading-tight">
-                                <span className="text-xs font-semibold text-white group-hover:text-[#364153] transition-colors">ยกระดับ/ปรับบทบาทผู้สิทธิ์</span>
-                                <span className="text-[10px] text-zinc-500 mt-1">เปลี่ยนขอบเขต Member / Premium / Admin</span>
+                             <div className="p-2 bg-card group-hover:bg-[#121212] transition-colors brut-card"><Edit className="w-4 h-4 text-muted-foreground" /></div>
+                             <div className="flex flex-col items-start leading-tight">
+                                <span className="text-sm font-bold text-white">แก้ไขข้อมูลบทบาท</span>
+                                <span className="text-[10px] text-muted-foreground font-medium mt-0.5">เปลี่ยนสิทธิ์ Member / Premium</span>
                              </div>
                            </div>
                         </button>
                         
                         <button onClick={async () => {
                           const { value: password } = await Swal.fire({
-                            title: 'ตั้งรหัสผ่านใหม่ (Force Override)', 
+                            title: 'เปลี่ยนรหัสผ่าน', 
                             input: 'password', 
-                            inputPlaceholder: 'ใส่รหัสผ่านใหม่ตรงนี้...', 
+                            inputPlaceholder: 'New Password...', 
                             showCancelButton: true, 
-                            confirmButtonText: 'เปลี่ยนรหัส', 
-                            confirmButtonColor: '#364153',
-                            cancelButtonColor: '#71717a',
-                            background: '#121212',
-                            color: '#fff'
+                            confirmButtonText: 'อัปเดต', 
+                            confirmButtonColor: '#dc2626'
                           });
                           if (password) {
                             try {
-                               Swal.showLoading();
-                               await axios.post(`/api/users/${selectedUser.id || selectedUser.uid}/password`, { password });
-                               Swal.fire({ icon: 'success', title: 'เปลี่ยนรหัสผ่านสำเร็จ', showConfirmButton: false, timer: 1200, background: '#121212', color: '#fff' });
+                              Swal.showLoading();
+                              await axios.post(`/api/users/${selectedUser.id || selectedUser.uid}/password`, { password });
+                              Swal.fire({ icon: 'success', title: 'เปลี่ยนรหัสผ่านแล้ว', showConfirmButton: false, timer: 1500 });
                             } catch (err: any) {
-                               Swal.fire({ title: 'Error', text: err.response?.data?.error || 'ไม่สามารถเปลี่ยนรหัสได้', icon: 'error', background: '#121212', color: '#fff' });
+                              Swal.fire('Error', err.response?.data?.error || 'ไม่สามารถเปลี่ยนรหัสผ่านได้', 'error');
                             }
                           }
-                        }} className="w-full flex items-center justify-between p-3.5 bg-[#050505]/50 border border-zinc-850 hover:border-[#374151] rounded-md transition-all group">
+                        }} className="w-full flex items-center justify-between p-3.5 bg-card border border-border border-2 hover:border-white/20 transition-all group brut-card">
                            <div className="flex items-center gap-3">
-                             <div className="p-2 bg-zinc-950 rounded-md text-zinc-500"><RefreshCw className="w-4 h-4" /></div>
-                             <div className="flex flex-col items-start text-left leading-tight">
-                                <span className="text-xs font-semibold text-white group-hover:text-[#364153] transition-colors">บังคับเปลี่ยนรหัสผ่าน</span>
-                                <span className="text-[10px] text-zinc-500 mt-1">กำหนดคีย์พาสเวิร์ดใหม่ทดแทนค่าเดิมทันที</span>
+                             <div className="p-2 bg-card group-hover:bg-[#121212] transition-colors brut-card"><RefreshCw className="w-4 h-4 text-muted-foreground" /></div>
+                             <div className="flex flex-col items-start leading-tight">
+                                <span className="text-sm font-bold text-white">เปลี่ยนรหัสผ่าน</span>
+                                <span className="text-[10px] text-muted-foreground font-medium mt-0.5">Force reset password</span>
                              </div>
                            </div>
                         </button>
 
-                        <button onClick={() => handleToggleBan(selectedUser)} className={`w-full flex items-center justify-between p-3.5 rounded-md border transition-all ${selectedUser.status === 'banned' ? 'border-emerald-500/20 bg-[#364153]/5 hover:border-emerald-500/40' : 'border-rose-500/20 bg-rose-500/5 hover:border-rose-500/40'}`}>
+                        <button onClick={() => handleToggleBan(selectedUser)} className={`w-full flex items-center justify-between p-3.5 bg-card border ${selectedUser.status === 'banned' ? 'border-emerald-500/30 hover:border-emerald-500/50' : 'border-[#3B82F6]/30 hover:border-[#3B82F6]/40'} transition-all group brut-card`}>
                            <div className="flex items-center gap-3">
-                             <div className={`p-2 rounded-md ${selectedUser.status === 'banned' ? 'bg-[#364153]/10 text-[#364153]' : 'bg-rose-500/10 text-rose-400'}`}>
-                                {selectedUser.status === 'banned' ? <CheckCircle className="w-4 h-4" /> : <Ban className="w-4 h-4" />}
+                             <div className={`p-2 transition-colors ${selectedUser.status === 'banned' ? 'bg-blue-600/10 group-hover:bg-emerald-100' : 'bg-purple-600/10 group-hover:bg-purple-600/20'}`}>
+                                {selectedUser.status === 'banned' ? <CheckCircle className="w-4 h-4 text-emerald-600" /> : <Ban className="w-4 h-4 text-blue-600" />}
                              </div>
-                             <div className="flex flex-col items-start text-left leading-tight">
-                                <span className={`text-xs font-semibold ${selectedUser.status === 'banned' ? 'text-[#364153]' : 'text-rose-400'}`}>
-                                  {selectedUser.status === 'banned' ? 'ปลดระงับบัญชีนี้' : 'สกัดกั้น/แบนบัญชีนี้'}
-                                </span>
-                                <span className="text-[10px] text-zinc-500 mt-1">
-                                  {selectedUser.status === 'banned' ? 'เปิดให้ลูกค้ากลับเข้ามาใช้งานเว็บ' : 'ล็อกอินไม่ผ่านเด็ดขาด'}
-                                </span>
+                             <div className="flex flex-col items-start leading-tight">
+                                <span className={`text-sm font-bold ${selectedUser.status === 'banned' ? 'text-emerald-700' : 'text-[#1D4ED8]'}`}>{selectedUser.status === 'banned' ? 'ปลดแบนผู้ใช้นี้' : 'ระงับ/แบนผู้ใช้นี้'}</span>
+                                <span className={`text-[10px] font-medium mt-0.5 ${selectedUser.status === 'banned' ? 'text-emerald-600/70' : 'text-blue-600/70'}`}>{selectedUser.status === 'banned' ? 'ผู้ใช้จะสามารถล็อกอินได้' : 'ป้องกันการเข้าสู่ระบบ'}</span>
                              </div>
                            </div>
                         </button>
 
                         <button onClick={async () => {
                           const result = await Swal.fire({
-                            title: 'ลบบัญชีถาวร?',
-                            text: 'ประวัติการทำรายการทุกออเดอร์ของผู้ซื้อรายนี้จะสูญสลายถาวร',
+                            title: 'ยืนยันการลบผู้ใช้?',
+                            text: 'การลบจะไม่สามารถย้อนกลับได้',
                             icon: 'warning',
                             showCancelButton: true,
-                            confirmButtonText: 'ลบทันที',
-                            confirmButtonColor: '#EF4444',
-                            cancelButtonColor: '#71717a',
-                            background: '#121212',
-                            color: '#fff'
+                            confirmButtonText: 'ลบข้อมูลถาวร',
+                            confirmButtonColor: '#dc2626'
                           });
                           if (result.isConfirmed) {
                             try {
-                               Swal.showLoading();
-                               await axios.delete(`/api/users/${selectedUser.id || selectedUser.uid}`);
-                               Swal.fire({ icon: 'success', title: 'ระเบิดบัญชีผู้ใช้แล้ว', showConfirmButton: false, timer: 1200, background: '#121212', color: '#fff' });
-                               setSelectedUser(null);
-                               onRefresh();
+                              Swal.showLoading();
+                              await axios.delete(`/api/users/${selectedUser.id || selectedUser.uid}`);
+                              Swal.fire({ icon: 'success', title: 'ลบผู้ใช้แล้ว', showConfirmButton: false, timer: 1500 });
+                              setSelectedUser(null);
+                              onRefresh();
                             } catch (err: any) {
-                               Swal.fire({ title: 'Error', text: err.response?.data?.error || 'ไม่สามารถลบผู้ใช้งานได้', icon: 'error', background: '#121212', color: '#fff' });
+                              Swal.fire('Error', err.response?.data?.error || 'ไม่สามารถลบข้อมูลได้', 'error');
                             }
                           }
-                        }} className="w-full flex items-center justify-between p-3 border border-rose-500/10 hover:border-rose-500/30 bg-rose-500/5 hover:bg-rose-500/10 text-rose-400 rounded-md transition-all scale-[0.99] hover:scale-[1] mt-6">
-                           <div className="flex-1 text-center py-1">
-                              <span className="text-xs font-medium">ลบข้อมูลบัญชีผู้ใช้งานคนนี้ถาวร</span>
+                        }} className="w-full flex items-center justify-between p-3.5 bg-red-500/5 hover:bg-red-500/10 border border-red-500/10 hover:border-red-500/30 transition-all group mt-6">
+                           <div className="flex items-center gap-3">
+                             <div className="flex flex-col items-start leading-tight px-2 py-1">
+                                <span className="text-sm font-bold text-red-500 group-hover:text-red-400 transition-colors">ลบข้อมูลผู้ใช้นี้ถาวร</span>
+                                <span className="text-[10px] text-red-500/60 font-medium mt-0.5">Delete account & data</span>
+                             </div>
                            </div>
                         </button>
                       </div>
@@ -425,42 +388,42 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({ purcha
               {actionTab === 'purchase' && (
                 <div className="space-y-3">
                   {userPurchaseHistory.length > 0 ? userPurchaseHistory.map((h, i) => (
-                    <div key={`adm-usr-po-${h.id || i}`} className="flex justify-between items-center p-4 bg-zinc-950/40 border border-zinc-850 rounded-md">
+                    <div key={i} className="flex justify-between items-center p-4 border border-border border-2">
                       <div>
-                        <p className="text-sm font-medium text-white">{h.productName}</p>
-                        <p className="text-xs text-zinc-500 mt-1">{new Date(h.date).toLocaleString('th-TH')}</p>
+                        <p className="text-sm font-bold">{h.productName}</p>
+                        <p className="text-xs text-muted-foreground">{new Date(h.date).toLocaleString('th-TH')}</p>
                       </div>
-                      <p className="font-medium text-rose-400 font-mono">-฿{h.price}</p>
+                      <p className="font-bold text-[#2563EB] font-mono">-฿{h.price}</p>
                     </div>
-                  )) : <p className="text-center text-xs font-semibold text-zinc-550 py-12">ไม่มีบันทึกการจัดซื้อสินค้าชิ้นใดของสมาชิกลายนี้</p>}
+                  )) : <p className="text-center text-sm font-bold text-muted-foreground py-10">ไม่พบประวัติการซื้อ</p>}
                 </div>
               )}
 
               {actionTab === 'topup' && (
                 <div className="space-y-3">
                   {userTopupHistory.length > 0 ? userTopupHistory.map((h, i) => (
-                    <div key={`adm-usr-topup-${h.id || i}`} className="flex justify-between items-center p-4 bg-zinc-950/40 border border-zinc-850 rounded-md">
+                    <div key={i} className="flex justify-between items-center p-4 border border-border border-2">
                       <div>
-                        <p className="text-sm font-medium text-white">เติมเงิน ({h.method})</p>
-                        <p className="text-xs text-zinc-500 mt-1">{new Date(h.date).toLocaleString('th-TH')}</p>
+                        <p className="text-sm font-bold">เติมเงิน ({h.method})</p>
+                        <p className="text-xs text-muted-foreground">{new Date(h.date).toLocaleString('th-TH')}</p>
                       </div>
-                      <p className="font-medium text-[#364153] font-mono">+฿{h.amount}</p>
+                      <p className="font-bold text-blue-500 font-mono">+฿{h.amount}</p>
                     </div>
-                  )) : <p className="text-center text-xs font-semibold text-zinc-550 py-12">ไม่มีรายการสถิติการเติมเครดิตเข้าสโตร์</p>}
+                  )) : <p className="text-center text-sm font-bold text-muted-foreground py-10">ไม่พบประวัติการเติมเงิน</p>}
                 </div>
               )}
 
               {actionTab === 'keys' && (
                 <div className="space-y-3">
                   {userKeysHistory.length > 0 ? userKeysHistory.map((k, i) => (
-                    <div key={`adm-usr-key-${k.id || k.key || i}`} className="flex justify-between items-center p-4 bg-zinc-950/40 border border-zinc-850 rounded-md">
+                    <div key={i} className="flex justify-between items-center p-4 border border-border border-2">
                       <div>
-                        <p className="text-sm font-medium font-mono text-zinc-300">{k.key || k.code || k.name || 'Key-' + i}</p>
-                        <p className="text-xs text-zinc-500 mt-1">{new Date(k.used_at || k.date || new Date()).toLocaleString('th-TH')}</p>
+                        <p className="text-sm font-bold font-mono">{k.key || k.code || k.name || 'Key-' + i}</p>
+                        <p className="text-xs text-muted-foreground">{new Date(k.used_at || k.date || new Date()).toLocaleString('th-TH')}</p>
                       </div>
-                      <span className="text-[10px] font-medium text-[#364153] px-2.5 py-0.5 rounded-full bg-[#364153]/10 border border-emerald-500/20 uppercase tracking-widest">Used / เติมแล้ว</span>
+                      <p className="font-bold text-blue-500 text-xs px-2 py-1 bg-primary text-primary-foreground rounded uppercase">Used</p>
                     </div>
-                  )) : <p className="text-center text-xs font-semibold text-zinc-550 py-12">ไม่เคยพบรายการสะสมรางวัลหรือรหัสของขวัญ</p>}
+                  )) : <p className="text-center text-sm font-bold text-muted-foreground py-10">ไม่พบประวัติใช้คีย์</p>}
                 </div>
               )}
             </div>
@@ -470,3 +433,9 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({ purcha
     </div>
   );
 };
+
+const CalendarIcon = (props: React.ComponentProps<'svg'>) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/>
+  </svg>
+)

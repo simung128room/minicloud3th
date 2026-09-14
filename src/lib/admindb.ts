@@ -4,17 +4,9 @@ import path from 'path';
 
 import os from 'os';
 import crypto from 'crypto';
-let localDBPath = path.join(process.cwd(), '.data');
-try {
-  if (!fs.existsSync(localDBPath)) {
-    fs.mkdirSync(localDBPath, { recursive: true });
-  }
-} catch (e) {
-  // Fallback to /tmp if process.cwd() is read-only (like in some production environments)
-  localDBPath = path.join(os.tmpdir(), '.data');
-  if (!fs.existsSync(localDBPath)) {
-    fs.mkdirSync(localDBPath, { recursive: true });
-  }
+const localDBPath = os.tmpdir() + `/.data`;
+if (!fs.existsSync(localDBPath)) {
+  fs.mkdirSync(localDBPath, { recursive: true });
 }
 
 const localTableCache: Record<string, any[]> = {};
@@ -54,23 +46,13 @@ async function saveLocalTable(collection: string, data: any) {
   await writePromises[collection];
 }
 
-const isServer = typeof window === 'undefined';
-const supabaseUrl = isServer ? (process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL) : '';
-const supabaseKey = isServer 
-  ? (process.env.SUPABASE_SERVICE_ROLE_KEY || '').trim()
-  : '';
+const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY;
 
-if (isServer && !supabaseKey) {
-  throw new Error("SUPABASE_SERVICE_ROLE_KEY is required for adminDb operations.");
-}
-
-// Ensure the key is an actual JWT/ASCII string and not Thai text to prevent Node Headers ByteString crash
-const isValidKey = /^[A-Za-z0-9\-_.]+$/.test(supabaseKey);
-
-const isSupabaseAdminConfigured = !!(supabaseUrl && supabaseUrl.startsWith('http') && supabaseKey && isValidKey);
+const isSupabaseAdminConfigured = !!(supabaseUrl && supabaseUrl.startsWith('http') && supabaseKey);
 
 if (!isSupabaseAdminConfigured) {
-  console.warn('Supabase service role variables are missing, invalid, or contain non-ascii characters');
+  console.warn('Supabase service role variables are missing or invalid');
 }
 
 const safeUrl = isSupabaseAdminConfigured ? supabaseUrl : 'https://placeholder.supabase.co';
@@ -84,25 +66,7 @@ export const supabaseAdmin = createClient(safeUrl, safeKey, {
   }
 });
 
-type DbColumn = 
-  | 'user_id' | 'product_name' | 'is_premium' | 'updated_at'
-  | 'created_at' | 'stock_data' | 'image_url' | 'original_price'
-  | 'is_popular' | 'sold_count' | 'banner_url' | 'secret_data'
-  | 'bill_number' | 'discord_claimed' | 'web_claimed' | 'product_id'
-  | 'is_deleted' | 'category_id' | 'is_highlight' | 'custom_page_id'
-  | 'youtube_url' | 'is_preorder' | 'preorder_options' | 'userid'
-  | 'productname' | 'ispremium' | 'updatedat' | 'createdat' | 'stockdata'
-  | 'image' | 'username' | 'isdeleted';
-
-type CamelField =
-  | 'userId' | 'productName' | 'isPremium' | 'updatedAt'
-  | 'createdAt' | 'stockData' | 'imageUrl' | 'originalPrice'
-  | 'isPopular' | 'soldCount' | 'bannerUrl' | 'secretData' | 'username'
-  | 'billNumber' | 'discordClaimed' | 'webClaimed' | 'productId'
-  | 'isDeleted' | 'categoryId' | 'isHighlight' | 'customPageId'
-  | 'youtubeUrl' | 'isPreOrder' | 'preOrderOptions';
-
-const camelMap: Record<string, CamelField> = {
+const camelMap: Record<string, string> = {
   userid: 'userId',
   product_name: 'productName',
   productname: 'productName',
@@ -125,18 +89,10 @@ const camelMap: Record<string, CamelField> = {
   bill_number: 'billNumber',
   discord_claimed: 'discordClaimed',
   web_claimed: 'webClaimed',
-  product_id: 'productId',
-  is_deleted: 'isDeleted',
-  isdeleted: 'isDeleted',
-  category_id: 'categoryId',
-  is_highlight: 'isHighlight',
-  custom_page_id: 'customPageId',
-  youtube_url: 'youtubeUrl',
-  is_preorder: 'isPreOrder',
-  preorder_options: 'preOrderOptions'
+  product_id: 'productId'
 };
 
-const forwardMap: Record<CamelField, DbColumn> = {
+const forwardMap: Record<string, string> = {
   imageUrl: 'image_url',
   bannerUrl: 'banner_url',
   createdAt: 'created_at',
@@ -152,51 +108,10 @@ const forwardMap: Record<CamelField, DbColumn> = {
   billNumber: 'bill_number',
   discordClaimed: 'discord_claimed',
   webClaimed: 'web_claimed',
-  productId: 'product_id',
-  isDeleted: 'is_deleted',
-  categoryId: 'category_id',
-  isHighlight: 'is_highlight',
-  customPageId: 'custom_page_id',
-  youtubeUrl: 'youtube_url',
-  isPreOrder: 'is_preorder',
-  preOrderOptions: 'preorder_options',
-  username: 'username'
+  productId: 'product_id'
 };
 
 const missingColumns = new Set<string>();
-
-export async function initializeAdminDb(): Promise<void> {
-  await hydrateMissingColumns();
-  console.log('[AdminDB] missingColumns hydrated:', Array.from(missingColumns));
-}
-
-// Pre-hydrate from DB to persist across serverless instances
-let isMissingColumnsHydrated = false;
-async function hydrateMissingColumns() {
-  if (isMissingColumnsHydrated) return;
-  try {
-    const { data } = await supabaseAdmin.from('custom_pages').select('content').eq('slug', '_sys:missing_columns').limit(1);
-    if (data && data[0] && data[0].content) {
-      const arr = JSON.parse(data[0].content);
-      if (Array.isArray(arr)) arr.forEach(col => missingColumns.add(col));
-    }
-  } catch(e) {}
-  isMissingColumnsHydrated = true;
-}
-
-async function persistMissingColumn(colName: string) {
-  missingColumns.add(colName);
-  try {
-    const arr = Array.from(missingColumns);
-    const payload = { slug: '_sys:missing_columns', title: 'SystemConfig', content: JSON.stringify(arr) };
-    const { data: existing } = await supabaseAdmin.from('custom_pages').select('id').eq('slug', '_sys:missing_columns').limit(1);
-    if (existing && existing[0]) {
-      await supabaseAdmin.from('custom_pages').update(payload).eq('id', existing[0].id);
-    } else {
-      await supabaseAdmin.from('custom_pages').insert([payload]);
-    }
-  } catch(e) {}
-}
 
 function toDB(data: any, collection?: string): any {
   if (!data || typeof data !== 'object') return data;
@@ -247,12 +162,8 @@ function extractMissingColumn(errMsg: string): string | null {
   if (m3) {
     let col = m3[1];
     if (col.includes('.')) col = col.split('.').pop() || col;
-    // Strip leading/trailing double quotes
-    if (col.startsWith('"') && col.endsWith('"')) col = col.substring(1, col.length - 1);
     return col;
   }
-  const m4 = errMsg.match(/column "([^"]+)"/);
-  if (m4) return m4[1];
   return null;
 }
 
@@ -274,9 +185,6 @@ class SupabaseDoc {
   }
 
   async get() {
-    if (!isSupabaseAdminConfigured) {
-        return { exists: false, data: () => null };
-    }
     if (isVirtual(this.collection)) {
         const slug = getVirtualSlug(this.collection, this.id);
         const legacySlug = `v:${this.collection}:${this.id}`;
@@ -322,7 +230,7 @@ class SupabaseDoc {
           console.warn(`Column error in fetch from ${this.collection}: ${err.message}. Adding to blacklist and retrying...`);
           const col = extractMissingColumn(err.message);
           if (col) {
-             await persistMissingColumn(`${this.collection}.${col}`);
+             missingColumns.add(`${this.collection}.${col}`);
              throw new Error(`Schema cache error on Supabase for table ${this.collection}: ${err.message}. Try reloading the database schema cache.`);
           }
         }
@@ -335,12 +243,11 @@ class SupabaseDoc {
     return { exists: false, data: () => null };
   }
   async update(data: any) {
-    if (!isSupabaseAdminConfigured) return;
     if (isVirtual(this.collection)) {
         const slug = getVirtualSlug(this.collection, this.id);
         const legacySlug = `v:${this.collection}:${this.id}`;
         try {
-            const { data: matchingRow } = await supabaseAdmin.from('custom_pages').select('id, slug, content').in('slug', [slug, legacySlug]).limit(1);
+            const { data: matchingRow } = await supabaseAdmin.from('custom_pages').select('id, slug, content').or(`slug.eq.${slug},slug.eq.${legacySlug}`).limit(1);
             
             const existingContent = matchingRow && matchingRow[0] && matchingRow[0].content ? JSON.parse(matchingRow[0].content) : {};
             const activeSlug = matchingRow && matchingRow[0] && matchingRow[0].slug ? matchingRow[0].slug : slug;
@@ -408,7 +315,7 @@ class SupabaseDoc {
           if (col) {
             if (!missingColumns.has(`${this.collection}.${col}`)) {
               console.warn(`Column ${col} missing in ${this.collection}, adding to blacklist and retrying...`);
-              await persistMissingColumn(`${this.collection}.${col}`);
+              missingColumns.add(`${this.collection}.${col}`);
             } else {
               console.warn(`Column ${col} missing but was already blacklisted! Skipping data manipulation manually.`);
             }
@@ -423,11 +330,10 @@ class SupabaseDoc {
     }
   }
   async delete() {
-    if (!isSupabaseAdminConfigured) return;
     if (isVirtual(this.collection)) {
         const slug = getVirtualSlug(this.collection, this.id);
         const legacySlug = `v:${this.collection}:${this.id}`;
-        const { error } = await supabaseAdmin.from('custom_pages').delete().in('slug', [slug, legacySlug]);
+        const { error } = await supabaseAdmin.from('custom_pages').delete().or(`slug.eq.${slug},slug.eq.${legacySlug}`);
         if (error) {
             console.error(`Error deleting virtual doc ${this.collection}/${this.id}:`, error);
             throw error;
@@ -438,12 +344,11 @@ class SupabaseDoc {
     if (error) throw error;
   }
   async set(data: any, options: any = {}) {
-    if (!isSupabaseAdminConfigured) return;
     if (isVirtual(this.collection)) {
         const slug = getVirtualSlug(this.collection, this.id);
         const legacySlug = `v:${this.collection}:${this.id}`;
         try {
-            const { data: matchingRow } = await supabaseAdmin.from('custom_pages').select('id, slug, content').in('slug', [slug, legacySlug]).limit(1);
+            const { data: matchingRow } = await supabaseAdmin.from('custom_pages').select('id, slug, content').or(`slug.eq.${slug},slug.eq.${legacySlug}`).limit(1);
             
             let finalData = { ...data, id: this.id };
             let activeSlug = slug;
@@ -458,7 +363,7 @@ class SupabaseDoc {
                     try {
                         const parsed = JSON.parse(matchingRow[0].content);
                         finalData = { ...parsed, ...data, id: this.id };
-                    } catch(e) { console.error("Caught error:", e); }
+                    } catch (e) {}
                 }
             }
             
@@ -525,12 +430,12 @@ class SupabaseDoc {
           if (col && col !== this.pk()) {
             if (!missingColumns.has(`${this.collection}.${col}`)) {
               console.warn(`Column ${col} missing in ${this.collection}, adding to blacklist and retrying...`);
-              await persistMissingColumn(`${this.collection}.${col}`);
+              missingColumns.add(`${this.collection}.${col}`);
             } else {
               console.warn(`Column ${col} missing but was already blacklisted! Skipping data manipulation manually.`);
             }
-            if (mergedData && typeof mergedData === 'object') {
-               delete mergedData[col];
+            if (data && typeof data === 'object') {
+               delete data[col];
             }
             continue;
           }
@@ -580,11 +485,7 @@ class SupabaseQuery {
   _selectFields: string | null = null;
 
   select(...fields: string[]) {
-    const mapped = fields.map(field => {
-      if (forwardMap[field]) return forwardMap[field];
-      return field.toLowerCase();
-    });
-    this._selectFields = mapped.join(',');
+    this._selectFields = fields.join(',');
     return this;
   }
   async get() {
@@ -610,7 +511,7 @@ class SupabaseQuery {
                  rawMap.set(item.id, row.content);
               }
            }
-         } catch(e) { console.error("Caught error:", e); }
+         } catch (e) {}
       }
       
       let filteredData = [...items];
@@ -691,14 +592,7 @@ class SupabaseQuery {
     while (retries < 5) {
       retries++;
       try {
-        const _origSelect = this._selectFields;
-        if (this._selectFields) {
-           this._selectFields = this._selectFields.split(',').filter(f => !missingColumns.has(`${this.collection}.${f.trim()}`)).join(',');
-        }
-        
         const { data, error } = await executeQuery(currentWhere, currentOrderBy);
-        if (_origSelect) this._selectFields = _origSelect;
-
         if (error) throw error;
         
         let finalData = data || [];
@@ -740,7 +634,7 @@ class SupabaseQuery {
           if (col) {
             if (!missingColumns.has(`${this.collection}.${col}`)) {
                console.warn(`Column ${col} missing in ${this.collection} during fetch, adding to blacklist and retrying...`);
-               await persistMissingColumn(`${this.collection}.${col}`);
+               missingColumns.add(`${this.collection}.${col}`);
             } else {
                console.warn(`Column ${col} missing but was already blacklisted! Stripping out manually.`);
             }
@@ -760,7 +654,6 @@ class SupabaseQuery {
         throw err;
       }
     }
-    throw new Error('Max retries exceeded waiting for columns check in SupabaseQuery.get');
   }
 }
 
@@ -770,9 +663,6 @@ class SupabaseCollection extends SupabaseQuery {
     return new SupabaseDoc(this.collection, id || genId());
   }
   async add(data: any) {
-    if (!isSupabaseAdminConfigured) {
-        return { id: data.id || crypto.randomUUID() };
-    }
     if (isVirtual(this.collection)) {
         const docId = data.id || crypto.randomUUID();
         const slug = getVirtualSlug(this.collection, docId);
@@ -814,7 +704,7 @@ class SupabaseCollection extends SupabaseQuery {
         const col = extractMissingColumn(err.message);
         if (col) {
           console.warn(`Column ${col} missing in ${this.collection}, adding to blacklist and retrying...`);
-          await persistMissingColumn(`${this.collection}.${col}`);
+          missingColumns.add(`${this.collection}.${col}`);
           return await performAdd(toDB(mergedData, this.collection));
         }
       }
@@ -858,30 +748,8 @@ const db = {
         
         const result = await updateFunction(t);
         
-        // Prepare payload for generic RPC execution
-        const rpcPayload = writes.map(w => ({
-            type: w.type,
-            collection: w.ref.collection,
-            pk: w.ref.pk(),
-            id: w.ref.id,
-            data: w.type === 'delete' ? {} : toDB({ ...w.data, _version: (reads.get(w.ref.id) || 0) + 1 }, w.ref.collection)
-        }));
-
-        try {
-            const { error: rpcError, data: rpcData } = await supabaseAdmin.rpc('exec_transaction', { writes: rpcPayload });
-            if (!rpcError && rpcData?.success) return result;
-            if (rpcError && rpcError.message === 'VERSION_CONFLICT') throw new Error('VERSION_CONFLICT');
-            if (rpcError?.message?.includes('does not exist')) {
-                 // Fallback to sequential to handle missing columns logic dynamically if RPC lacks it
-                 console.warn("RPC transaction failed (maybe unapplied or missing column). Falling back to sequential execution.", rpcError);
-            }
-        } catch (e) {
-            console.warn("exec_transaction RPC failed, falling back to sequential writes.");
-        }
-
-        // Execute writes sequentially. While not a true distributed ACID transaction,
-        // executing sequentially guarantees we don't concurrently write partial state
-        for (const w of writes) {
+        // Execute writes (Synchronously locked on the logical application level ideally)
+        await Promise.all(writes.map(async (w) => {
            if (w.type === 'update' || w.type === 'set') {
               const oldVersion = reads.get(w.ref.id) || 0;
               w.data._version = oldVersion + 1;
@@ -890,7 +758,7 @@ const db = {
            } else if (w.type === 'delete') {
               await w.ref.delete();
            }
-        }
+        }));
         
         return result;
       } catch (err: any) {
@@ -900,8 +768,7 @@ const db = {
         }
         if (err.message === 'VERSION_CONFLICT' || err.message === 'CONCURRENCY_ERROR') {
           attempts++;
-          const jitter = Math.random() * 50;
-          await new Promise(r => setTimeout(r, 100 * Math.pow(2, attempts) + jitter));
+          await new Promise(r => setTimeout(r, 100 * Math.pow(2, attempts)));
           if (attempts >= 5) throw new Error('Transaction failed after retries due to high concurrency. Please try again.');
           continue; // Retry
         }

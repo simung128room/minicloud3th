@@ -1,26 +1,11 @@
 import React, { useState } from 'react';
-import { 
-  User, 
-  Wallet, 
-  ShieldCheck, 
-  Mail, 
-  Calendar, 
-  ChevronRight, 
-  LogOut, 
-  Package, 
-  Key, 
-  Settings,
-  Activity,
-  UserCheck,
-  Coins
-} from 'lucide-react';
+import { User, Wallet, Shield, Mail, Calendar, CreditCard, ChevronRight, LogOut, Package, History, Key, Copy, Link2, Check, RefreshCw, Smartphone, ShieldCheck } from 'lucide-react';
 import Swal from 'sweetalert2';
 import { UserPlan } from '../types';
 import { User as SupabaseUser } from '@supabase/supabase-js';
 import { getAvatarUrl } from '../lib/avatar';
 import { getUserRank } from '../lib/rank';
 import { AnimatedScroll } from './AnimatedScroll';
-import { motion } from 'motion/react';
 import axios from 'axios';
 
 interface ProfileViewProps {
@@ -35,17 +20,10 @@ interface ProfileViewProps {
 }
 
 export const ProfileView: React.FC<ProfileViewProps> = ({
-  user,
-  userPlan,
-  setUserPlan,
-  clientIp,
-  setActiveView,
-  handleLogout,
-  purchaseHistory = [],
-  usedKeysHistory = []
+  user, userPlan, setUserPlan, clientIp, setActiveView, handleLogout,
+  purchaseHistory = [], usedKeysHistory = []
 }) => {
-  const [fullName, setFullName] = useState(userPlan?.fullName || '');
-  const [isUpdating, setIsUpdating] = useState(false);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const rawRole = userPlan?.role;
   let role = '';
@@ -56,266 +34,319 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
   }
   const isAdminOrOwner = ['admin', 'owner'].includes(rawRole?.toLowerCase() || '');
   const balance = userPlan?.balance || 0;
-  const username = userPlan?.username || user?.email?.split('@')[0] || 'Member';
-  const email = user?.email || 'เข้าสู่ระบบแล้ว';
+  const fullName = userPlan?.fullName || '-';
+  const username = userPlan?.username || user?.email?.split('@')[0] || '';
+  const email = user?.email || 'เข้าสู่ระบบด้วยคีย์ (Anonymous)';
+  const registeredAt = userPlan?.registeredAt ? new Date(userPlan.registeredAt).toLocaleDateString('th-TH') : new Date().toLocaleDateString('th-TH');
 
-  const formatDateToCE = (dateVal: string | Date | undefined | null) => {
-    if (!dateVal) return '';
-    const d = new Date(dateVal);
-    if (isNaN(d.getTime())) return '';
-    const day = d.getDate();
-    const month = d.toLocaleDateString('th-TH', { month: 'long' });
-    const year = d.getFullYear();
-    return `${day} ${month} ${year}`;
+  const handleCopy = (text: string, id: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedId(id);
+    setTimeout(() => setCopiedId(null), 2000);
   };
-  const registeredAt = formatDateToCE(userPlan?.registeredAt) || formatDateToCE(new Date());
 
-  const handleUpdateProfile = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!user) return;
+  const renderHistoryItem = (item: any, type: 'purchase' | 'key') => {
+    const timestamp = item.timestamp || item.usedAt;
+    const dateStr = timestamp ? new Date(timestamp).toLocaleString('th-TH') : '-';
+    const displayId = item.id.substring(0, 8).toUpperCase();
     
-    setIsUpdating(true);
-    try {
-      await axios.post(`/api/users/${user.id}`, { fullName });
-      const newPlan = { 
-        ...userPlan, 
-        fullName, 
-        username: userPlan?.username || username, 
-        isPremium: userPlan?.isPremium || false, 
-        premiumExpireDate: userPlan?.premiumExpireDate || null 
-      };
-      setUserPlan(newPlan);
-      if (user?.id) {
-        localStorage.setItem(`userplan_${user.id}`, JSON.stringify(newPlan));
-      }
-      Swal.fire({ 
-        icon: 'success', 
-        title: 'บันทึกข้อมูลเรียบร้อย', 
-        timer: 1550, 
-        showConfirmButton: false, 
-        background: '#ffffff', 
-        color: '#1f2937',
-        customClass: {
-          popup: 'rounded-2xl border border-zinc-200 shadow-[0_15px_40px_rgba(0,0,0,0.05)]'
-        }
-      });
-    } catch (err: any) {
-      console.error('Error updating profile:', err);
-      Swal.fire({
-        icon: 'error',
-        title: 'บันทึกข้อมูลไม่สำเร็จ',
-        text: err.response?.data?.error || err.message || 'เกิดข้อผิดพลาดในการเชื่อมต่อ',
-        background: '#ffffff',
-        color: '#1f2937',
-        customClass: {
-          popup: 'rounded-2xl border border-zinc-200 shadow-[0_15px_40px_rgba(0,0,0,0.05)]'
-        }
-      });
-    } finally {
-      setIsUpdating(false);
-    }
+    return (
+      <div key={item.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-[#0a0a0b] border border-zinc-800 hover:border-zinc-700 transition-all rounded-xl gap-3">
+        <div className="flex flex-col gap-1.5">
+          <span className="text-sm font-bold text-white tracking-wide truncate max-w-[200px] sm:max-w-[400px]">
+            {type === 'purchase' ? item.productName : `เปิดใช้งานคีย์: ${item.key || 'ไม่ระบุ'}`}
+          </span>
+          <div className="flex flex-wrap items-center gap-2.5 text-xs text-zinc-400">
+            <span className="font-mono bg-zinc-900 border border-zinc-800 px-2 py-0.5 rounded text-neon-green font-bold">#{displayId}</span>
+            <span>{dateStr}</span>
+          </div>
+        </div>
+        <div className="flex items-center gap-3 self-end sm:self-auto">
+          {type === 'purchase' ? (
+            <span className="font-black text-rose-500 font-mono text-sm tracking-wide">
+              -{(item.price || 0).toLocaleString()} ฿
+            </span>
+          ) : (
+            <span className="font-bold text-neon-green text-[10px] px-2.5 py-1 bg-neon-green/10 border border-neon-green/20 rounded">
+              SUCCESS
+            </span>
+          )}
+        </div>
+      </div>
+    );
   };
-
-  // Custom Shortcut Card component mimicking the HomeView bento cells
-  const MenuShortcut = ({
-    label,
-    subLabel,
-    icon: Icon,
-    colorClass,
-    glowColor,
-    onClick
-  }: {
-    label: string;
-    subLabel: string;
-    icon: any;
-    colorClass: string;
-    glowColor: string;
-    onClick: () => void;
-  }) => (
-    <motion.button
-      whileHover={{ y: -3, scale: 1.01 }}
-      whileTap={{ scale: 0.98 }}
-      onClick={onClick}
-      className="relative overflow-hidden text-left bg-[#161a26] border border-[#1f293d] hover:border-blue-500/30 rounded-2xl p-5 flex items-center gap-4 transition-all duration-300 w-full group cursor-pointer shadow-sm outline-none"
-    >
-      {/* Background radial highlight */}
-      <div 
-        className="absolute -top-12 -right-12 w-24 h-24 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
-        style={{ background: glowColor }}
-      />
-      {/* Icon enclosure */}
-      <div className="p-4 rounded-xl bg-[#11131a] border border-[#2d3748] group-hover:bg-[#1f293d] group-hover:border-blue-500/30 group-hover:scale-105 duration-300 transition-all shrink-0">
-        <Icon className={`w-5 h-5 font-medium transition-colors ${colorClass}`} />
-      </div>
-      <div className="flex flex-col min-w-0">
-        <span className="text-xs sm:text-sm font-extrabold text-white tracking-wide uppercase">{label}</span>
-        <span className="text-[11px] text-zinc-500 group-hover:text-blue-400 font-bold tracking-normal truncate mt-1 transition-colors duration-200">
-          {subLabel}
-        </span>
-      </div>
-      <div className="ml-auto opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-300 text-blue-500 shrink-0">
-        <ChevronRight className="w-4 h-4" />
-      </div>
-    </motion.button>
-  );
 
   return (
     <AnimatedScroll direction="up" hideOnScroll={true}>
-      <div className="max-w-6xl mx-auto px-4 py-8 font-sans space-y-8 select-none">
-        
-        {/* TOP INTEGRATED PROFILE HERO */}
-        <div className="relative overflow-hidden bg-[#11131a] border border-[#1f293d] rounded-[24px] p-6 sm:p-8 shadow-[0_4px_20px_-8px_rgba(0,0,0,0.5)] flex flex-col sm:flex-row items-center gap-6">
-          <div className="absolute top-0 left-0 w-full h-[4px] bg-gradient-to-r from-blue-500 to-indigo-500" />
+      <div className="font-sans px-4 pb-12">
+        <div className="bg-[#070708] border border-zinc-800 w-full max-w-4xl mx-auto transition-all relative overflow-hidden flex flex-col md:flex-row mt-6 rounded-2xl shadow-xl">
           
-          <div className="relative shrink-0">
-            <div className="w-20 h-20 bg-[#161a26] border border-[#2d3748] p-1 rounded-full overflow-hidden shadow-xs">
-              <img 
-                loading="lazy" 
-                src={getAvatarUrl(user?.id || username)} 
-                alt="Avatar" 
-                className="w-full h-full object-cover rounded-full animate-in fade-in duration-300"
+          {/* Left Side: Balance & Quick Profile */}
+          <div className="md:w-1/3 bg-[#09090a] p-6 sm:p-8 flex flex-col items-center border-b md:border-b-0 md:border-r border-zinc-800 relative overflow-hidden">
+            <div className="absolute -top-12 -right-12 w-32 h-32 bg-neon-green/5 rounded-full blur-2xl pointer-events-none"></div>
+            
+            <div className="w-24 h-24 bg-zinc-900 p-1 mb-4 relative z-10 border border-zinc-800 rounded-full overflow-hidden shadow-lg group">
+              <img loading="lazy" 
+                src={getAvatarUrl(user?.id || username || 'guest')} 
+                alt="avatar" 
+                className="w-full h-full object-cover rounded-full transition-transform duration-300 group-hover:scale-110"
                 referrerPolicy="no-referrer"
               />
             </div>
-            <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full border border-[#11131a] flex items-center justify-center text-[10px] shadow bg-blue-500 text-white font-bold" title={role}>
-              👑
-            </div>
-          </div>
-
-          <div className="flex-1 text-center sm:text-left space-y-2 min-w-0">
-            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2.5">
-              <h1 className="text-xl font-black text-white tracking-tight truncate max-w-[240px] sm:max-w-md">
-                {username}
-              </h1>
-              <span className="text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-1 ml-0.5 text-blue-400 bg-blue-900/40 border border-blue-500/30 rounded-lg shrink-0">
-                {role}
-              </span>
-            </div>
-            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-x-5 gap-y-1.5 text-zinc-500 mt-1.5">
-              <p className="text-xs font-bold flex items-center gap-1.5 break-all">
-                <Mail className="w-4 h-4 text-zinc-500 shrink-0" />
-                {email}
-              </p>
-              <p className="text-xs font-bold flex items-center gap-1.5">
-                <Calendar className="w-4 h-4 text-zinc-500 shrink-0" />
-                สมาชิกตั้งแต่ {registeredAt}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* ACCOUNT NAVIGATION MENU - MAIN MENU STYLE SHORTCUTS */}
-        <div className="space-y-4">
-          <div className="flex items-center gap-2 py-1 select-none">
-            <span className="w-1.5 h-3.5 rounded-full bg-blue-600 " />
-            <span className="text-[10px] font-extrabold text-zinc-400 uppercase tracking-[0.2em]">
-              เมนูข้อมูลบัญชีและการตั้งค่า • USER DASHBOARD
-            </span>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             
-            <MenuShortcut
-              label="ยอดเงินคงเหลือ"
-              subLabel={`คลิกเพื่อเติมเงิน • ฿${Math.floor(balance).toLocaleString()} บาท`}
-              icon={Coins}
-              colorClass="text-amber-500"
-              glowColor="rgba(245,158,11,0.08)"
-              onClick={() => setActiveView('wallet')}
-            />
-
-            <MenuShortcut
-              label="ประวัติการสั่งซื้อ"
-              subLabel="คำสั่งซื้อสินค้าและเติมเงินเดี่ยว"
-              icon={Package}
-              colorClass="text-blue-500"
-              glowColor="rgba(59,130,246,0.08)"
-              onClick={() => setActiveView('my_orders')}
-            />
-
-            <MenuShortcut
-              label="ระบบความปลอดภัย"
-              subLabel="เปลี่ยนรหัสผ่านเพื่อป้องกันข้อมูล"
-              icon={Settings}
-              colorClass="text-zinc-500"
-              glowColor="rgba(107,114,128,0.08)"
-              onClick={() => setActiveView('settings')}
-            />
-
-            <MenuShortcut
-              label="ออกจากระบบ"
-              subLabel="เสร็จสิ้นเซสชั่นและลงชื่อออกเดสก์ท็อป"
-              icon={LogOut}
-              colorClass="text-rose-500"
-              glowColor="rgba(239,68,68,0.08)"
-              onClick={() => { 
-                Swal.fire({
-                  title: 'ยืนยันการออกจากระบบ?',
-                  text: 'คุณต้องการปิดหน้าเซสชั่นการใช้งานปัจจุบันหรือไม่',
-                  icon: 'warning',
-                  showCancelButton: true,
-                  confirmButtonColor: '#ef4444',
-                  cancelButtonColor: '#e4e4e7',
-                  cancelButtonText: 'ยกเลิก',
-                  confirmButtonText: 'ยืนยันการออก',
-                  background: '#ffffff',
-                  color: '#1f2937',
-                  customClass: {
-                    popup: 'rounded-2xl border border-zinc-200 shadow-[0_15px_40px_rgba(0,0,0,0.05)]',
-                    confirmButton: 'rounded-xl px-5 py-2.5 font-bold text-xs',
-                    cancelButton: 'rounded-xl px-5 py-2.5 font-bold text-xs text-zinc-600 bg-zinc-100 hover:bg-zinc-200'
-                  }
-                }).then((result) => {
-                  if (result.isConfirmed) {
-                    handleLogout();
-                  }
-                });
-              }}
-            />
-
-          </div>
-        </div>
-
-        {/* PROFILE METADATA DETAILS EDIT FORM */}
-        <div className="bg-[#11131a] border border-[#1f293d] rounded-[24px] p-6 sm:p-8 shadow-[0_4px_20px_-8px_rgba(0,0,0,0.5)] relative overflow-hidden">
-          <div className="flex items-center gap-2 border-b border-[#1f293d] pb-4 mb-6">
-            <UserCheck className="w-5 h-5 text-blue-500 shrink-0" />
-            <h2 className="text-sm font-black text-white uppercase tracking-wider">แก้ไขข้อมูลสมาชิกและโปรไฟล์</h2>
-          </div>
-
-          <form onSubmit={handleUpdateProfile} className="space-y-5 max-w-xl">
-            <div>
-              <label className="text-[10px] text-zinc-500 font-extrabold uppercase tracking-widest mb-2 block ml-0.5">
-                ชื่อ-นามสกุลผู้ใช้งาน (จริง)
-              </label>
-              <input 
-                type="text" 
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                placeholder="ระบุชื่อจริงสำหรับการเชื่อมเคาน์เตอร์ธุรกรรม"
-                className="w-full bg-[#161a26] hover:bg-[#1f293d] focus:bg-[#161a26] border border-[#2d3748] focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-2xl py-3.5 px-4 text-xs text-white outline-none transition-all placeholder:text-zinc-500 font-bold" 
-              />
-            </div>
-
-            <div className="flex justify-start pt-2">
+            <h3 className="text-lg font-bold text-white mb-1.5 text-center truncate w-full px-2 z-10">{username}</h3>
+            
+            <span className={`text-[10px] font-black uppercase tracking-wider px-3 py-1.5 border rounded-lg mb-6 z-10 ${
+              isAdminOrOwner 
+                ? "text-neon-yellow bg-neon-yellow/10 border-neon-yellow/20" 
+                : "text-neon-green bg-neon-green/10 border-neon-green/20"
+            }`}>
+              {role}
+            </span>
+            
+            <div className="w-full bg-[#0d0d0f] border border-zinc-800 p-5 rounded-xl flex flex-col items-center relative overflow-hidden shadow-inner">
+              <div className="flex items-center gap-2 mb-2">
+                <Wallet className="w-4 h-4 text-neon-green" />
+                <span className="text-zinc-400 text-[10px] font-black uppercase tracking-wider">ยอดเงินคงเหลือ</span>
+              </div>
+              <div className="text-4xl font-black text-white mb-2 tracking-tight font-mono select-none">
+                <span className="text-sm font-bold text-neon-green mr-1 font-sans">฿</span>
+                {Math.floor(balance).toLocaleString()}
+              </div>
               <button 
-                type="submit" 
-                disabled={isUpdating}
-                className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-extrabold py-3.5 px-7 shrink-0 transition-all duration-300 text-xs rounded-2xl cursor-pointer uppercase tracking-widest shadow-md hover:shadow-lg disabled:opacity-50 border-none flex items-center justify-center gap-2"
+                onClick={() => setActiveView('wallet')}
+                className="mt-2 w-full bg-neon-green text-black hover:bg-neon-green/90 py-2.5 rounded-lg text-xs font-black uppercase tracking-widest transition-all duration-150 cursor-pointer shadow-md shadow-neon-green/10"
               >
-                {isUpdating ? (
-                  <>
-                    <span className="w-3.5 h-3.5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                    <span>กำลังบันทึกข้อมูล...</span>
-                  </>
-                ) : (
-                  <span>บันทึกข้อมูลอย่างเป็นทางการ</span>
-                )}
+                + เติมเงิน
               </button>
             </div>
-          </form>
-        </div>
+          </div>
 
+          {/* Right Side: Details & Settings */}
+          <div className="md:w-2/3 p-6 sm:p-8">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-lg font-bold text-white flex items-center gap-2.5">
+                <ShieldCheck className="w-5 h-5 text-neon-green"/> ข้อมูลส่วนตัว
+              </h2>
+            </div>
+
+            <form onSubmit={async (e) => {
+              e.preventDefault();
+              const formData = new FormData(e.currentTarget);
+              const newFullName = formData.get('fullName') as string;
+              
+              if (!user) {
+                Swal.fire({ icon: 'error', title: 'ไม่พบข้อมูลผู้ใช้', text: 'กรุณาเข้าสู่ระบบก่อนอัพเดทโปรไฟล์', background: '#09090b', color: '#fff' });
+                return;
+              }
+
+              // Display loading state
+              Swal.fire({
+                title: 'กำลังบันทึกข้อมูล...',
+                allowOutsideClick: false,
+                didOpen: () => { Swal.showLoading(); }
+              });
+
+              try {
+                // API call to database
+                await axios.post(`/api/users/${user.id}`, { fullName: newFullName });
+                const newPlan = { ...userPlan, fullName: newFullName, username: userPlan?.username || username, isPremium: userPlan?.isPremium || false, premiumExpireDate: userPlan?.premiumExpireDate || null };
+                setUserPlan(newPlan);
+                if (clientIp) localStorage.setItem(`checker_userplan_${clientIp}`, JSON.stringify(newPlan));
+                Swal.fire({ icon: 'success', title: 'อัพเดทสำเร็จ', timer: 1500, showConfirmButton: false, background: '#09090b', color: '#fff' });
+              } catch (err: any) {
+                console.error('Error updating profile:', err);
+                Swal.fire({
+                  icon: 'error',
+                  title: 'อัพเดทไม่สำเร็จ',
+                  text: err.response?.data?.error || err.message || 'เกิดข้อผิดพลาดในการบันทึกข้อมูล',
+                  background: '#09090b',
+                  color: '#fff'
+                });
+              }
+            }} className="space-y-4 mb-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider mb-2 block ml-1">ชื่อ-นามสกุล</label>
+                  <input 
+                    name="fullName" 
+                    type="text" 
+                    defaultValue={fullName !== '-' ? fullName : ''}
+                    placeholder="ระบุชื่อ-นามสกุล"
+                    className="w-full bg-[#0a0a0b] border border-zinc-800 rounded-xl py-3 px-4 text-sm text-white focus:border-neon-green/50 focus:ring-1 focus:ring-neon-green/10 outline-none transition-all placeholder:text-zinc-500 font-medium" 
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider mb-2 block ml-1">สมัครสมาชิกเมื่อ</label>
+                  <div className="w-full bg-[#0a0a0b] border border-zinc-800 rounded-xl py-3 px-4 text-sm text-zinc-400 cursor-not-allowed flex items-center gap-2.5 font-medium">
+                    <Calendar className="w-4 h-4 text-zinc-500 shrink-0" /> {registeredAt}
+                  </div>
+                </div>
+              </div>
+              
+              <div>
+                <label className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider mb-2 block ml-1">อีเมล</label>
+                <div className="w-full bg-[#0a0a0b] border border-zinc-800 rounded-xl py-3 px-4 text-sm text-zinc-400 cursor-not-allowed flex items-center justify-between gap-2 overflow-hidden font-medium">
+                  <div className="flex items-center gap-2.5 truncate">
+                    <Mail className="w-4 h-4 text-zinc-500 shrink-0" />
+                    <span className="truncate">{email}</span>
+                  </div>
+                  <button 
+                    type="button"
+                    onClick={() => { navigator.clipboard.writeText(email); Swal.fire({ title: 'Copied!', text: 'คัดลอกอีเมลสำเร็จ', icon: 'success', timer: 1000, showConfirmButton: false, background: '#09090b', color: '#fff' }); }}
+                    className="p-1.5 hover:bg-zinc-800/60 rounded-lg transition-colors text-zinc-500 hover:text-white shrink-0 cursor-pointer"
+                    title="Copy Email"
+                  >
+                    <Copy className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex justify-end pt-2">
+                <button type="submit" className="bg-neon-green text-black hover:bg-neon-green/90 font-extrabold py-2.5 px-6 transition-all text-sm rounded-lg cursor-pointer uppercase tracking-wider">
+                  บันทึกการแก้ไข
+                </button>
+              </div>
+            </form>
+
+            {/* Quick Menu */}
+            <div className="mb-8">
+              <h3 className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider mb-3.5 ml-1">เมนูด่วน</h3>
+              <div className="space-y-2.5">
+                <button type="button" onClick={() => setActiveView('history')} className="w-full flex items-center justify-between p-3.5 bg-[#0a0a0b] border border-zinc-800 hover:border-neon-green/30 hover:bg-[#0c0c0e] transition-all group rounded-xl cursor-pointer">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2.5 bg-neon-green/10 text-neon-green border border-neon-green/20 rounded-lg">
+                      <History className="w-4 h-4" />
+                    </div>
+                    <span className="text-sm font-semibold text-zinc-300 group-hover:text-white transition-colors">ประวัติสั่งซื้อ (History)</span>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-zinc-500 group-hover:text-neon-green group-hover:translate-x-1 transition-all" />
+                </button>
+
+                <button type="button" onClick={() => setActiveView('checker_logs')} className="w-full flex items-center justify-between p-3.5 bg-[#0a0a0b] border border-zinc-800 hover:border-zinc-600 hover:bg-[#0c0c0e] transition-all group rounded-xl cursor-pointer">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2.5 bg-zinc-800 border border-zinc-700 text-zinc-300 rounded-lg">
+                      <History className="w-4 h-4" />
+                    </div>
+                    <span className="text-sm font-semibold text-zinc-300 group-hover:text-white transition-colors">ประวัติระบบเช็คไอดี (Checker Logs)</span>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-zinc-500 group-hover:text-zinc-300 group-hover:translate-x-1 transition-all" />
+                </button>
+
+                <button type="button" onClick={() => setActiveView('redeem')} className="w-full flex items-center justify-between p-3.5 bg-[#0a0a0b] border border-zinc-800 hover:border-neon-green/30 hover:bg-[#0c0c0e] transition-all group rounded-xl cursor-pointer">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2.5 bg-neon-green/10 text-neon-green border border-neon-green/20 rounded-lg">
+                      <Key className="w-4 h-4" />
+                    </div>
+                    <span className="text-sm font-semibold text-zinc-300 group-hover:text-white transition-colors">เปิดใช้งานคีย์ไลเซนส์ (Redeem Key)</span>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-zinc-500 group-hover:text-neon-green group-hover:translate-x-1 transition-all" />
+                </button>
+                
+                {user && (
+                  <button type="button" onClick={() => { 
+                    Swal.fire({
+                      title: 'ยืนยันการออกจากระบบ?',
+                      icon: 'warning',
+                      showCancelButton: true,
+                      confirmButtonColor: '#ef4444',
+                      cancelButtonColor: '#18181b',
+                      cancelButtonText: '<span style="color:#ffffff">ยกเลิก</span>',
+                      confirmButtonText: 'ออกจากระบบ',
+                    }).then((result) => {
+                      if (result.isConfirmed) {
+                        handleLogout();
+                      }
+                    });
+                  }} className="w-full flex items-center justify-between p-3.5 bg-[#0a0a0b] border border-red-500/10 hover:border-red-500/40 hover:bg-red-500/5 transition-all group rounded-xl cursor-pointer animate-none">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2.5 bg-red-500/10 text-red-400 border border-red-500/20 rounded-lg">
+                        <LogOut className="w-4 h-4" />
+                      </div>
+                      <span className="text-sm font-semibold text-zinc-300 group-hover:text-red-450 transition-colors">ออกจากระบบ</span>
+                    </div>
+                    <ChevronRight className="w-4 h-4 text-zinc-500 group-hover:text-red-400 group-hover:translate-x-1 transition-all" />
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Linked Accounts */}
+            <div className="mb-8">
+              <h3 className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider mb-4 ml-1">การเชื่อมต่อบัญชี (Linked Accounts)</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <button className="flex items-center justify-between p-4 bg-[#0a0a0b] border border-zinc-800 hover:border-[#1877F2]/30 hover:bg-[#1877F2]/5 transition-all group rounded-xl cursor-pointer">
+                  <div className="flex items-center gap-3.5">
+                    <div className="w-10 h-10 bg-zinc-900 border border-zinc-800 flex items-center justify-center text-[#1877F2] rounded-xl">
+                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.469h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.469h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                    </div>
+                    <div className="flex flex-col items-start gap-0.5">
+                      <span className="text-sm font-bold text-white">Facebook</span>
+                      <span className="text-[10px] text-zinc-500">ไม่ได้เชื่อมต่อ</span>
+                    </div>
+                  </div>
+                  <span className="text-xs font-bold text-zinc-400 px-3 py-1.5 bg-zinc-900 border border-zinc-800 rounded-lg hover:text-white transition-colors">เชื่อมต่อ</span>
+                </button>
+                
+                <button className="flex items-center justify-between p-4 bg-[#0a0a0b] border border-zinc-800 hover:border-[#5865F2]/30 hover:bg-[#5865F2]/5 transition-all group rounded-xl cursor-pointer">
+                  <div className="flex items-center gap-3.5">
+                    <div className="w-10 h-10 bg-zinc-900 border border-zinc-800 flex items-center justify-center text-[#5865F2] rounded-xl">
+                       <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8852 1.515.0699.0699 0 00-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0785.0095c.1202.099.246.1981.3728.2924a.077.077 0 01-.0066.1276 12.2986 12.2986 0 01-1.873.8914.0766.0766 0 00-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 00.0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.9555 2.4189-2.1569 2.4189zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.946 2.4189-2.1568 2.4189Z"/></svg>
+                    </div>
+                    <div className="flex flex-col items-start gap-0.5">
+                      <span className="text-sm font-bold text-white">Discord</span>
+                      <span className="text-[10px] text-zinc-500">ไม่ได้เชื่อมต่อ</span>
+                    </div>
+                  </div>
+                  <span className="text-xs font-bold text-zinc-400 px-3 py-1.5 bg-zinc-900 border border-zinc-800 rounded-lg hover:text-white transition-colors">เชื่อมต่อ</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Purchased Items */}
+            <div className="mt-8 border-t border-zinc-800 pt-8">
+              <div className="flex items-center justify-between mb-4 px-1">
+                <h3 className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider">รายการสินค้าที่ซื้อล่าสุด (Purchased Items)</h3>
+                <button onClick={() => setActiveView('history')} className="text-xs font-bold text-neon-green hover:text-neon-green/80 hover:underline transition-colors cursor-pointer">
+                  ดูทั้งหมด
+                </button>
+              </div>
+              
+              {purchaseHistory.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-8 bg-[#0a0a0b] border border-zinc-800 border-dashed text-zinc-400 rounded-xl">
+                  <Package className="w-6 h-6 opacity-40 mb-2 text-zinc-500" />
+                  <span className="text-xs font-medium">ยังไม่มีประวัติการซื้อ</span>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-2.5">
+                  {purchaseHistory.slice(0, 3).map(item => renderHistoryItem(item, 'purchase'))}
+                </div>
+              )}
+            </div>
+
+            {/* Redeemed Keys */}
+            <div className="mt-8 border-t border-zinc-800 pt-8">
+              <div className="flex items-center justify-between mb-4 px-1">
+                <h3 className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider">คีย์ที่เปิดใช้งานล่าสุด (Redeemed Keys)</h3>
+                <button onClick={() => setActiveView('history')} className="text-xs font-bold text-neon-green hover:text-neon-green/80 hover:underline transition-colors cursor-pointer">
+                  ดูทั้งหมด
+                </button>
+              </div>
+              
+              {usedKeysHistory.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-8 bg-[#0a0a0b] border border-zinc-800 border-dashed text-zinc-400 rounded-xl">
+                  <Key className="w-6 h-6 opacity-40 mb-2 text-zinc-500" />
+                  <span className="text-xs font-medium">ยังไม่มีประวัติการใช้งานคีย์</span>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-2.5">
+                  {usedKeysHistory.slice(0, 3).map(item => renderHistoryItem(item, 'key'))}
+                </div>
+              )}
+            </div>
+
+          </div>
+        </div>
       </div>
     </AnimatedScroll>
   );
