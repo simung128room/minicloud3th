@@ -122,7 +122,7 @@ export const AuthView: React.FC<AuthViewProps> = React.memo(({ initialMode, setA
       {/* Immersive Background */}
       <div className="absolute inset-0 z-0 select-none pointer-events-none">
         <img 
-          src="https://img2.pic.in.th/IMG_7177176d5344301b32a1.png" 
+          src="https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=2070&auto=format&fit=crop" 
           alt="Background" 
           className="w-full h-full object-cover opacity-15 blur-lg transform scale-105"
         />
@@ -142,10 +142,12 @@ export const AuthView: React.FC<AuthViewProps> = React.memo(({ initialMode, setA
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ delay: 0.1, duration: 0.4 }}
-            className="mb-6 cursor-pointer"
+            className="mb-6 cursor-pointer select-none"
             onClick={() => setActiveView("home")}
           >
-            <img src="https://img2.pic.in.th/IMG_718032ab9d504326a436.png" alt="APEXSTORE Logo" className="h-[48px] md:h-[56px] object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.1)] hover:scale-105 transition-transform duration-300" />
+            <span className="text-3xl md:text-4xl font-black text-white tracking-tighter drop-shadow-[0_0_15px_rgba(255,255,255,0.1)] hover:scale-105 transition-transform duration-300 inline-block">
+              APEX<span className="text-red-500">STORE</span>
+            </span>
           </motion.div>
           
           <h1 className="text-xl font-bold tracking-wide text-white mb-1.5">

@@ -5,7 +5,15 @@ import './index.css';
 import { ErrorBoundary } from './components/ErrorBoundary';
 
 if (import.meta.env.MODE !== 'production') {
-  import('eruda').then((eruda) => eruda.default.init()).catch(() => {});
+  import('eruda').then((eruda) => {
+    eruda.default.init();
+    try {
+      const consolePlugin = eruda.default.get('console');
+      if (consolePlugin && typeof consolePlugin.clear === 'function') {
+        consolePlugin.clear();
+      }
+    } catch {}
+  }).catch(() => {});
 }
 
 // Remote error logging
@@ -14,7 +22,7 @@ window.onerror = function (message, source, lineno, colno, error) {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ type: 'onerror', message, source, lineno, colno, stack: error?.stack })
-  }).catch(console.log);
+  }).catch(() => {});
 };
 
 window.addEventListener('unhandledrejection', function(event) {
@@ -68,8 +76,6 @@ window.addEventListener('unhandledrejection', function(event) {
     return;
   }
 
-  console.error('[Unhandled Rejection] Reason:', reasonDetails);
-  
   let payload: any = { type: 'unhandledrejection' };
   
   try {
@@ -82,7 +88,7 @@ window.addEventListener('unhandledrejection', function(event) {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
-  }).catch(console.log);
+  }).catch(() => {});
 });
 
 
@@ -94,7 +100,7 @@ function sendToAnalytics(metric: any) {
   if (navigator.sendBeacon) {
     navigator.sendBeacon('/api/log_vitals', body);
   } else {
-    fetch('/api/log_vitals', { body, method: 'POST', keepalive: true, headers: { 'Content-Type': 'application/json' } }).catch(console.log);
+    fetch('/api/log_vitals', { body, method: 'POST', keepalive: true, headers: { 'Content-Type': 'application/json' } }).catch(() => {});
   }
 }
 

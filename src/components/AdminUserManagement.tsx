@@ -117,15 +117,15 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({ purcha
   return (
     <div className="space-y-6">
       {!selectedUser ? (
-        <div className="bg-card border border-border border-2 p-6 relative overflow-hidden flex flex-col min-h-[500px] brut-card">
+        <div className="bg-card border border-border border-2 p-6 relative overflow-hidden flex flex-col min-h-[500px] brut-card rounded-2xl">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
             <h3 className="font-bold text-white flex items-center gap-2"><Users className="w-5 h-5 text-[#2563EB]" /> จัดการผู้ใช้ (User Management)</h3>
-            <div className="flex bg-card border border-border border-2 p-1 overflow-hidden shrink-0 w-full sm:w-64 relative brut-card">
+            <div className="flex bg-card border border-border border-2 p-1 overflow-hidden shrink-0 w-full sm:w-64 relative brut-card rounded-xl">
               <Search className="w-4 h-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2" />
               <input 
                 type="text" 
                 placeholder="ค้นหาอีเมล, บทบาท..."
-                className="w-full bg-transparent border-none focus:ring-0 text-xs px-3 py-2 pl-9 font-medium"
+                className="w-full bg-transparent border-none focus:ring-0 text-xs px-3 py-2 pl-9 font-medium rounded-xl"
                 value={search}
                 onChange={e => setSearch(e.target.value)}
               />
@@ -134,7 +134,7 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({ purcha
 
           <div className="overflow-x-auto border border-border border-2 flex-1">
             <table className="w-full text-left text-sm text-muted-foreground">
-              <thead className="text-xs uppercase bg-card text-muted-foreground font-bold tracking-wider brut-card">
+              <thead className="text-xs uppercase bg-card text-muted-foreground font-bold tracking-wider brut-card rounded-md">
                 <tr>
                   <th className="px-4 py-3 border-b border-border border-2">อีเมล/ผู้ใช้</th>
                   <th className="px-4 py-3 border-b border-border border-2 text-center">ไอพีล่าสุด</th>
@@ -161,7 +161,7 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({ purcha
                       </button>
                     </td>
                     <td className="px-4 py-4 text-center">
-                       <span className="font-mono text-xs text-muted-foreground bg-card px-2 py-1 border border-border border-2 brut-card">{u.lastLoginIp || u.last_login_ip || 'ไม่ทราบ'}</span>
+                       <span className="font-mono text-xs text-muted-foreground bg-card px-2 py-1 border border-border border-2 brut-card rounded-md">{u.lastLoginIp || u.last_login_ip || 'ไม่ทราบ'}</span>
                     </td>
                     <td className="px-4 py-4">
                       <span className={`px-2 py-1 text-[10px] uppercase tracking-widest font-bold ${u.role === 'Admin' ? 'bg-purple-600/10 text-blue-600 border border-white/10' : u.role === 'Premium' ? 'bg-amber-500/10 text-amber-600 border-amber-100' : 'bg-[#121212] text-muted-foreground border-white/10'}`}>
@@ -170,14 +170,14 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({ purcha
                     </td>
                     <td className="px-4 py-4">
                       {u.status === 'banned' ? (
-                         <span className="px-2 py-1 text-[10px] uppercase font-bold bg-card text-muted-foreground flex items-center gap-1 w-max brut-card"><Ban className="w-3 h-3"/> ระงับห้ามใช้</span>
+                         <span className="px-2 py-1 text-[10px] uppercase font-bold bg-card text-muted-foreground flex items-center gap-1 w-max brut-card rounded-md"><Ban className="w-3 h-3"/> ระงับห้ามใช้</span>
                       ) : (
                          <span className="px-2 py-1 text-[10px] uppercase font-bold bg-primary text-primary-foreground text-emerald-600 flex items-center gap-1 w-max"><CheckCircle className="w-3 h-3"/> ปกติ</span>
                       )}
                     </td>
                     <td className="px-4 py-4 font-bold font-mono text-emerald-600 text-right">{(u.balance || 0).toLocaleString()}</td>
                     <td className="px-4 py-4 text-right">
-                       <button onClick={() => setSelectedUser(u)} className="px-3 py-1.5 bg-card hover:bg-[#1e1e1e] text-white text-xs font-bold transition-all flex items-center gap-1 ml-auto active:scale-95 brut-card">
+                       <button onClick={() => setSelectedUser(u)} className="px-3 py-1.5 bg-card hover:bg-[#1e1e1e] text-white text-xs font-bold transition-all flex items-center gap-1 ml-auto active:scale-95 brut-card rounded-md">
                           <Eye className="w-3 h-3" /> ดูข้อมูล
                        </button>
                     </td>
@@ -198,12 +198,12 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({ purcha
             initial={{ opacity: 0, scale: 0.98 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.98 }}
-            className="bg-card border border-border border-2 overflow-hidden flex flex-col brut-card"
+            className="bg-card border border-border border-2 overflow-hidden flex flex-col brut-card rounded-xl"
           >
-            <div className="p-6 md:p-8 bg-card border-b border-border border-2 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 brut-card">
+            <div className="p-6 md:p-8 bg-card border-b border-border border-2 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 brut-card rounded-2xl">
               <div className="flex items-center gap-4">
-                <div className="w-16 h-16 bg-card border border-border border-2 flex items-center justify-center p-1 shrink-0 relative overflow-hidden brut-card">
-                   <div className="bg-card w-full h-full flex items-center justify-center text-muted-foreground brut-card">
+                <div className="w-16 h-16 bg-card border border-border border-2 flex items-center justify-center p-1 shrink-0 relative overflow-hidden brut-card rounded-xl">
+                   <div className="bg-card w-full h-full flex items-center justify-center text-muted-foreground brut-card rounded-xl">
                      <Users className="w-6 h-6" />
                    </div>
                 </div>
@@ -221,11 +221,11 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({ purcha
               </div>
               
               <div className="flex flex-wrap gap-2">
-                <button onClick={() => setSelectedUser(null)} className="px-4 py-2 border border-border border-2 bg-card hover:bg-[#121212] text-muted-foreground text-xs font-bold transition-all brut-card">กลับไปหน้ารายชื่อ</button>
+                <button onClick={() => setSelectedUser(null)} className="px-4 py-2 border border-border border-2 bg-card hover:bg-[#121212] text-muted-foreground text-xs font-bold transition-all brut-card rounded-md">กลับไปหน้ารายชื่อ</button>
               </div>
             </div>
 
-            <div className="border-b border-border border-2 bg-card px-6 overflow-x-auto no-scrollbar brut-card">
+            <div className="border-b border-border border-2 bg-card px-6 overflow-x-auto no-scrollbar brut-card rounded-xl">
               <div className="flex items-center gap-2 py-4 w-max">
                 {[
                   { id: 'info', label: 'ข้อมูลทั่วไป & จัดการ' },
@@ -244,12 +244,12 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({ purcha
               </div>
             </div>
 
-            <div className="p-6 md:p-8 bg-card min-h-[300px] brut-card">
+            <div className="p-6 md:p-8 bg-card min-h-[300px] brut-card rounded-2xl">
               {actionTab === 'info' && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   {/* Info */}
                   <div className="space-y-6">
-                    <div className="bg-card border border-border border-2 p-6 brut-card">
+                    <div className="bg-card border border-border border-2 p-6 brut-card rounded-2xl">
                       <h4 className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-4 flex items-center gap-2"><Wallet className="w-4 h-4"/> ข้อมูลการเงิน</h4>
                       <div className="flex items-end justify-between mb-6">
                         <div>
@@ -267,7 +267,7 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({ purcha
                       </div>
                     </div>
 
-                    <div className="p-4 border border-border border-2 flex justify-between items-center bg-card brut-card">
+                    <div className="p-4 border border-border border-2 flex justify-between items-center bg-card brut-card rounded-xl">
                       <div>
                         <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">วันที่ลงทะเบียน</p>
                         <p className="text-sm font-bold text-muted-foreground mt-0.5">{new Date(selectedUser.registered).toLocaleString('th-TH')}</p>
@@ -275,7 +275,7 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({ purcha
                       <CalendarIcon className="w-5 h-5 text-muted-foreground" />
                     </div>
 
-                    <div className="p-4 border border-border border-2 bg-card space-y-3 brut-card">
+                    <div className="p-4 border border-border border-2 bg-card space-y-3 brut-card rounded-xl">
                       <div>
                         <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">ไอพีล่าสุด</p>
                         <p className="text-sm font-mono text-white bg-card w-max px-2 py-1 rounded border border-border border-2 brut-card">{selectedUser.lastLoginIp || selectedUser.last_login_ip || 'ไม่ทราบ'}</p>
@@ -297,13 +297,13 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({ purcha
 
                   {/* Actions */}
                   <div className="space-y-6">
-                    <div className="bg-card border border-border border-2 p-6 brut-card">
+                    <div className="bg-card border border-border border-2 p-6 brut-card rounded-2xl">
                       <h4 className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-4">การจัดการบัญชี</h4>
                       
                       <div className="space-y-3">
-                        <button onClick={() => handleEditUser(selectedUser)} className="w-full flex items-center justify-between p-3.5 bg-card border border-border border-2 hover:border-white/20 transition-all group brut-card">
+                        <button onClick={() => handleEditUser(selectedUser)} className="w-full flex items-center justify-between p-3.5 bg-card border border-border border-2 hover:border-white/20 transition-all group brut-card rounded-xl">
                            <div className="flex items-center gap-3">
-                             <div className="p-2 bg-card group-hover:bg-[#121212] transition-colors brut-card"><Edit className="w-4 h-4 text-muted-foreground" /></div>
+                             <div className="p-2 bg-card group-hover:bg-[#121212] transition-colors brut-card rounded-xl"><Edit className="w-4 h-4 text-muted-foreground" /></div>
                              <div className="flex flex-col items-start leading-tight">
                                 <span className="text-sm font-bold text-white">แก้ไขข้อมูลบทบาท</span>
                                 <span className="text-[10px] text-muted-foreground font-medium mt-0.5">เปลี่ยนสิทธิ์ Member / Premium</span>
@@ -329,9 +329,9 @@ export const AdminUserManagement: React.FC<AdminUserManagementProps> = ({ purcha
                               Swal.fire('Error', err.response?.data?.error || 'ไม่สามารถเปลี่ยนรหัสผ่านได้', 'error');
                             }
                           }
-                        }} className="w-full flex items-center justify-between p-3.5 bg-card border border-border border-2 hover:border-white/20 transition-all group brut-card">
+                        }} className="w-full flex items-center justify-between p-3.5 bg-card border border-border border-2 hover:border-white/20 transition-all group brut-card rounded-xl">
                            <div className="flex items-center gap-3">
-                             <div className="p-2 bg-card group-hover:bg-[#121212] transition-colors brut-card"><RefreshCw className="w-4 h-4 text-muted-foreground" /></div>
+                             <div className="p-2 bg-card group-hover:bg-[#121212] transition-colors brut-card rounded-xl"><RefreshCw className="w-4 h-4 text-muted-foreground" /></div>
                              <div className="flex flex-col items-start leading-tight">
                                 <span className="text-sm font-bold text-white">เปลี่ยนรหัสผ่าน</span>
                                 <span className="text-[10px] text-muted-foreground font-medium mt-0.5">Force reset password</span>

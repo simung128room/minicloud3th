@@ -35,7 +35,7 @@ export const SearchView: React.FC<SearchViewProps> = ({ products, onBack, onProd
       <div className="flex items-center gap-4 mb-8">
         <button 
           onClick={onBack}
-          className="w-10 h-10 bg-card border border-border border-2 flex items-center justify-center text-muted-foreground hover:text-white hover:bg-white/10 transition-colors brut-card"
+          className="w-10 h-10 bg-card border border-border border-2 flex items-center justify-center text-muted-foreground hover:text-white hover:bg-white/10 transition-colors brut-card rounded-xl"
         >
           <ArrowLeft className="w-5 h-5" />
         </button>
@@ -48,7 +48,7 @@ export const SearchView: React.FC<SearchViewProps> = ({ products, onBack, onProd
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="ค้นหาสินค้า..."
-            className="w-full bg-card border border-border border-2 py-3 pl-12 pr-4 outline-none focus:border-[#1D4ED8]/50 focus:bg-[#050505] transition-colors text-white placeholder:text-zinc-500 brut-card"
+            className="w-full bg-card border border-border border-2 py-3 pl-12 pr-4 outline-none focus:border-[#1D4ED8]/50 focus:bg-[#050505] transition-colors text-white placeholder:text-zinc-500 brut-card rounded-xl"
             autoFocus
           />
         </div>
@@ -56,7 +56,7 @@ export const SearchView: React.FC<SearchViewProps> = ({ products, onBack, onProd
 
       <div className="space-y-4">
         {searchQuery && filteredProducts.length === 0 ? (
-          <div className="text-center py-20 bg-card border border-border border-2 brut-card">
+          <div className="text-center py-20 bg-card border border-border border-2 brut-card rounded-xl">
             <Search className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-xl font-bold text-white mb-2">ไม่พบสินค้า</h3>
             <p className="text-muted-foreground">ไม่พบสินค้าที่ตรงกับ "{searchQuery}"</p>
@@ -67,10 +67,10 @@ export const SearchView: React.FC<SearchViewProps> = ({ products, onBack, onProd
               <div 
                 key={product.id}
                 onClick={() => onProductClick(product.id)}
-                className="bg-card border border-border border-2 p-4 cursor-pointer hover:border-white/10 transition-all group overflow-hidden relative flex flex-col h-full brut-card"
+                className="bg-card border border-border border-2 p-4 cursor-pointer hover:border-white/10 transition-all group overflow-hidden relative flex flex-col h-full brut-card rounded-xl"
               >
                 {product.imageUrl && product.imageUrl.trim() !== "" ? (
-                  <div className="w-full aspect-video overflow-hidden mb-4 relative bg-card border border-border border-2 brut-card">
+                  <div className="w-full aspect-video overflow-hidden mb-4 relative bg-card border border-border border-2 brut-card rounded-xl">
                     <img loading="lazy" src={product.imageUrl} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
                       onError={(e) => {
                         e.currentTarget.style.display = 'none';
@@ -93,7 +93,7 @@ export const SearchView: React.FC<SearchViewProps> = ({ products, onBack, onProd
                   </div>
                 ) : (
                   <div 
-                    className="w-full aspect-video overflow-hidden mb-4 relative bg-card flex items-center justify-center border border-border border-2 group-hover:border-white/10 opacity-80 transition-all brut-card"
+                    className="w-full aspect-video overflow-hidden mb-4 relative bg-card flex items-center justify-center border border-border border-2 group-hover:border-white/10 opacity-80 transition-all brut-card rounded-xl"
                     style={{ background: generateGradient(product.name || product.id) }}
                   >
                      <span className="text-5xl font-black text-white mix-blend-overlay opacity-60">

@@ -76,7 +76,7 @@ export const AdminPagesManagement: React.FC<AdminPagesManagementProps> = ({ cust
 
   if (isEditing) {
     return (
-      <div className="bg-card border border-border border-2 p-6 sm:p-8 brut-card">
+      <div className="bg-card border border-border border-2 p-6 sm:p-8 brut-card rounded-2xl">
         <h3 className="font-black text-xl mb-6">{editingPage ? 'แก้ไขหน้าเพจ' : 'สร้างหน้าเพจใหม่'}</h3>
         <form onSubmit={handleSave} className="space-y-4">
           <div>
@@ -85,7 +85,7 @@ export const AdminPagesManagement: React.FC<AdminPagesManagementProps> = ({ cust
               type="text" 
               value={formData.title}
               onChange={(e) => setFormData({...formData, title: e.target.value})}
-              className="w-full bg-card border-2 border-border px-4 py-3 text-sm focus:border-[#2563EB] outline-none transition-colors brut-card"
+              className="w-full bg-card border-2 border-border px-4 py-3 text-sm focus:border-[#2563EB] outline-none transition-colors brut-card rounded-xl"
               placeholder="e.g. Terms of Service, About Us"
             />
           </div>
@@ -95,7 +95,7 @@ export const AdminPagesManagement: React.FC<AdminPagesManagementProps> = ({ cust
               type="text" 
               value={formData.slug}
               onChange={(e) => setFormData({...formData, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-')})}
-              className="w-full bg-card border-2 border-border px-4 py-3 text-sm focus:border-[#2563EB] outline-none transition-colors brut-card"
+              className="w-full bg-card border-2 border-border px-4 py-3 text-sm focus:border-[#2563EB] outline-none transition-colors brut-card rounded-xl"
               placeholder="e.g. terms, about"
             />
           </div>
@@ -104,7 +104,7 @@ export const AdminPagesManagement: React.FC<AdminPagesManagementProps> = ({ cust
             <textarea 
               value={formData.content}
               onChange={(e) => setFormData({...formData, content: e.target.value})}
-              className="w-full bg-card border-2 border-border px-4 py-3 text-sm focus:border-[#2563EB] outline-none transition-colors h-64 font-mono brut-card"
+              className="w-full bg-card border-2 border-border px-4 py-3 text-sm focus:border-[#2563EB] outline-none transition-colors h-64 font-mono brut-card rounded-xl"
               placeholder="Write markdown here..."
             />
           </div>
@@ -118,7 +118,7 @@ export const AdminPagesManagement: React.FC<AdminPagesManagementProps> = ({ cust
             </button>
             <button 
               type="submit"
-              className="px-6 py-3 font-bold text-sm bg-primary text-primary-foreground text-white hover:bg-[#1D4ED8]"
+              className="px-6 py-3 font-bold text-sm bg-primary text-primary-foreground text-white hover:bg-[#1D4ED8] rounded-xl"
             >
               บันทึก
             </button>
@@ -137,13 +137,13 @@ export const AdminPagesManagement: React.FC<AdminPagesManagementProps> = ({ cust
         </div>
         <button 
           onClick={handleCreateNew}
-          className="bg-primary text-primary-foreground hover:bg-[#1D4ED8] text-white px-4 py-2 font-bold text-sm flex items-center gap-2 transition-colors"
+          className="bg-primary text-primary-foreground hover:bg-[#1D4ED8] text-white px-4 py-2 font-bold text-sm flex items-center gap-2 transition-colors rounded-lg"
         >
           <Plus className="w-4 h-4" /> สร้างหน้าเพจใหม่
         </button>
       </div>
 
-      <div className="bg-card border border-border border-2 overflow-hidden brut-card">
+      <div className="bg-card border border-border border-2 overflow-hidden brut-card rounded-xl">
         {customPages.length === 0 ? (
           <div className="p-12 text-center text-muted-foreground font-medium">
             ยังไม่มีหน้าเพจ ข้อมูลที่คุณสร้างจะมาที่นี่
@@ -162,8 +162,8 @@ export const AdminPagesManagement: React.FC<AdminPagesManagementProps> = ({ cust
                   </div>
                 </div>
                 <div className="flex gap-2">
-                  <button onClick={() => handleEdit(page)} className="p-2 text-muted-foreground hover:text-blue-600 bg-card border border-border border-2 transition-all brut-card"><Edit className="w-4 h-4"/></button>
-                  <button onClick={() => handleDelete(page)} className="p-2 text-muted-foreground hover:text-red-500 bg-card border border-border border-2 transition-all brut-card"><Trash2 className="w-4 h-4"/></button>
+                  <button onClick={() => handleEdit(page)} className="p-2 text-muted-foreground hover:text-blue-600 bg-card border border-border border-2 transition-all brut-card rounded-xl"><Edit className="w-4 h-4"/></button>
+                  <button onClick={() => handleDelete(page)} className="p-2 text-muted-foreground hover:text-red-500 bg-card border border-border border-2 transition-all brut-card rounded-xl"><Trash2 className="w-4 h-4"/></button>
                 </div>
               </div>
             ))}

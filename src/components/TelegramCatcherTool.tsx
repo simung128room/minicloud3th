@@ -153,12 +153,12 @@ export const TelegramCatcherTool: React.FC<TelegramCatcherToolProps> = ({ userPl
   return (
     <AnimatedScroll direction="up" hideOnScroll={true}>
       <div className="max-w-4xl mx-auto pb-10 mt-6">
-        <div className="bg-card border border-border border-2 overflow-hidden flex flex-col md:flex-row brut-card">
+        <div className="bg-card border border-border border-2 overflow-hidden flex flex-col md:flex-row brut-card rounded-xl">
         
         {/* Sidebar Settings Area */}
         <div className="w-full md:w-1/3 border-b md:border-b-0 md:border-r border-border border-2 p-6 flex flex-col gap-6">
           <div className="flex items-center gap-3">
-             <div className="w-10 h-10 bg-card flex items-center justify-center text-white brut-card">
+             <div className="w-10 h-10 bg-card flex items-center justify-center text-white brut-card rounded-xl">
                 <Send className="w-5 h-5 -ml-1" />
              </div>
              <div>
@@ -177,7 +177,7 @@ export const TelegramCatcherTool: React.FC<TelegramCatcherToolProps> = ({ userPl
                   value={telegramPhone}
                   onChange={e => setTelegramPhone(e.target.value)}
                   placeholder="+66XXXXXXXXX"
-                  className="w-full bg-card border border-border border-2 py-3 pl-10 pr-4 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-[#2AABEE]/50 focus:ring-1 focus:ring-[#2AABEE]/20 transition-all font-mono brut-card"
+                  className="w-full bg-card border border-border border-2 py-3 pl-10 pr-4 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-[#2AABEE]/50 focus:ring-1 focus:ring-[#2AABEE]/20 transition-all font-mono brut-card rounded-xl"
                   disabled={status !== 'none' && status !== 'error'}
                 />
               </div>
@@ -192,19 +192,19 @@ export const TelegramCatcherTool: React.FC<TelegramCatcherToolProps> = ({ userPl
                   value={truemoneyPhone}
                   onChange={e => setTruemoneyPhone(e.target.value)}
                   placeholder="0XXXXXXXXX"
-                  className="w-full bg-card border border-border border-2 py-3 pl-10 pr-4 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-[#2AABEE]/50 focus:ring-1 focus:ring-[#2AABEE]/20 transition-all font-mono brut-card"
+                  className="w-full bg-card border border-border border-2 py-3 pl-10 pr-4 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-[#2AABEE]/50 focus:ring-1 focus:ring-[#2AABEE]/20 transition-all font-mono brut-card rounded-xl"
                   disabled={status !== 'none' && status !== 'error'}
                 />
               </div>
             </div>
             
-            <div className="h-px bg-card my-2 brut-card" />
+            <div className="h-px bg-card my-2 brut-card rounded-xl" />
 
             {(status === 'none' || status === 'error') && (
               <button 
                 type="submit"
                 disabled={isLoading}
-                className="w-full bg-card hover:bg-[#229ED9] text-white font-black py-3 text-sm transition-all brut-card"
+                className="w-full bg-card hover:bg-[#229ED9] text-white font-black py-3 text-sm transition-all brut-card rounded-xl"
               >
                 {isLoading ? <><Loader2 className="w-4 h-4 animate-spin" /> Connecting...</> : <><Bot className="w-5 h-5" /> Connect Bot</>}
               </button>
@@ -214,7 +214,7 @@ export const TelegramCatcherTool: React.FC<TelegramCatcherToolProps> = ({ userPl
               <button 
                 type="button"
                 onClick={stopCatcher}
-                className="w-full bg-red-500/10 hover:bg-red-500/20 text-red-500 font-bold py-3 text-sm transition-all border border-red-500/30 flex items-center justify-center gap-2 mt-2"
+                className="w-full bg-red-500/10 hover:bg-red-500/20 text-red-500 font-bold py-3 text-sm transition-all border border-red-500/30 flex items-center justify-center gap-2 mt-2 rounded-xl"
               >
                 <LogOut className="w-4 h-4" /> Disconnect
               </button>
@@ -222,7 +222,7 @@ export const TelegramCatcherTool: React.FC<TelegramCatcherToolProps> = ({ userPl
           </form>
 
           {status === 'pending_otp' && (
-            <div className="mt-4 bg-card p-4 border border-[#2AABEE]/30 brut-card">
+            <div className="mt-4 bg-card p-4 border border-[#2AABEE]/30 brut-card rounded-xl">
                <label className="text-xs font-bold text-[#2AABEE] block mb-2"><KeyRound className="inline w-3 h-3 mr-1" /> Enter OTP Code</label>
                <div className="flex gap-2">
                  <input 
@@ -230,13 +230,13 @@ export const TelegramCatcherTool: React.FC<TelegramCatcherToolProps> = ({ userPl
                    value={otp}
                    onChange={e => setOtp(e.target.value)}
                    onKeyDown={e => e.key === 'Enter' && submitValue('otp', otp)}
-                   className="flex-1 w-full bg-card border border-border border-2 px-3 py-2 text-sm text-white focus:outline-none focus:border-[#2AABEE] brut-card"
+                   className="flex-1 w-full bg-card border border-border border-2 px-3 py-2 text-sm text-white focus:outline-none focus:border-[#2AABEE] brut-card rounded-lg"
                    placeholder="•••••"
                  />
                  <button 
                    onClick={() => submitValue('otp', otp)}
                    disabled={isLoading || !otp}
-                   className="bg-card text-white px-4 py-2 font-bold text-sm disabled:opacity-50 brut-card"
+                   className="bg-card text-white px-4 py-2 font-bold text-sm disabled:opacity-50 brut-card rounded-xl"
                  >
                    Verify
                  </button>
@@ -245,7 +245,7 @@ export const TelegramCatcherTool: React.FC<TelegramCatcherToolProps> = ({ userPl
           )}
 
           {status === 'pending_password' && (
-            <div className="mt-4 bg-card p-4 border border-amber-500/30 brut-card">
+            <div className="mt-4 bg-card p-4 border border-amber-500/30 brut-card rounded-xl">
                <label className="text-xs font-bold text-amber-500 block mb-2"><Lock className="inline w-3 h-3 mr-1" /> 2FA Password</label>
                <div className="flex gap-2">
                  <input 
@@ -253,7 +253,7 @@ export const TelegramCatcherTool: React.FC<TelegramCatcherToolProps> = ({ userPl
                    value={password}
                    onChange={e => setPassword(e.target.value)}
                    onKeyDown={e => e.key === 'Enter' && submitValue('password', password)}
-                   className="flex-1 w-full bg-card border border-border border-2 px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500 brut-card"
+                   className="flex-1 w-full bg-card border border-border border-2 px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500 brut-card rounded-lg"
                    placeholder="Password"
                  />
                  <button 
@@ -269,10 +269,10 @@ export const TelegramCatcherTool: React.FC<TelegramCatcherToolProps> = ({ userPl
         </div>
 
         {/* Telegram Chat Area */}
-        <div className="w-full md:w-2/3 bg-card flex flex-col h-[600px] relative brut-card">
+        <div className="w-full md:w-2/3 bg-card flex flex-col h-[600px] relative brut-card rounded-xl">
           
-          <div className="bg-card px-6 py-4 flex items-center border-b border-border border-2 z-10 brut-card">
-            <div className="w-10 h-10 bg-card flex items-center justify-center mr-4 brut-card">
+          <div className="bg-card px-6 py-4 flex items-center border-b border-border border-2 z-10 brut-card rounded-xl">
+            <div className="w-10 h-10 bg-card flex items-center justify-center mr-4 brut-card rounded-xl">
               <Bot className="w-6 h-6 text-white" />
             </div>
             <div>
@@ -291,10 +291,10 @@ export const TelegramCatcherTool: React.FC<TelegramCatcherToolProps> = ({ userPl
           <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-3 z-10 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
             {logs.length === 0 ? (
               <div className="mt-auto mb-auto text-center opacity-40">
-                <div className="w-16 h-16 bg-card flex items-center justify-center mx-auto mb-4 border border-border border-2 brut-card">
+                <div className="w-16 h-16 bg-card flex items-center justify-center mx-auto mb-4 border border-border border-2 brut-card rounded-xl">
                    <Send className="w-6 h-6 text-muted-foreground" />
                 </div>
-                <div className="bg-card text-muted-foreground text-[10px] px-6 py-2 inline-block font-black uppercase tracking-[0.2em] brut-card">
+                <div className="bg-card text-muted-foreground text-[10px] px-6 py-2 inline-block font-black uppercase tracking-[0.2em] brut-card rounded-md">
                   Awaiting Connection
                 </div>
               </div>

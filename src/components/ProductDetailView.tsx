@@ -29,7 +29,7 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({ product, u
     <div className="w-full animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-5xl mx-auto">
       {/* Breadcrumb Navigation */}
       <div className="flex items-center gap-2 mb-6 text-sm">
-        <button onClick={onBack} className="text-muted-foreground hover:text-blue-600 transition-colors flex items-center gap-1 font-medium">
+        <button onClick={onBack} className="text-muted-foreground hover:text-blue-600 transition-colors flex items-center gap-1 font-medium rounded-xl">
           <ArrowLeft className="w-4 h-4" />
           กลับสู่หน้าหลัก
         </button>
@@ -37,9 +37,9 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({ product, u
         <span className="text-white font-bold truncate">{product.name}</span>
       </div>
 
-      <div className="bg-card border border-border border-2 overflow-hidden flex flex-col md:flex-row brut-card">
+      <div className="bg-card border border-border border-2 overflow-hidden flex flex-col md:flex-row brut-card rounded-xl">
         {/* Left Side: Image */}
-        <div className="w-full md:w-5/12 lg:w-1/2 p-6 md:p-8 flex items-center justify-center bg-card brut-card">
+        <div className="w-full md:w-5/12 lg:w-1/2 p-6 md:p-8 flex items-center justify-center bg-card brut-card rounded-2xl">
           <motion.div
             className="w-full aspect-square relative overflow-hidden group"
             whileHover={{ scale: 1.02 }}
@@ -72,7 +72,7 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({ product, u
                  <CheckCircle2 className="w-3.5 h-3.5" /> INSTOCK
                </span>
              ) : (
-               <span className="px-3 py-1 bg-card text-muted-foreground font-bold text-xs border border-border border-2 flex items-center gap-1.5 uppercase tracking-widest brut-card">
+               <span className="px-3 py-1 bg-card text-muted-foreground font-bold text-xs border border-border border-2 flex items-center gap-1.5 uppercase tracking-widest brut-card rounded-md">
                  <Box className="w-3.5 h-3.5" /> OUT OF STOCK
                </span>
              )}
@@ -90,13 +90,13 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({ product, u
           </div>
 
           <div className="grid grid-cols-2 gap-4 mb-8">
-            <div className="bg-card border border-border border-2 p-4 brut-card">
+            <div className="bg-card border border-border border-2 p-4 brut-card rounded-xl">
                <div className="text-muted-foreground text-xs font-bold mb-1 flex items-center gap-1"><Box className="w-3.5 h-3.5"/> สถานะสต๊อก</div>
                <div className={`text-xl font-black ${product.stock > 0 ? 'text-white' : 'text-[#2563EB]'}`}>
                  {product.stock >= 999999 ? '∞' : `${product.stock} ชิ้น`}
                </div>
             </div>
-            <div className="bg-card border border-border border-2 p-4 brut-card">
+            <div className="bg-card border border-border border-2 p-4 brut-card rounded-xl">
                <div className="text-muted-foreground text-xs font-bold mb-1 flex items-center gap-1"><ShoppingCart className="w-3.5 h-3.5"/> สั่งซื้อไปแล้ว</div>
                <div className="text-xl font-black text-white">{product.soldCount || 0} ครั้ง</div>
             </div>
@@ -116,7 +116,7 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({ product, u
                       addToast({ title: "คัดลอกลิงก์แล้ว", message: "แชร์ลิงก์ให้เพื่อนได้เลย!", type: "success" });
                     });
                   }}
-                  className="text-[10px] font-bold text-muted-foreground hover:text-blue-500 transition-colors flex items-center gap-1.5 bg-card border border-border border-2 px-3 py-1.5 active:scale-95 brut-card"
+                  className="text-[10px] font-bold text-muted-foreground hover:text-blue-500 transition-colors flex items-center gap-1.5 bg-card border border-border border-2 px-3 py-1.5 active:scale-95 brut-card rounded-md"
                 >
                   <Share2 className="w-3.5 h-3.5" /> แชร์สินค้า
                 </button>
@@ -131,13 +131,13 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({ product, u
                     link.click();
                     URL.revokeObjectURL(url);
                   }}
-                  className="text-[10px] font-bold text-muted-foreground hover:text-blue-600 transition-colors flex items-center gap-1.5 bg-card border border-border border-2 px-3 py-1.5 active:scale-95 brut-card"
+                  className="text-[10px] font-bold text-muted-foreground hover:text-blue-600 transition-colors flex items-center gap-1.5 bg-card border border-border border-2 px-3 py-1.5 active:scale-95 brut-card rounded-md"
                 >
                   <Download className="w-3.5 h-3.5" /> DOWNLOAD .TXT
                 </button>
               </div>
             </div>
-            <div className="text-muted-foreground text-sm leading-relaxed whitespace-pre-wrap bg-card p-5 border border-border border-2 min-h-[120px] brut-card">
+            <div className="text-muted-foreground text-sm leading-relaxed whitespace-pre-wrap bg-card p-5 border border-border border-2 min-h-[120px] brut-card rounded-xl">
               {product.description || "ไม่มีรายละเอียดสินค้าระบุไว้"}
             </div>
           </div>
@@ -150,7 +150,7 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({ product, u
                   <div className="flex items-center gap-4">
                     <button
                       onClick={() => setPurchaseQuantity(Math.max(1, purchaseQuantity - 1))}
-                      className="w-12 h-12 bg-card flex items-center justify-center font-black text-xl hover:bg-zinc-200 transition-colors active:scale-95 brut-card"
+                      className="w-12 h-12 bg-card flex items-center justify-center font-black text-xl hover:bg-zinc-200 transition-colors active:scale-95 brut-card rounded-xl"
                       disabled={purchaseQuantity <= 1}
                     >
                       -
@@ -164,13 +164,13 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({ product, u
                         const val = parseInt(e.target.value);
                         if (!isNaN(val)) setPurchaseQuantity(Math.min(product.stock >= 999999 ? 999 : product.stock, Math.max(1, val)));
                       }}
-                      className="flex-1 h-12 bg-card border-2 border-border text-center font-black text-xl outline-none focus:border-[#2563EB] transition-colors appearance-none m-0 brut-card"
+                      className="flex-1 h-12 bg-card border-2 border-border text-center font-black text-xl outline-none focus:border-[#2563EB] transition-colors appearance-none m-0 brut-card rounded-xl"
                       style={{ WebkitAppearance: 'none', MozAppearance: 'textfield' }}
                       disabled={product.stock === 0}
                     />
                     <button
                       onClick={() => setPurchaseQuantity(Math.min(product.stock >= 999999 ? 999 : product.stock, purchaseQuantity + 1))}
-                      className="w-12 h-12 bg-card flex items-center justify-center font-black text-xl hover:bg-zinc-200 transition-colors active:scale-95 brut-card"
+                      className="w-12 h-12 bg-card flex items-center justify-center font-black text-xl hover:bg-zinc-200 transition-colors active:scale-95 brut-card rounded-xl"
                       disabled={product.stock === 0 || purchaseQuantity >= product.stock}
                     >
                       +
@@ -226,7 +226,7 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({ product, u
                 <div className="flex items-center gap-3 w-full">
                    <button 
                      onClick={() => setShowConfirmPurchase(false)}
-                     className="flex-1 py-3 bg-card border border-[#3B82F6]/30 hover:bg-purple-600/10 text-[#1D4ED8] font-bold transition-colors text-sm active:scale-95 brut-card"
+                     className="flex-1 py-3 bg-card border border-[#3B82F6]/30 hover:bg-purple-600/10 text-[#1D4ED8] font-bold transition-colors text-sm active:scale-95 brut-card rounded-xl"
                    >
                      ยกเลิก
                    </button>

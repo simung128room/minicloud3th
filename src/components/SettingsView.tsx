@@ -284,7 +284,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ setActiveView, user,
                             <label className="relative inline-flex items-center cursor-pointer">
                               <input 
                                 type="checkbox" 
-                                className="sr-only peer" 
+                                className="sr-only peer rounded-xl" 
                                 checked={useCustomCursor ?? true} 
                                 onChange={toggleCustomCursor}
                               />

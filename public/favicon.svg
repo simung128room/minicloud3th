@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 550" width="100%" height="100%" fill="none">
+  <!-- D -->
+  <path d="M 45 520 L 195 155 L 360 300 L 315 480 L 175 470 L 165 500 Z M 165 270 L 105 460 L 225 440 L 275 340 Z" fill="currentColor" fill-rule="evenodd"/>
+  <!-- E -->
+  <path d="M 380 340 L 610 215 L 585 285 L 435 365 Z M 370 385 L 570 330 L 555 395 L 410 415 Z M 325 490 L 525 490 L 510 440 L 330 440 Z M 330 440 L 380 340 L 350 335 L 305 450 Z" fill="currentColor"/>
+  <!-- V -->
+  <path d="M 605 270 L 640 495 L 975 145 L 820 210 L 660 395 L 675 285 Z" fill="currentColor"/>
+</svg>

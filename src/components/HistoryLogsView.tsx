@@ -34,7 +34,7 @@ export const HistoryLogsView: React.FC<HistoryLogsViewProps> = ({ usedKeysHistor
   );
 
   const CopyBox = ({ text, id }: { text: string, id: string }) => (
-    <div className="flex items-center justify-between gap-3 bg-card border border-border border-2 py-1.5 px-3 w-full max-w-xs brut-card">
+    <div className="flex items-center justify-between gap-3 bg-card border border-border border-2 py-1.5 px-3 w-full max-w-xs brut-card rounded-2xl">
       <span className="font-mono text-muted-foreground font-medium text-xs truncate">
         {text}
       </span>
@@ -57,13 +57,13 @@ export const HistoryLogsView: React.FC<HistoryLogsViewProps> = ({ usedKeysHistor
     if (isPurchase) {
       return (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200" onClick={() => setSelectedItem(null)}>
-          <div className="bg-card w-full max-w-md overflow-hidden relative brut-card" onClick={e => e.stopPropagation()}>
+          <div className="bg-card w-full max-w-md overflow-hidden relative brut-card rounded-2xl" onClick={e => e.stopPropagation()}>
             <div className="p-6 pb-4 relative">
               <button onClick={() => setSelectedItem(null)} className="absolute top-4 right-4 text-muted-foreground hover:text-zinc-400 transition-colors">
                 <X className="w-6 h-6" />
               </button>
               <h3 className="text-2xl font-black text-blue-600 mb-1">รายละเอียดการซื้อ</h3>
-              <p className="text-muted-foreground text-sm font-medium">หมายเลขบิล: <span className="font-mono text-white bg-card px-2 py-0.5 brut-card">BILL-{item.id?.toUpperCase()}</span></p>
+              <p className="text-muted-foreground text-sm font-medium">หมายเลขบิล: <span className="font-mono text-white bg-card px-2 py-0.5 brut-card rounded-md">BILL-{item.id?.toUpperCase()}</span></p>
             </div>
 
             <div className="px-6 space-y-6">
@@ -87,22 +87,22 @@ export const HistoryLogsView: React.FC<HistoryLogsViewProps> = ({ usedKeysHistor
 
               <div>
                 <h4 className="font-black text-white mb-4">รายการสินค้า</h4>
-                <div className="bg-card border p-4 flex flex-col gap-4 border-border border-2 brut-card">
+                <div className="bg-card border p-4 flex flex-col gap-4 border-border border-2 brut-card rounded-xl">
                   <div className="flex gap-4 items-center">
-                    <div className="w-16 h-16 bg-card border border-border border-2 flex items-center justify-center shrink-0 text-muted-foreground brut-card">
+                    <div className="w-16 h-16 bg-card border border-border border-2 flex items-center justify-center shrink-0 text-muted-foreground brut-card rounded-xl">
                       <Package className="w-8 h-8" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <h5 className="font-bold text-white text-sm md:text-base truncate">{item.productName}</h5>
                       <div className="flex items-center gap-2 mt-1">
-                        <span className="text-xs text-muted-foreground font-medium bg-card px-2 py-0.5 brut-card">จำนวน 1 ชิ้น</span>
+                        <span className="text-xs text-muted-foreground font-medium bg-card px-2 py-0.5 brut-card rounded-md">จำนวน 1 ชิ้น</span>
                         <span className="text-sm font-black text-rose-600">฿ {item.price?.toLocaleString() || 0}</span>
                       </div>
                     </div>
                   </div>
                   <button 
                     onClick={() => setShowSecret(!showSecret)}
-                    className="w-full py-2.5 bg-card hover:bg-[#121212] border border-border border-2 text-muted-foreground text-sm font-bold transition-all brut-card"
+                    className="w-full py-2.5 bg-card hover:bg-[#121212] border border-border border-2 text-muted-foreground text-sm font-bold transition-all brut-card rounded-xl"
                   >
                     {showSecret ? 'ซ่อนรายละเอียด' : 'ดูรายละเอียด'}
                   </button>
@@ -131,10 +131,10 @@ export const HistoryLogsView: React.FC<HistoryLogsViewProps> = ({ usedKeysHistor
 
     return (
       <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200" onClick={() => setSelectedItem(null)}>
-        <div className="bg-card w-full max-w-md overflow-hidden relative brut-card" onClick={e => e.stopPropagation()}>
+        <div className="bg-card w-full max-w-md overflow-hidden relative brut-card rounded-2xl" onClick={e => e.stopPropagation()}>
           <div className="flex justify-between items-center p-6 border-b border-border border-2">
             <h3 className="font-bold text-lg text-white">รายละเอียดรายการ</h3>
-            <button onClick={() => setSelectedItem(null)} className="p-2 bg-card hover:bg-zinc-200 text-muted-foreground transition-colors absolute top-4 right-4 focus:outline-none brut-card">
+            <button onClick={() => setSelectedItem(null)} className="p-2 bg-card hover:bg-zinc-200 text-muted-foreground transition-colors absolute top-4 right-4 focus:outline-none brut-card rounded-xl">
               <X className="w-5 h-5"/>
             </button>
           </div>
@@ -152,7 +152,7 @@ export const HistoryLogsView: React.FC<HistoryLogsViewProps> = ({ usedKeysHistor
               <StatusBadge status="SUCCESS" />
             </div>
             
-            <div className="h-px bg-card my-2 w-full relative brut-card"></div>
+            <div className="h-px bg-card my-2 w-full relative brut-card rounded-xl"></div>
 
             {type === 'topup' && (
               <>
@@ -181,10 +181,10 @@ export const HistoryLogsView: React.FC<HistoryLogsViewProps> = ({ usedKeysHistor
             )}
 
           </div>
-          <div className="p-4 bg-card border-t border-border border-2 flex justify-end brut-card">
+          <div className="p-4 bg-card border-t border-border border-2 flex justify-end brut-card rounded-xl">
              <button 
                onClick={() => setSelectedItem(null)}
-               className="px-6 py-3 bg-card hover:bg-[#1e1e1e] text-white text-sm font-bold transition-colors w-full brut-card"
+               className="px-6 py-3 bg-card hover:bg-[#1e1e1e] text-white text-sm font-bold transition-colors w-full brut-card rounded-xl"
              >
                ปิดหน้าต่าง
              </button>
@@ -213,15 +213,15 @@ export const HistoryLogsView: React.FC<HistoryLogsViewProps> = ({ usedKeysHistor
     }
 
     return (
-      <div key={item.id} className="bg-card border border-border border-2 p-5 hover:border-white/20 transition-all flex flex-col md:flex-row md:items-center justify-between gap-5 group relative overflow-hidden brut-card">
-        <div className="absolute top-0 left-0 w-1.5 h-full bg-card group-hover:bg-[#2563EB] transition-colors brut-card"></div>
+      <div key={item.id} className="bg-card border border-border border-2 p-5 hover:border-white/20 transition-all flex flex-col md:flex-row md:items-center justify-between gap-5 group relative overflow-hidden brut-card rounded-xl">
+        <div className="absolute top-0 left-0 w-1.5 h-full bg-card group-hover:bg-[#2563EB] transition-colors brut-card rounded-xl"></div>
         <div className="flex flex-col gap-2 flex-1 pl-2">
           <div className="flex items-center gap-3">
              <span className="font-bold text-white text-base md:text-lg tracking-tight">{title}</span>
              <StatusBadge status="SUCCESS" />
           </div>
           <div className="flex items-center gap-3 text-sm text-muted-foreground font-medium">
-            <span className="font-mono bg-card px-2 py-0.5 text-[11px] text-muted-foreground brut-card"># BILL-{displayId}</span>
+            <span className="font-mono bg-card px-2 py-0.5 text-[11px] text-muted-foreground brut-card rounded-md"># BILL-{displayId}</span>
             <span className="hidden leading-none md:inline-block border-l border-border border-2 h-3"></span>
             <span>{dateStr}</span>
           </div>
@@ -234,7 +234,7 @@ export const HistoryLogsView: React.FC<HistoryLogsViewProps> = ({ usedKeysHistor
           </div>
           <button 
             onClick={() => setSelectedItem({ details: item, type })}
-            className="px-6 py-2.5 bg-card hover:bg-[#121212] border border-border border-2 text-muted-foreground text-sm font-bold transition-all whitespace-nowrap active:scale-95 w-full md:w-auto brut-card"
+            className="px-6 py-2.5 bg-card hover:bg-[#121212] border border-border border-2 text-muted-foreground text-sm font-bold transition-all whitespace-nowrap active:scale-95 w-full md:w-auto brut-card rounded-xl"
           >
             ดูรายละเอียด
           </button>
@@ -246,7 +246,7 @@ export const HistoryLogsView: React.FC<HistoryLogsViewProps> = ({ usedKeysHistor
   const renderPurchaseList = (list: any[], type: string, emptyMessage: string) => {
     if (list.length === 0) {
       return (
-        <div className="py-16 flex flex-col items-center justify-center text-muted-foreground border border-dashed border-border border-2 bg-card brut-card">
+        <div className="py-16 flex flex-col items-center justify-center text-muted-foreground border border-dashed border-border border-2 bg-card brut-card rounded-lg">
           <ShoppingCart className="w-8 h-8 mb-4 opacity-30" />
           <p className="font-medium text-sm">{emptyMessage}</p>
         </div>
@@ -272,7 +272,7 @@ export const HistoryLogsView: React.FC<HistoryLogsViewProps> = ({ usedKeysHistor
 
       {/* Filter Tabs - Scrollable on mobile */}
       <div className="overflow-x-auto pb-4 mb-4 scrollbar-none w-full">
-        <div className="flex bg-card border border-border border-2 w-fit p-1.5 gap-1.5 min-w-max brut-card">
+        <div className="flex bg-card border border-border border-2 w-fit p-1.5 gap-1.5 min-w-max brut-card rounded-xl">
           {[
             { id: 'key_purchase', label: 'ซื้อคีย์', icon: ShoppingCart },
             { id: 'keys', label: 'ใช้คีย์', icon: Key },
@@ -302,7 +302,7 @@ export const HistoryLogsView: React.FC<HistoryLogsViewProps> = ({ usedKeysHistor
               <Key className="w-5 h-5 text-blue-500" /> ประวัติการใช้คีย์
             </h2>
             {usedKeysHistory.length === 0 ? (
-              <div className="py-16 flex flex-col items-center justify-center text-muted-foreground border border-dashed border-border border-2 bg-card brut-card">
+              <div className="py-16 flex flex-col items-center justify-center text-muted-foreground border border-dashed border-border border-2 bg-card brut-card rounded-lg">
                 <Key className="w-8 h-8 mb-4 opacity-30" />
                 <p className="font-medium text-sm">ยังไม่มีประวัติการใช้งานคีย์</p>
               </div>
@@ -320,7 +320,7 @@ export const HistoryLogsView: React.FC<HistoryLogsViewProps> = ({ usedKeysHistor
               <Wallet className="w-5 h-5 text-blue-600" /> ประวัติการเติมเงิน
             </h2>
             {topupHistory.length === 0 ? (
-              <div className="py-16 flex flex-col items-center justify-center text-muted-foreground border border-dashed border-border border-2 bg-card brut-card">
+              <div className="py-16 flex flex-col items-center justify-center text-muted-foreground border border-dashed border-border border-2 bg-card brut-card rounded-lg">
                 <Wallet className="w-8 h-8 mb-4 opacity-30" />
                 <p className="font-medium text-sm">ยังไม่มีประวัติการเติมเงิน</p>
               </div>

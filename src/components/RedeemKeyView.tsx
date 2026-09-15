@@ -32,28 +32,28 @@ export const RedeemKeyView: React.FC<RedeemKeyViewProps> = ({ redeemKey, userEma
         <div className="flex justify-between items-center mb-8">
           <button 
             onClick={onBack}
-            className="flex items-center gap-2 text-muted-foreground hover:text-white transition-all group font-bold px-4 py-2.5 bg-card border border-border border-2 brut-card"
+            className="flex items-center gap-2 text-muted-foreground hover:text-white transition-all group font-bold px-4 py-2.5 bg-card border border-border border-2 brut-card rounded-xl"
           >
             <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
             <span className="hidden sm:inline">กลับหน้าหลัก</span>
             <span className="sm:hidden">กลับ</span>
           </button>
           
-          <div className="flex items-center gap-2 px-4 py-2.5 bg-primary text-primary-foreground border border-border border-2">
+          <div className="flex items-center gap-2 px-4 py-2.5 bg-primary/20 text-primary-foreground border border-border border-2 rounded-full">
             <Sparkles className="w-4 h-4 text-blue-600" />
             <span className="text-blue-600 text-[10px] font-black uppercase tracking-[0.2em]">Key Activation</span>
           </div>
         </div>
 
-        <div className="bg-card border border-border border-2 overflow-hidden brut-card">
+        <div className="bg-card border border-border border-2 overflow-hidden brut-card rounded-3xl">
           <div className="grid grid-cols-1 lg:grid-cols-12 relative z-10">
             
             {/* Left Column: Info & Benefits */}
-            <div className="lg:col-span-12 xl:col-span-5 p-8 md:p-12 border-b lg:border-b-0 lg:border-r border-border border-2 bg-card relative overflow-hidden brut-card">
+            <div className="lg:col-span-12 xl:col-span-5 p-8 md:p-12 border-b lg:border-b-0 lg:border-r border-border border-2 bg-card relative overflow-hidden brut-card rounded-2xl">
               <div className="absolute top-0 right-0 w-64 h-64 bg-primary text-primary-foreground pointer-events-none -translate-y-1/2 translate-x-1/4"></div>
               
               <div className="mb-10 relative z-10">
-                <div className="w-16 h-16 bg-primary text-primary-foreground flex items-center justify-center mb-6">
+                <div className="w-16 h-16 bg-blue-600 text-white rounded-2xl flex items-center justify-center mb-6 shadow-lg">
                   <KeyIcon className="w-8 h-8 text-white" />
                 </div>
                 <h2 className="text-3xl font-black text-white tracking-tight mb-3">
@@ -67,7 +67,7 @@ export const RedeemKeyView: React.FC<RedeemKeyViewProps> = ({ redeemKey, userEma
                 </p>
                 <button 
                   onClick={onGoToStore}
-                  className="w-full flex items-center justify-between px-5 py-4 bg-card hover:bg-[#050505] text-white transition-all active:scale-[0.98] group brut-card"
+                  className="w-full flex items-center justify-between px-5 py-4 bg-card hover:bg-[#050505] text-white transition-all active:scale-[0.98] group brut-card rounded-xl"
                 >
                   <span className="text-xs font-bold flex items-center gap-2">
                     สั่งซื้อผ่านเว็บไซต์เลย
@@ -78,10 +78,10 @@ export const RedeemKeyView: React.FC<RedeemKeyViewProps> = ({ redeemKey, userEma
             </div>
 
             {/* Right Column: Activation Form */}
-            <div className="lg:col-span-12 xl:col-span-7 p-8 md:p-12 lg:p-16 flex flex-col justify-center bg-card relative brut-card">
+            <div className="lg:col-span-12 xl:col-span-7 p-8 md:p-12 lg:p-16 flex flex-col justify-center bg-card relative brut-card rounded-2xl">
               <div className="max-w-md mx-auto w-full relative z-10">
                 <div className="mb-10">
-                   <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-card border border-border border-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-4 brut-card">
+                   <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-card border border-border border-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-4 brut-card rounded-md">
                      <KeyIcon className="w-3 h-3" /> Activation Center
                    </div>
                    <h3 className="text-2xl font-black text-white mb-2">Redeem Code</h3>
@@ -109,7 +109,7 @@ export const RedeemKeyView: React.FC<RedeemKeyViewProps> = ({ redeemKey, userEma
                     {!isLoggedIn && (
                       <div className="mt-3 text-center">
                         <p className="text-sm font-bold text-[#2563EB] mb-2">กรุณาเข้าสู่ระบบก่อนกรอกคีย์</p>
-                        <button type="button" onClick={onLoginClick} className="px-4 py-2 bg-primary text-primary-foreground text-blue-600 text-sm font-bold hover:bg-purple-600/20 transition-colors">เข้าสู่ระบบ / สมัครสมาชิก</button>
+                        <button type="button" onClick={onLoginClick} className="px-4 py-2 bg-primary text-primary-foreground text-blue-600 text-sm font-bold hover:bg-purple-600/20 transition-colors rounded-xl">เข้าสู่ระบบ / สมัครสมาชิก</button>
                       </div>
                     )}
                   </div>
@@ -117,7 +117,7 @@ export const RedeemKeyView: React.FC<RedeemKeyViewProps> = ({ redeemKey, userEma
                   <button 
                     type="submit" 
                     disabled={!keyInput || !isLoggedIn}
-                    className="w-full relative group h-16 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                    className="w-full relative group h-16 disabled:opacity-50 disabled:cursor-not-allowed transition-all rounded-xl"
                   >
                     <div className="absolute inset-0 bg-primary text-primary-foreground blur-lg opacity-20 group-hover:opacity-40 transition-opacity"></div>
                     <div className="relative h-full w-full bg-primary text-primary-foreground text-white font-bold text-sm uppercase tracking-widest flex items-center justify-center gap-3 active:scale-[0.98] transition-all">

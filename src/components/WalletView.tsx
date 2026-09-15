@@ -90,7 +90,7 @@ export const WalletView: React.FC<WalletViewProps> = ({ userPlan, setUserPlan, o
             billNumber: topup ? 'T-' + topup.id.split('-')[0].toUpperCase() : 'T-' + Math.floor(Math.random()*1000000).toString().padStart(6, '0'),
             money: topup ? topup.amount : amount,
             title: topup ? topup.title : 'เติมเงินสำเร็จ',
-            image: topup ? topup.image : 'https://img1.pic.in.th/images/IMG_6162.png'
+            image: topup ? topup.image : 'https://images.unsplash.com/photo-1613243555988-441166d4d6fd?auto=format&fit=crop&w=800&q=80'
           };
           if (onTopupSuccess) onTopupSuccess(historyEntry);
         } catch(e) {}
@@ -179,7 +179,7 @@ export const WalletView: React.FC<WalletViewProps> = ({ userPlan, setUserPlan, o
               billNumber: topup ? 'T-' + topup.id.split('-')[0].toUpperCase() : 'T-' + Math.floor(Math.random()*1000000).toString().padStart(6, '0'),
               money: topup ? topup.amount : amount,
               title: topup ? topup.title : 'เติมเงินสำเร็จ',
-              image: topup ? topup.image : 'https://img2.pic.in.th/IMG_6166.png'
+              image: topup ? topup.image : 'https://images.unsplash.com/photo-1613243555988-441166d4d6fd?auto=format&fit=crop&w=800&q=80'
             };
             if (onTopupSuccess) onTopupSuccess(historyEntry);
           } catch(e) {}
@@ -236,17 +236,17 @@ export const WalletView: React.FC<WalletViewProps> = ({ userPlan, setUserPlan, o
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, delay: 0.1 }}
               whileHover={{ y: -5, borderColor: 'rgba(34,197,94,0.3)' }}
-              className="bg-[#0c0c0c]/85 border border-white/[0.08] p-8 md:p-10 rounded-3xl flex flex-col items-center text-center transition-all group relative overflow-hidden cursor-pointer shadow-xl hover:shadow-2xl hover:shadow-green-500/[0.03]"
+              className="bg-[#0c0c0e]/90 backdrop-blur-md border border-white/[0.08] p-8 md:p-10 rounded-[32px] flex flex-col items-center text-center transition-all group relative overflow-hidden cursor-pointer shadow-xl hover:shadow-2xl hover:shadow-green-500/[0.05]"
               onClick={() => setActiveView('truemoney')}
             >
-              <div className="w-24 h-24 mb-6 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6">
-                <img loading="lazy" src="https://img1.pic.in.th/images/IMG_6172.png" alt="TrueMoney Wallet" className="w-full h-full object-contain" />
+              <div className="w-24 h-24 mb-6 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6 flex items-center justify-center rounded-3xl bg-gradient-to-br from-orange-500 to-amber-600 shadow-lg shadow-orange-500/20 text-white">
+                <Gift className="w-12 h-12" />
               </div>
               <h2 className="text-2xl font-black text-white mb-3">TrueMoney Wallet (อั่งเปา)</h2>
               <p className="text-white/50 text-sm mb-3 leading-relaxed px-4 font-medium">
                 เติมเงินผ่านคิวอาร์โค้ดหรือลิงก์ซองของขวัญ TrueMoney Wallet สะดวก รวดเร็ว ตรวจสอบของรางวัลอัตโนมัติ
               </p>
-              <div className="mt-4 px-4 py-1.5 rounded-full bg-white/[0.04] border border-white/[0.06] text-xs text-neon-green font-mono font-bold uppercase tracking-wider group-hover:bg-neon-green/10 group-hover:border-neon-green/30 transition-all">
+              <div className="mt-4 px-5 py-2 rounded-full bg-white/[0.04] border border-white/[0.08] text-xs text-neon-green font-mono font-bold uppercase tracking-wider group-hover:bg-neon-green/10 group-hover:border-neon-green/30 transition-all shadow-sm">
                 GIFT LINK TOPUP
               </div>
             </motion.div>
@@ -257,17 +257,17 @@ export const WalletView: React.FC<WalletViewProps> = ({ userPlan, setUserPlan, o
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, delay: 0.2 }}
               whileHover={{ y: -5, borderColor: 'rgba(34,197,94,0.3)' }}
-              className="bg-[#0c0c0c]/85 border border-white/[0.08] p-8 md:p-10 rounded-3xl flex flex-col items-center text-center transition-all group relative overflow-hidden cursor-pointer shadow-xl hover:shadow-2xl hover:shadow-green-500/[0.03]"
+              className="bg-[#0c0c0e]/90 backdrop-blur-md border border-white/[0.08] p-8 md:p-10 rounded-[32px] flex flex-col items-center text-center transition-all group relative overflow-hidden cursor-pointer shadow-xl hover:shadow-2xl hover:shadow-green-500/[0.05]"
               onClick={() => setActiveView('bank')}
             >
-              <div className="w-24 h-24 mb-6 transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-6">
-                <img loading="lazy" src="https://img1.pic.in.th/images/IMG_6164.png" alt="Bank Transfer" className="w-full h-full object-contain" />
+              <div className="w-24 h-24 mb-6 transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-6 flex items-center justify-center rounded-3xl bg-gradient-to-br from-emerald-600 to-teal-700 shadow-lg shadow-emerald-500/20 text-white">
+                <Landmark className="w-12 h-12" />
               </div>
               <h2 className="text-2xl font-black text-white mb-3">ธนาคาร เช็คสลิป</h2>
               <p className="text-white/50 text-sm mb-3 leading-relaxed px-4 font-medium">
                 โอนเงินเข้าบัญชีธนาคารกสิกรไทย แล้วอัปโหลดรูปภาพสลิป มีระบบสแกนตรวจสอบอัจฉริยะ ตลอด 24 ชม.
               </p>
-              <div className="mt-4 px-4 py-1.5 rounded-full bg-white/[0.04] border border-white/[0.06] text-xs text-neon-green font-mono font-bold uppercase tracking-wider group-hover:bg-neon-green/10 group-hover:border-neon-green/30 transition-all">
+              <div className="mt-4 px-5 py-2 rounded-full bg-white/[0.04] border border-white/[0.08] text-xs text-neon-green font-mono font-bold uppercase tracking-wider group-hover:bg-neon-green/10 group-hover:border-neon-green/30 transition-all shadow-sm">
                 BANK SLIP SCANNER
               </div>
             </motion.div>
@@ -279,31 +279,31 @@ export const WalletView: React.FC<WalletViewProps> = ({ userPlan, setUserPlan, o
         <motion.div 
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
-          className="max-w-xl mx-auto bg-[#0a0a0a]/90 backdrop-blur border border-white/[0.08] p-6 sm:p-10 rounded-3xl shadow-2xl relative"
+          className="max-w-xl mx-auto bg-[#0a0a0c]/90 backdrop-blur-xl border border-white/[0.08] p-6 sm:p-10 rounded-[32px] shadow-2xl relative"
         >
           <button 
             onClick={() => setActiveView('main')}
-            className="mb-8 flex items-center gap-2 text-white/50 hover:text-white transition-colors font-bold text-sm cursor-pointer"
+            className="mb-8 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/[0.04] border border-white/[0.08] text-white/70 hover:text-white hover:bg-white/[0.08] transition-all font-bold text-xs cursor-pointer shadow-sm active:scale-95"
           >
-            <ArrowLeft className="w-4 h-4 text-neon-green" /> ย้อนกลับ
+            <ArrowLeft className="w-3.5 h-3.5 text-neon-green" /> ย้อนกลับ
           </button>
           
           <div className="flex flex-col items-center text-center mb-8">
-            <div className="w-32 h-32 mb-4">
-              <img loading="lazy" src="https://img1.pic.in.th/images/IMG_6172.png" alt="TrueMoney Wallet" className="w-full h-full object-contain" />
+            <div className="w-24 h-24 mb-4 flex items-center justify-center rounded-3xl bg-gradient-to-br from-orange-500 to-amber-600 shadow-lg shadow-orange-500/20 text-white">
+              <Gift className="w-12 h-12" />
             </div>
             <h2 className="text-2xl font-black text-white">เติมเงินผ่านซองของขวัญ</h2>
             <p className="text-white/40 text-xs mt-1.5 font-medium">นำลิงก์ซองของขวัญจากแอปทรูมันนี่วอลเล็ทมาเติมเข้าสู่แอปพลิเคชัน</p>
           </div>
 
           <div className="space-y-4">
-            <div className="bg-[#111] border border-white/[0.06] p-4 rounded-2xl flex items-center gap-3 text-white/70">
+            <div className="bg-white/[0.02] border border-white/[0.06] p-4 rounded-2xl flex items-center gap-3 text-white/70">
               <ShieldCheck className="w-5 h-5 text-neon-green shrink-0" />
               <span className="text-xs sm:text-sm font-bold tracking-wider">ระบบตรวจสอบและเติมเงินอัตโนมัติ รวดเร็ว 100%</span>
             </div>
 
             <div className="bg-red-500/5 border border-red-500/10 p-4 rounded-2xl text-center">
-              <p className="text-xs text-rose-450 font-bold leading-relaxed">โปรดตรวจสอบลิงก์ให้ถูกต้องและพิมพ์ให้ตรงกับความเป็นจริงก่อนกดตกลง</p>
+              <p className="text-xs text-rose-400 font-bold leading-relaxed">โปรดตรวจสอบลิงก์ให้ถูกต้องและพิมพ์ให้ตรงกับความเป็นจริงก่อนกดตกลง</p>
             </div>
 
             <form onSubmit={handleTruemoneyTopup} className="mt-6 space-y-4">
@@ -314,13 +314,13 @@ export const WalletView: React.FC<WalletViewProps> = ({ userPlan, setUserPlan, o
                   value={truemoneyLink}
                   onChange={(e) => setTruemoneyLink(e.target.value)}
                   placeholder="https://gift.truemoney.com/campaign/?v=..."
-                  className="w-full bg-white/[0.02] border border-white/[0.08] rounded-2xl p-4 text-white text-sm placeholder:text-white/20 focus:outline-none focus:border-neon-green/50 focus:bg-[#0c0c0c] transition-all font-sans font-bold"
+                  className="w-full bg-white/[0.02] border border-white/[0.08] rounded-2xl p-4 text-white text-sm placeholder:text-white/20 focus:outline-none focus:border-neon-green/50 focus:bg-[#0c0c0c] transition-all font-sans font-bold shadow-inner"
                   required
                 />
               </div>
               <button
                 type="submit"
-                className="w-full py-4 rounded-2xl bg-neon-green hover:bg-neon-green/90 text-black font-black tracking-widest uppercase transition-all duration-200 shadow-lg shadow-neon-green/10 hover:shadow-neon-green/20 cursor-pointer active:scale-[0.98]"
+                className="w-full py-4 rounded-full bg-neon-green hover:bg-neon-green/90 text-black font-black text-xs tracking-widest uppercase transition-all duration-200 shadow-lg shadow-neon-green/20 hover:shadow-neon-green/30 cursor-pointer active:scale-[0.98]"
               >
                 ยืนยันการเติมเงิน
               </button>
@@ -333,17 +333,17 @@ export const WalletView: React.FC<WalletViewProps> = ({ userPlan, setUserPlan, o
         <motion.div 
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
-          className="max-w-xl mx-auto bg-[#0a0a0a]/90 backdrop-blur border border-white/[0.08] p-6 sm:p-10 rounded-3xl shadow-2xl relative"
+          className="max-w-xl mx-auto bg-[#0a0a0c]/90 backdrop-blur-xl border border-white/[0.08] p-6 sm:p-10 rounded-[32px] shadow-2xl relative"
         >
           <button 
             onClick={() => setActiveView('main')}
-            className="mb-8 flex items-center gap-2 text-white/50 hover:text-white transition-colors font-bold text-sm cursor-pointer"
+            className="mb-8 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/[0.04] border border-white/[0.08] text-white/70 hover:text-white hover:bg-white/[0.08] transition-all font-bold text-xs cursor-pointer shadow-sm active:scale-95"
           >
-            <ArrowLeft className="w-4 h-4 text-neon-green" /> ย้อนกลับ
+            <ArrowLeft className="w-3.5 h-3.5 text-neon-green" /> ย้อนกลับ
           </button>
           
           <div className="space-y-6">
-            <div className="bg-white/[0.01] border border-white/[0.06] p-6 rounded-3xl text-center space-y-4">
+            <div className="bg-white/[0.01] border border-white/[0.06] p-6 rounded-[26px] text-center space-y-4">
                 <div className="flex bg-[#008000]/10 border border-[#008000]/30 text-[#00A82D] px-6 py-2.5 gap-2.5 items-center w-fit mx-auto rounded-full font-bold text-xs select-none">
                   <Landmark className="w-4 h-4" />
                   <span>ธนาคารกสิกรไทย (K-BANK)</span>
@@ -386,10 +386,10 @@ export const WalletView: React.FC<WalletViewProps> = ({ userPlan, setUserPlan, o
             </div>
 
             <div className="pt-2 flex flex-col items-center w-full">
-              <label className="flex flex-col items-center justify-center w-full py-10 rounded-3xl bg-white/[0.01] hover:bg-white/[0.02] transition-all border-2 border-dashed border-white/[0.08] hover:border-neon-green/30 cursor-pointer group active:scale-[0.99] relative z-10 shadow-lg">
-                  <input type="file" className="hidden" accept="image/png, image/jpeg" onChange={handleSlipUpload} />
-                  <div className="w-24 h-24 mb-4 group-hover:scale-105 transition-transform">
-                     <img loading="lazy" src="https://img1.pic.in.th/images/IMG_6164.png" alt="KBank" className="w-full h-full object-contain" />
+              <label className="flex flex-col items-center justify-center w-full py-10 rounded-[28px] bg-white/[0.01] hover:bg-white/[0.03] transition-all border-2 border-dashed border-white/[0.08] hover:border-neon-green/30 cursor-pointer group active:scale-[0.99] relative z-10 shadow-lg">
+                  <input type="file" className="hidden rounded-xl" accept="image/png, image/jpeg" onChange={handleSlipUpload} />
+                  <div className="w-20 h-20 mb-4 group-hover:scale-105 transition-transform flex items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-600 to-teal-700 shadow-lg shadow-emerald-500/20 text-white">
+                     <Landmark className="w-10 h-10" />
                   </div>
                   <div className="text-center px-4">
                      <span className="text-lg font-black text-white block leading-none">อัปโหลดสลิปธนาคารของท่าน</span>

@@ -39,8 +39,8 @@ export class GlobalErrorBoundary extends React.Component<ErrorBoundaryProps, Err
   render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen bg-card flex items-center justify-center p-6 font-sans brut-card">
-          <div className="max-w-md w-full bg-card border border-border border-2 p-10 text-center relative overflow-hidden brut-card">
+        <div className="min-h-screen bg-card flex items-center justify-center p-6 font-sans brut-card rounded-2xl">
+          <div className="max-w-md w-full bg-card border border-border border-2 p-10 text-center relative overflow-hidden brut-card rounded-2xl">
             {/* Background Decoration */}
             <div className="absolute -top-24 -left-24 w-48 h-48 bg-red-500/10"></div>
             <div className="absolute -bottom-24 -right-24 w-48 h-48 bg-primary text-primary-foreground"></div>
@@ -58,13 +58,13 @@ export class GlobalErrorBoundary extends React.Component<ErrorBoundaryProps, Err
                 <div className="flex flex-col gap-3">
                     <button
                         onClick={this.handleReload}
-                        className="w-full flex items-center justify-center gap-2 py-4 bg-primary text-primary-foreground hover:bg-[#1D4ED8] text-white font-black text-sm transition-all active:scale-[0.98] uppercase tracking-wider"
+                        className="w-full flex items-center justify-center gap-2 py-4 bg-primary text-primary-foreground hover:bg-[#1D4ED8] text-white font-black text-sm transition-all active:scale-[0.98] uppercase tracking-wider rounded-xl"
                     >
                         <RefreshCcw className="w-4 h-4" /> รีเฟรชหน้านี้
                     </button>
                     <button
                         onClick={this.handleGoHome}
-                        className="w-full flex items-center justify-center gap-2 py-4 bg-card hover:bg-white/10 text-muted-foreground hover:text-white font-bold text-sm transition-all brut-card"
+                        className="w-full flex items-center justify-center gap-2 py-4 bg-card hover:bg-white/10 text-muted-foreground hover:text-white font-bold text-sm transition-all brut-card rounded-xl"
                     >
                         <Home className="w-4 h-4" /> กลับสู่หน้าหลัก
                     </button>

@@ -53,16 +53,16 @@ export const PopupBanner: React.FC<PopupBannerProps> = ({ enabled, imgUrl, linkU
             animate={{ opacity: 1, scale: 1, x: 0 }}
             exit={{ opacity: 0, scale: 0.95, x: 40 }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="relative w-[calc(100vw-2rem)] max-w-[340px] sm:max-w-[400px] max-h-[85vh] bg-card overflow-hidden flex flex-col pointer-events-auto border border-border border-2 brut-card"
+            className="relative w-[calc(100vw-2rem)] max-w-[340px] sm:max-w-[400px] max-h-[85vh] bg-card overflow-hidden flex flex-col pointer-events-auto border border-border border-2 brut-card rounded-2xl"
           >
             <button
               onClick={handleClose}
-              className="absolute top-4 right-4 z-10 w-10 h-10 bg-card hover:bg-black/70 flex items-center justify-center text-white transition-colors brut-card"
+              className="absolute top-4 right-4 z-10 w-10 h-10 bg-card hover:bg-black/70 flex items-center justify-center text-white transition-colors brut-card rounded-xl"
             >
               <X className="w-5 h-5" />
             </button>
             
-            <div className="w-full flex-1 overflow-auto bg-card flex items-center justify-center brut-card">
+            <div className="w-full flex-1 overflow-auto bg-card flex items-center justify-center brut-card rounded-xl">
               {linkUrl ? (
                 <a href={linkUrl} target="_blank" rel="noopener noreferrer" className="w-full h-full flex items-center justify-center">
                   <ImageContent />
@@ -72,12 +72,12 @@ export const PopupBanner: React.FC<PopupBannerProps> = ({ enabled, imgUrl, linkU
               )}
             </div>
 
-            <div className="p-4 sm:px-6 bg-card flex-shrink-0 flex flex-wrap items-center justify-between border-t border-border border-2 gap-4 brut-card">
+            <div className="p-4 sm:px-6 bg-card flex-shrink-0 flex flex-wrap items-center justify-between border-t border-border border-2 gap-4 brut-card rounded-xl">
               <label className="flex items-center gap-3 cursor-pointer group">
                 <div className="relative flex items-center justify-center">
                   <input 
                     type="checkbox" 
-                    className="sr-only" 
+                    className="sr-only rounded-xl" 
                     checked={dontShow}
                     onChange={(e) => setDontShow(e.target.checked)}
                   />
@@ -87,7 +87,7 @@ export const PopupBanner: React.FC<PopupBannerProps> = ({ enabled, imgUrl, linkU
                 </div>
                 <span className="text-muted-foreground text-sm font-semibold select-none group-hover:text-white transition-colors">ไม่แสดงอีกใน 24 ชั่วโมง</span>
               </label>
-              <button onClick={handleClose} className="px-5 py-2.5 bg-card hover:bg-[#050505] hover:text-white text-white text-sm font-bold transition-colors brut-card">
+              <button onClick={handleClose} className="px-5 py-2.5 bg-card hover:bg-[#050505] hover:text-white text-white text-sm font-bold transition-colors brut-card rounded-xl">
                 ปิดหน้าต่าง
               </button>
             </div>

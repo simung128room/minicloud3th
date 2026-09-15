@@ -108,12 +108,12 @@ export const DiscordTokenOnTool: React.FC<DiscordTokenOnToolProps> = ({ userPlan
   return (
     <AnimatedScroll direction="up" hideOnScroll={true}>
       <div className="max-w-4xl mx-auto pb-10 mt-6">
-        <div className="bg-card border border-border border-2 overflow-hidden flex flex-col md:flex-row brut-card">
+        <div className="bg-card border border-border border-2 overflow-hidden flex flex-col md:flex-row brut-card rounded-xl">
         
         {/* Sidebar Settings Area */}
         <div className="w-full md:w-1/3 border-b md:border-b-0 md:border-r border-border border-2 p-6 flex flex-col gap-6">
           <div className="flex items-center gap-3">
-             <div className="w-10 h-10 bg-card flex items-center justify-center text-white brut-card">
+             <div className="w-10 h-10 bg-card flex items-center justify-center text-white brut-card rounded-xl">
                 <Globe className="w-5 h-5" />
              </div>
              <div>
@@ -132,19 +132,19 @@ export const DiscordTokenOnTool: React.FC<DiscordTokenOnToolProps> = ({ userPlan
                   value={discordToken}
                   onChange={e => setDiscordToken(e.target.value)}
                   placeholder="MTA...."
-                  className="w-full bg-card border border-border border-2 py-3 pl-10 pr-4 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-[#5865F2]/50 focus:ring-1 focus:ring-[#5865F2]/20 transition-all font-mono brut-card"
+                  className="w-full bg-card border border-border border-2 py-3 pl-10 pr-4 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-[#5865F2]/50 focus:ring-1 focus:ring-[#5865F2]/20 transition-all font-mono brut-card rounded-xl"
                   disabled={status !== 'none' && status !== 'error'}
                 />
               </div>
             </div>
             
-            <div className="h-px bg-card my-2 brut-card" />
+            <div className="h-px bg-card my-2 brut-card rounded-xl" />
 
             {(status === 'none' || status === 'error') && (
               <button 
                 type="submit"
                 disabled={isLoading}
-                className="w-full bg-card hover:bg-[#4752C4] text-white font-black py-3 text-sm transition-all brut-card"
+                className="w-full bg-card hover:bg-[#4752C4] text-white font-black py-3 text-sm transition-all brut-card rounded-xl"
               >
                 {isLoading ? <><Loader2 className="w-4 h-4 animate-spin" /> Connecting...</> : <><Power className="w-5 h-5" /> Connect Token</>}
               </button>
@@ -154,7 +154,7 @@ export const DiscordTokenOnTool: React.FC<DiscordTokenOnToolProps> = ({ userPlan
               <button 
                 type="button"
                 onClick={stopSystem}
-                className="w-full bg-red-500/10 hover:bg-red-500/20 text-red-500 font-bold py-3 text-sm transition-all border border-red-500/30 flex items-center justify-center gap-2 mt-2"
+                className="w-full bg-red-500/10 hover:bg-red-500/20 text-red-500 font-bold py-3 text-sm transition-all border border-red-500/30 flex items-center justify-center gap-2 mt-2 rounded-xl"
               >
                 <LogOut className="w-4 h-4" /> Disconnect
               </button>
@@ -163,10 +163,10 @@ export const DiscordTokenOnTool: React.FC<DiscordTokenOnToolProps> = ({ userPlan
         </div>
 
         {/* Discord Terminal Logs Area */}
-        <div className="w-full md:w-2/3 bg-card flex flex-col h-[600px] relative brut-card">
+        <div className="w-full md:w-2/3 bg-card flex flex-col h-[600px] relative brut-card rounded-xl">
           
-          <div className="bg-card px-6 py-4 flex items-center border-b border-border border-2 z-10 brut-card">
-            <div className="w-10 h-10 bg-card flex items-center justify-center mr-4 brut-card">
+          <div className="bg-card px-6 py-4 flex items-center border-b border-border border-2 z-10 brut-card rounded-xl">
+            <div className="w-10 h-10 bg-card flex items-center justify-center mr-4 brut-card rounded-xl">
               <Terminal className="w-5 h-5 text-white" />
             </div>
             <div>
@@ -183,10 +183,10 @@ export const DiscordTokenOnTool: React.FC<DiscordTokenOnToolProps> = ({ userPlan
           <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-3 z-10 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
             {logs.length === 0 ? (
               <div className="mt-auto mb-auto text-center">
-                <div className="w-16 h-16 bg-card flex items-center justify-center mx-auto mb-4 border border-border border-2 brut-card">
+                <div className="w-16 h-16 bg-card flex items-center justify-center mx-auto mb-4 border border-border border-2 brut-card rounded-xl">
                   <Terminal className="w-8 h-8 text-muted-foreground" />
                 </div>
-                <div className="bg-card text-muted-foreground text-xs px-4 py-1.5 inline-block font-medium brut-card">
+                <div className="bg-card text-muted-foreground text-xs px-4 py-1.5 inline-block font-medium brut-card rounded-md">
                   Add token to start keeping it online
                 </div>
               </div>

@@ -148,8 +148,8 @@ export const AdminCategoriesManagement: React.FC<AdminCategoriesManagementProps>
       </div>
 
       {(isAdding || editingCategory) && (
-        <div className="bg-card border overflow-hidden mb-8 transition-all brut-card">
-          <div className="bg-card p-6 sm:p-8 flex items-center justify-between border-b border-border border-2 brut-card">
+        <div className="bg-card border overflow-hidden mb-8 transition-all brut-card rounded-xl">
+          <div className="bg-card p-6 sm:p-8 flex items-center justify-between border-b border-border border-2 brut-card rounded-2xl">
             <div>
               <h3 className="text-xl font-black text-white tracking-tight">
                 {editingCategory ? 'แก้ไขหมวดหมู่สินค้า' : 'สร้างหมวดหมู่ใหม่'}
@@ -158,7 +158,7 @@ export const AdminCategoriesManagement: React.FC<AdminCategoriesManagementProps>
                 {editingCategory ? 'แก้ไขรายละเอียดหมวดหมู่ที่นี่' : 'เพิ่มรายละเอียดหมวดหมู่สินค้าใหม่ลงในระบบ'}
               </p>
             </div>
-            <div className="p-3 bg-card border border-border border-2 brut-card">
+            <div className="p-3 bg-card border border-border border-2 brut-card rounded-xl">
               {editingCategory ? <Edit className="w-6 h-6 text-blue-500" /> : <Package className="w-6 h-6 text-[#2563EB]" />}
             </div>
           </div>
@@ -174,7 +174,7 @@ export const AdminCategoriesManagement: React.FC<AdminCategoriesManagementProps>
                     type="text" 
                     value={formData.name || ''} 
                     onChange={e => setFormData({...formData, name: e.target.value})} 
-                    className="w-full bg-card focus:bg-[#0B0D0F] border border-border border-2 focus:border-[#3B82F6]/40 focus:ring-4 focus:ring-[#3B82F6]/30 px-4 py-3 text-sm font-medium transition-all brut-card" 
+                    className="w-full bg-card focus:bg-[#0B0D0F] border border-border border-2 focus:border-[#3B82F6]/40 focus:ring-4 focus:ring-[#3B82F6]/30 px-4 py-3 text-sm font-medium transition-all brut-card rounded-xl" 
                     placeholder="เช่น game_accounts (อักษรภาษาอังกฤษ)" 
                   />
                   <p className="text-xs text-muted-foreground mt-2 ml-1">สำหรับใช้ในระบบ โปรดใช้ภาษาอังกฤษ</p>
@@ -188,7 +188,7 @@ export const AdminCategoriesManagement: React.FC<AdminCategoriesManagementProps>
                     type="text" 
                     value={formData.title || ''} 
                     onChange={e => setFormData({...formData, title: e.target.value})} 
-                    className="w-full bg-card focus:bg-[#0B0D0F] border border-border border-2 focus:border-[#3B82F6]/40 focus:ring-4 focus:ring-[#3B82F6]/30 px-4 py-3 text-sm font-medium transition-all brut-card" 
+                    className="w-full bg-card focus:bg-[#0B0D0F] border border-border border-2 focus:border-[#3B82F6]/40 focus:ring-4 focus:ring-[#3B82F6]/30 px-4 py-3 text-sm font-medium transition-all brut-card rounded-xl" 
                     placeholder="เช่น บัญชีเกม" 
                   />
                   <p className="text-xs text-muted-foreground mt-2 ml-1">ชื่อหมวดหมู่ที่จะแสดงให้ผู้ใช้งานเห็น</p>
@@ -203,7 +203,7 @@ export const AdminCategoriesManagement: React.FC<AdminCategoriesManagementProps>
                   <textarea 
                     value={formData.subtitle || ''} 
                     onChange={e => setFormData({...formData, subtitle: e.target.value})} 
-                    className="w-full h-[124px] bg-card focus:bg-[#0B0D0F] border border-border border-2 focus:border-[#3B82F6]/40 focus:ring-4 focus:ring-[#3B82F6]/30 px-4 py-3 text-sm font-medium transition-all resize-none brut-card" 
+                    className="w-full h-[124px] bg-card focus:bg-[#0B0D0F] border border-border border-2 focus:border-[#3B82F6]/40 focus:ring-4 focus:ring-[#3B82F6]/30 px-4 py-3 text-sm font-medium transition-all resize-none brut-card rounded-xl" 
                     placeholder="เขียนอธิบายเกี่ยวกับสินค้านี้..." 
                   />
                 </div>
@@ -221,7 +221,7 @@ export const AdminCategoriesManagement: React.FC<AdminCategoriesManagementProps>
                         type="text" 
                         value={formData.bannerUrl || ''} 
                         onChange={e => setFormData({...formData, bannerUrl: e.target.value})} 
-                        className="w-full bg-card focus:bg-[#0B0D0F] border border-border border-2 focus:border-[#3B82F6]/40 focus:ring-4 focus:ring-[#3B82F6]/30 pl-11 pr-4 py-3 text-sm font-medium transition-all brut-card" 
+                        className="w-full bg-card focus:bg-[#0B0D0F] border border-border border-2 focus:border-[#3B82F6]/40 focus:ring-4 focus:ring-[#3B82F6]/30 pl-11 pr-4 py-3 text-sm font-medium transition-all brut-card rounded-xl" 
                         placeholder="https://example.com/banner.jpg" 
                       />
                     </div>
@@ -231,14 +231,14 @@ export const AdminCategoriesManagement: React.FC<AdminCategoriesManagementProps>
                   </div>
                   
                   {formData.bannerUrl ? (
-                    <div className="w-full md:w-64 h-32 overflow-hidden border border-border border-2 relative group bg-card shrink-0 brut-card">
+                    <div className="w-full md:w-64 h-32 overflow-hidden border border-border border-2 relative group bg-card shrink-0 brut-card rounded-xl">
                       <img loading="lazy" src={formData.bannerUrl || undefined} alt="Preview" className="w-full h-full object-cover" />
                       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                         <p className="text-white text-xs font-bold text-center px-4">พรีวิวรูปภาพหน้าปก</p>
                       </div>
                     </div>
                   ) : (
-                    <div className="w-full md:w-64 h-32 border-2 border-dashed border-border flex flex-col items-center justify-center text-muted-foreground shrink-0 bg-card brut-card">
+                    <div className="w-full md:w-64 h-32 border-2 border-dashed border-border flex flex-col items-center justify-center text-muted-foreground shrink-0 bg-card brut-card rounded-xl">
                       <ImageIcon className="w-8 h-8 mb-2 opacity-50" />
                       <span className="text-xs font-medium">ยังไม่มีรูปภาพ</span>
                     </div>
@@ -248,10 +248,10 @@ export const AdminCategoriesManagement: React.FC<AdminCategoriesManagementProps>
             </div>
             
             <div className="flex gap-3 justify-end pt-6 mb-2 border-t border-border border-2">
-              <button onClick={() => { setIsAdding(false); setEditingCategory(null); }} className="px-6 py-3 font-bold bg-card border border-border border-2 text-muted-foreground hover:bg-[#121212] hover:text-white transition-colors brut-card">
+              <button onClick={() => { setIsAdding(false); setEditingCategory(null); }} className="px-6 py-3 font-bold bg-card border border-border border-2 text-muted-foreground hover:bg-[#121212] hover:text-white transition-colors brut-card rounded-xl">
                 ยกเลิก
               </button>
-              <button onClick={saveCategory} className="px-6 py-3 font-bold bg-primary text-primary-foreground text-white hover:bg-[#1D4ED8] flex items-center gap-2 transition-all active:scale-95">
+              <button onClick={saveCategory} className="px-6 py-3 font-bold bg-primary text-primary-foreground text-white hover:bg-[#1D4ED8] flex items-center gap-2 transition-all active:scale-95 rounded-xl">
                 <Save className="w-5 h-5"/> {editingCategory ? 'อัปเดตหมวดหมู่' : 'สร้างหมวดหมู่'}
               </button>
             </div>
@@ -259,10 +259,10 @@ export const AdminCategoriesManagement: React.FC<AdminCategoriesManagementProps>
         </div>
       )}
 
-      <div className="bg-card border text-sm border-border border-2 overflow-hidden brut-card">
+      <div className="bg-card border text-sm border-border border-2 overflow-hidden brut-card rounded-xl">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
-            <thead className="bg-card border-b border-border border-2 text-muted-foreground uppercase text-xs tracking-wider brut-card">
+            <thead className="bg-card border-b border-border border-2 text-muted-foreground uppercase text-xs tracking-wider brut-card rounded-md">
               <tr>
                 <th className="px-6 py-5 font-black whitespace-nowrap">แบนเนอร์</th>
                 <th className="px-6 py-5 font-black whitespace-nowrap">ข้อมูลหมวดหมู่</th>
@@ -275,11 +275,11 @@ export const AdminCategoriesManagement: React.FC<AdminCategoriesManagementProps>
                 <tr key={c.id} className="hover:bg-[#121212]/80 transition-colors group">
                   <td className="px-6 py-4">
                     {c.bannerUrl ? (
-                      <div className="w-24 h-14 overflow-hidden relative border border-border border-2 group-hover:border-[#3B82F6]/30 transition-colors">
-                        <img loading="lazy" src={c.bannerUrl || undefined} alt={c.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                      <div className="w-24 h-14 overflow-hidden relative border border-border border-2 group-hover:border-[#3B82F6]/30 transition-colors rounded-xl">
+                        <img loading="lazy" src={c.bannerUrl || undefined} alt={c.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 rounded-xl" />
                       </div>
                     ) : (
-                      <div className="w-24 h-14 bg-card flex flex-col items-center justify-center text-muted-foreground border border-border border-2 border-dashed brut-card">
+                      <div className="w-24 h-14 bg-card flex flex-col items-center justify-center text-muted-foreground border border-border border-2 border-dashed brut-card rounded-xl">
                         <ImageIcon className="w-4 h-4 mb-1 opacity-50" />
                         <span className="text-[10px] font-bold uppercase">ไม่มีรูป</span>
                       </div>
@@ -289,7 +289,7 @@ export const AdminCategoriesManagement: React.FC<AdminCategoriesManagementProps>
                     <div className="flex flex-col">
                       <span className="font-black text-white text-base">{c.title}</span>
                       <div className="flex items-center gap-1.5 mt-1">
-                        <span className="inline-flex items-center px-2 py-0.5 text-[10px] font-bold bg-card text-muted-foreground font-mono brut-card">
+                        <span className="inline-flex items-center px-2 py-0.5 text-[10px] font-bold bg-card text-muted-foreground font-mono brut-card rounded-md">
                           {c.name}
                         </span>
                       </div>
@@ -302,14 +302,14 @@ export const AdminCategoriesManagement: React.FC<AdminCategoriesManagementProps>
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center justify-end gap-2 opacity-100 md:opacity-50 md:group-hover:opacity-100 transition-opacity">
-                      <button onClick={() => setManagingProductsForCategory(c)} className="p-2 border border-purple-500/30 bg-primary text-primary-foreground text-blue-600 hover:bg-blue-600 hover:text-white transition-colors flex items-center gap-2 px-3" title="เพิ่ม/จัดการสินค้าในหมวดหมู่นี้">
+                      <button onClick={() => setManagingProductsForCategory(c)} className="p-2 border border-purple-500/30 bg-primary/20 text-blue-600 hover:bg-blue-600 hover:text-white transition-colors flex items-center gap-2 px-3 rounded-lg" title="เพิ่ม/จัดการสินค้าในหมวดหมู่นี้">
                         <ShoppingCart className="w-4 h-4" />
                         <span className="text-xs font-bold hidden sm:inline">จัดการสินค้า</span>
                       </button>
-                      <button onClick={() => { setEditingCategory(c); setFormData(c); setIsAdding(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="p-2 border border-[#3B82F6]/30 bg-primary text-primary-foreground text-white hover:bg-purple-600 hover:text-white transition-colors" title="แก้ไข">
+                      <button onClick={() => { setEditingCategory(c); setFormData(c); setIsAdding(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="p-2 border border-[#3B82F6]/30 bg-primary/20 text-white hover:bg-purple-600 hover:text-white transition-colors rounded-lg" title="แก้ไข">
                         <Edit className="w-4 h-4" />
                       </button>
-                      <button onClick={() => deleteCategory(c.id)} className="p-2 border border-red-500/30 bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-colors" title="ลบ">
+                      <button onClick={() => deleteCategory(c.id)} className="p-2 border border-red-500/30 bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-colors rounded-lg" title="ลบ">
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
@@ -334,10 +334,10 @@ export const AdminCategoriesManagement: React.FC<AdminCategoriesManagementProps>
 
       {managingProductsForCategory && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-end p-0 z-50">
-          <div className="bg-card border-l border-border border-2 w-full max-w-2xl h-full relative p-6 sm:p-8 flex flex-col overflow-y-auto animate-in slide-in-from-right-full duration-300 brut-card">
+          <div className="bg-card border-l border-border border-2 w-full max-w-2xl h-full relative p-6 sm:p-8 flex flex-col overflow-y-auto animate-in slide-in-from-right-full duration-300 brut-card rounded-2xl">
             <button 
               onClick={() => setManagingProductsForCategory(null)}
-              className="absolute top-4 right-4 p-2 text-muted-foreground hover:text-white bg-card border border-border border-2 hover:bg-[#1e1e1e] transition-colors brut-card"
+              className="absolute top-4 right-4 p-2 text-muted-foreground hover:text-white bg-card border border-border border-2 hover:bg-[#1e1e1e] transition-colors brut-card rounded-xl"
             >
               <X className="w-5 h-5" />
             </button>
@@ -363,12 +363,12 @@ export const AdminCategoriesManagement: React.FC<AdminCategoriesManagementProps>
                     <div 
                       key={p.id} 
                       onClick={() => toggleProductSelection(p.id)}
-                      className={`flex items-center gap-4 p-3 border cursor-pointer transition-colors ${ isChecked ? 'bg-blue-600/10 border-purple-500/30' : 'bg-[#0a0a0a]/50 border-border border-2 hover:bg-[#0a0a0a] hover:border-white/10' }`}
+                      className={`flex items-center gap-4 p-3 border cursor-pointer transition-colors rounded-xl ${ isChecked ? 'bg-blue-600/10 border-purple-500/30' : 'bg-[#0a0a0a]/50 border-border border-2 hover:bg-[#0a0a0a] hover:border-white/10' }`}
                     >
-                      <div className={`w-6 h-6 flex items-center justify-center shrink-0 border ${ isChecked ? 'bg-purple-600 border-purple-500 text-white' : 'bg-[#0a0a0a] border-white/10' }`}>
+                      <div className={`w-6 h-6 flex items-center justify-center shrink-0 border rounded-md ${ isChecked ? 'bg-purple-600 border-purple-500 text-white' : 'bg-[#0a0a0a] border-white/10' }`}>
                         {isChecked && <Check className="w-4 h-4" />}
                       </div>
-                      <div className="w-12 h-12 bg-card overflow-hidden shrink-0 brut-card">
+                      <div className="w-12 h-12 bg-card overflow-hidden shrink-0 brut-card rounded-xl">
                          {p.imageUrl ? (
                             <img loading="lazy" src={p.imageUrl} alt={p.name} className="w-full h-full object-cover" />
                          ) : (
@@ -390,14 +390,14 @@ export const AdminCategoriesManagement: React.FC<AdminCategoriesManagementProps>
             <div className="flex gap-3 justify-end pt-4 border-t border-border border-2 shrink-0">
               <button 
                 onClick={() => setManagingProductsForCategory(null)} 
-                className="px-6 py-3 font-bold bg-card border border-border border-2 text-muted-foreground hover:text-white transition-colors brut-card"
+                className="px-6 py-3 font-bold bg-card border border-border border-2 text-muted-foreground hover:text-white transition-colors brut-card rounded-xl"
               >
                 ยกเลิก
               </button>
               <button 
                 onClick={saveCategoryProducts} 
                 disabled={isUpdatingProducts}
-                className="px-6 py-3 font-bold bg-primary text-primary-foreground text-white hover:bg-blue-600 flex items-center gap-2 transition-colors disabled:opacity-50"
+                className="px-6 py-3 font-bold bg-primary text-primary-foreground text-white hover:bg-blue-600 flex items-center gap-2 transition-colors disabled:opacity-50 rounded-xl"
               >
                 {isUpdatingProducts ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
                 บันทึกสินค้า

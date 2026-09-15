@@ -134,7 +134,7 @@ export const AdminApiKeys: React.FC = () => {
         </div>
         <button
           onClick={() => setIsAdding(!isAdding)}
-          className="bg-card text-white px-4 py-2 text-sm font-bold hover:bg-[#2563EB]/80 flex items-center gap-2 brut-card"
+          className="bg-card text-white px-4 py-2 text-sm font-bold hover:bg-[#2563EB]/80 flex items-center gap-2 brut-card rounded-xl"
         >
           {isAdding ? <XCircle className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
           {isAdding ? 'Cancel' : 'Create Key'}
@@ -142,7 +142,7 @@ export const AdminApiKeys: React.FC = () => {
       </div>
 
       {isAdding && (
-        <form onSubmit={handleAddKey} className="bg-card border border-border border-2 p-6 flex flex-col gap-4 brut-card">
+        <form onSubmit={handleAddKey} className="bg-card border border-border border-2 p-6 flex flex-col gap-4 brut-card rounded-2xl">
           <div className="flex flex-col gap-2">
             <label className="text-xs font-bold text-muted-foreground uppercase">Key Name / Description</label>
             <input
@@ -151,7 +151,7 @@ export const AdminApiKeys: React.FC = () => {
               value={newKeyName}
               onChange={e => setNewKeyName(e.target.value)}
               placeholder="e.g. My Python Checker Script"
-              className="bg-card text-white px-4 py-3 border border-border border-2 focus:border-[#2563EB] outline-none brut-card"
+              className="bg-card text-white px-4 py-3 border border-border border-2 focus:border-[#2563EB] outline-none brut-card rounded-xl"
             />
           </div>
           <div className="flex items-center gap-3">
@@ -173,21 +173,21 @@ export const AdminApiKeys: React.FC = () => {
                 required
                 value={expireDays}
                 onChange={e => setExpireDays(e.target.value)}
-                className="bg-card text-white px-4 py-3 border border-border border-2 focus:border-[#2563EB] outline-none brut-card"
+                className="bg-card text-white px-4 py-3 border border-border border-2 focus:border-[#2563EB] outline-none brut-card rounded-xl"
               />
             </div>
           )}
-          <button type="submit" className="bg-card text-white font-bold py-3 mt-2 brut-card">
+          <button type="submit" className="bg-card text-white font-bold py-3 mt-2 brut-card rounded-xl">
             Generate Key
           </button>
         </form>
       )}
 
-      <div className="bg-card border border-border border-2 overflow-hidden brut-card">
+      <div className="bg-card border border-border border-2 overflow-hidden brut-card rounded-xl">
         <div className="overflow-x-auto min-h-[300px]">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="border-b border-border border-2 bg-card text-xs text-muted-foreground uppercase font-black tracking-widest brut-card">
+              <tr className="border-b border-border border-2 bg-card text-xs text-muted-foreground uppercase font-black tracking-widest brut-card rounded-md">
                 <th className="px-6 py-4">Status</th>
                 <th className="px-6 py-4">Name</th>
                 <th className="px-6 py-4">API Key</th>

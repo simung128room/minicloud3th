@@ -143,6 +143,7 @@ import {
   SunnyBuxLogo,
 } from "./components/SunnyComponents";
 
+import { DevLogo } from "./components/DevLogo";
 import { ProfileView } from "./components/ProfileView";
 import { CategoriesView } from "./components/CategoriesView";
 import { AuthView } from "./components/AuthView";
@@ -302,7 +303,7 @@ function ElapsedTimeDisplay({
 
   if (elapsedTime === "00:00:00.000") return null;
   return (
-    <div className="px-3 py-1 bg-card border border-border border-2 text-xs font-mono text-muted-foreground font-bold brut-card">
+    <div className="px-3 py-1 bg-card border border-border border-2 text-xs font-mono text-muted-foreground font-bold brut-card rounded-md">
       {elapsedTime}
     </div>
   );
@@ -356,7 +357,7 @@ function AppContent() {
   const [userPlan, setUserPlan] = useState<UserPlan | null>(null);
   const [siteSettings, setSiteSettings] = useState(() => {
     const defaultSettings = {
-      site_name: "APEXSTORE",
+      site_name: "DEV",
       truewallet_phone: "",
       contact_line: "https://www.facebook.com/share/18emwBsqUf/?mibextid=wwXIfr",
       discord_link: "",
@@ -370,7 +371,7 @@ function AppContent() {
       stats_sales_offset: 0,
       spotify_url: "https://youtu.be/WczSfh3gJaU?si=PI1i4X0p0FGbdEfq",
       spotify_autoplay: true,
-      announcement_text: "ยินดีต้อนรับสู่ APEXSTORE ศูนย์รวมสินค้าไอดีและข้อเสนอยอดฮิต ระบบซื้อขายทำงานอัตโนมัติ 24 ชั่วโมง - กรณีมีปัญหาโปรดติดต่อแอดมิน",
+      announcement_text: "ยินดีต้อนรับสู่ DEV ศูนย์รวมสินค้าไอดีและข้อเสนอยอดฮิต ระบบซื้อขายทำงานอัตโนมัติ 24 ชั่วโมง - กรณีมีปัญหาโปรดติดต่อแอดมิน",
     };
     try {
       const saved = localStorage.getItem("apex_settings_cache");
@@ -710,7 +711,7 @@ function AppContent() {
   const [topupHistory, setTopupHistory] = useState<any[]>([]);
 
   const [purchasesNextCursor, setPurchasesNextCursor] = useState<string | null>(null);
-  const [isAdminDataLoading, setIsAdminDataLoading] = useState(false);
+  const isAdminDataLoadingRef = useRef(false);
 
   useEffect(() => {
     // Topup history is user-specific, we do not cache it in localStorage.
@@ -986,9 +987,6 @@ function AppContent() {
 
       fetchRequestId.current += 1;
       const currentRequestId = fetchRequestId.current;
-      
-      console.log("Fetching public data from backend...", { reqId: currentRequestId });
-      console.time(`fetchAllData-${currentRequestId}`);
 
       const publicAxios = axios.create();
       publicAxios.interceptors.request.use(config => {
@@ -1038,12 +1036,34 @@ function AppContent() {
         publicEndpoints.map(url =>
           publicAxios.get(url, { signal: controller.signal })
             .then(res => ({ url, data: res.data, isCanceled: false }))
-            .catch(err => {
+            .catch(async err => {
               if (axios.isCancel(err)) {
                 return { url, data: null, isCanceled: true };
               }
-              console.error(`Parallel fetch error for public endpoint ${url}:`, err);
-              return { url, data: null, isCanceled: false };
+              if (err.response?.status === 429) {
+                console.warn(`Endpoint ${url} rate-limited (429), retrying...`);
+                try {
+                  await new Promise(r => setTimeout(r, 1200));
+                  const retryRes = await publicAxios.get(url, { signal: controller.signal });
+                  return { url, data: retryRes.data, isCanceled: false };
+                } catch (retryErr) {
+                  console.warn(`Retry for ${url} exhausted, using cache fallback.`);
+                }
+              } else {
+                console.warn(`Parallel fetch notice for public endpoint ${url}:`, err.message || err);
+              }
+
+              // Fallback to local cache if network/rate-limiting prevented fetch
+              let cachedData: any = null;
+              try {
+                if (url === "/api/settings") cachedData = JSON.parse(localStorage.getItem("apex_settings_cache") || "null");
+                else if (url === "/api/products") cachedData = JSON.parse(localStorage.getItem("apex_products_cache") || "null");
+                else if (url === "/api/categories") cachedData = JSON.parse(localStorage.getItem("apex_categories_cache") || "null");
+                else if (url === "/api/stats") cachedData = JSON.parse(localStorage.getItem("apex_stats_cache") || "null");
+                else if (url === "/api/pages") cachedData = JSON.parse(localStorage.getItem("apex_pages_cache") || "null");
+              } catch (e) {}
+
+              return { url, data: cachedData, isCanceled: false };
             })
         )
       ).then(results => {
@@ -1105,9 +1125,8 @@ function AppContent() {
 
       // Await only the critical home view endpoints + backend health check to reveal the home UI instantly
       await Promise.all([mainFetchPromise, healthPromise]);
-      console.timeEnd(`fetchAllData-${currentRequestId}`);
     } catch (err: any) {
-      console.error("Critical fetch error in fetchAllData:", err);
+      // Catch silently
     }
   }, []);
 
@@ -1115,7 +1134,6 @@ function AppContent() {
   const fetchUserData = useCallback(async () => {
     if (!user) return;
     try {
-      console.log("Fetching user-specific data from backend...");
       const [usedKeysRes, purchasesRes, topupsRes] = await Promise.all([
         axios.get("/api/used_keys").catch(() => null),
         axios.get("/api/purchases?limit=20").catch(() => null),
@@ -1135,16 +1153,15 @@ function AppContent() {
       }
       if (topupsRes?.data && Array.isArray(topupsRes.data)) setTopupHistory(topupsRes.data);
     } catch (err) {
-      console.error("Failed to fetch user-specific data:", err);
+      // Handled silently
     }
   }, [user]);
 
   // Dedicated admin logs/entities data retriever (decoupled from the landing page loop)
   const fetchAdminData = useCallback(async () => {
-    if (!isAdmin || isAdminDataLoading) return;
-    setIsAdminDataLoading(true);
+    if (!isAdmin || isAdminDataLoadingRef.current) return;
+    isAdminDataLoadingRef.current = true;
     try {
-      console.log("Fetching admin-specific data from backend...");
       const [licensesRes, blockedIpsRes, usersRes] = await Promise.all([
         axios.get("/api/license_keys").catch(() => null),
         axios.get("/api/blocked_ips").catch(() => null),
@@ -1154,15 +1171,14 @@ function AppContent() {
       if (blockedIpsRes?.data) setBlockedIPs(blockedIpsRes.data);
       if (usersRes?.data && Array.isArray(usersRes.data)) setUsersList(usersRes.data);
     } catch (err) {
-      console.error("Failed to fetch admin-specific data:", err);
+      // Handled silently
     } finally {
-      setIsAdminDataLoading(false);
+      isAdminDataLoadingRef.current = false;
     }
-  }, [isAdmin, isAdminDataLoading]);
+  }, [isAdmin]);
 
   // Combined system-wide data refresh function for user/admin actions
   const refreshAllSystemData = useCallback(async () => {
-    console.log("Executing manual refresh of all relevant system data...");
     await Promise.all([
       fetchAllData(),
       user ? fetchUserData() : Promise.resolve(),
@@ -1237,7 +1253,6 @@ function AppContent() {
       if (savedLogs && JSON.parse(savedLogs).length > 0) {
         setLogs(JSON.parse(savedLogs));
       } else {
-        console.log("Welcome to APEXSTORE System");
         setLogs([
           {
             id: Math.random().toString(36).substring(2, 9),
@@ -1489,7 +1504,7 @@ function AppContent() {
         const newKeys = [];
         for (let i = 0; i < count; i++) {
           const newKey =
-            "APEXSTORE-" +
+            "DEV-" +
             Math.random().toString(36).substring(2, 10).toUpperCase() +
             "-" +
             Math.random().toString(36).substring(2, 6).toUpperCase();
@@ -2110,7 +2125,7 @@ function AppContent() {
 
   if (isIPBlocked)
     return (
-      <div className="min-h-screen bg-card flex items-center justify-center p-4 brut-card">
+      <div className="min-h-screen bg-card flex items-center justify-center p-4 brut-card rounded-2xl">
         <div className="w-full max-w-lg bg-primary text-primary-foreground border border-[#3B82F6]/20 p-12 text-center relative overflow-hidden">
           <ShieldAlert className="w-20 h-20 text-[#2563EB] mx-auto mb-6 animate-pulse" />
           <h1 className="text-3xl font-bold text-[#2563EB] mb-4 uppercase tracking-tighter">
@@ -2119,10 +2134,10 @@ function AppContent() {
           <p className="text-muted-foreground text-sm leading-relaxed mb-8">
             ที่อยู่ IP ของคุณ ({clientIp})
             ถูกระงับการเข้าถึงระบบเนื่องจากละเมิดข้อตกลงการใช้งานหรือพบพฤติกรรมที่น่าสงสัย
-            หากคุณคิดว่าเป็นความผิดพลาด กรุณาติดต่อผู้ดูแลระบบ APEXSTORE
+            หากคุณคิดว่าเป็นความผิดพลาด กรุณาติดต่อผู้ดูแลระบบ DEV
           </p>
-          <div className="bg-card p-4 text-[10px] text-muted-foreground font-mono mb-8 brut-card">
-            Error Code: APEXSTORE_SECURITY_BLOCK_L4
+          <div className="bg-card p-4 text-[10px] text-muted-foreground font-mono mb-8 brut-card rounded-md">
+            Error Code: DEV_SECURITY_BLOCK_L4
           </div>
           <button
             onClick={() => window.location.reload()}
@@ -2137,7 +2152,7 @@ function AppContent() {
   const isHomeViewReady = (products.length > 0 && categories.length > 0 && siteSettings !== null) || forceReveal;
   if (!isLoaded || (!isHomeViewReady && !dbErrorDetail))
     return (
-      <div className="min-h-screen bg-card flex flex-col items-center justify-center font-sans overflow-hidden relative brut-card">
+      <div className="min-h-screen bg-card flex flex-col items-center justify-center font-sans overflow-hidden relative brut-card rounded-2xl">
         <motion.div
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
@@ -2157,7 +2172,7 @@ function AppContent() {
       {useCustomCursor && <CustomCursor />}
       <Suspense fallback={null}>
         <PopupBanner
-          enabled={siteSettings?.popup_enabled ?? false}
+          enabled={false}
           imgUrl={siteSettings?.popup_img_url ?? ""}
           linkUrl={siteSettings?.popup_link ?? ""}
         />
@@ -2166,12 +2181,12 @@ function AppContent() {
       {/* Desktop Sidebar */}
       <aside className="hidden">
         <div className="mb-10 w-full flex justify-start">
-          <img
-            src="https://img2.pic.in.th/IMG_718032ab9d504326a436.png"
-            alt="APEXSTORE Logo"
-            className="h-[42px] object-contain hover:scale-105 active:scale-95 transition-all duration-205 cursor-pointer"
+          <div 
+            className="flex items-center gap-1.5 flex-shrink-0 cursor-pointer hover:opacity-90 transition-all group select-none"
             onClick={handleLogoClick}
-          />
+          >
+            <DevLogo className="h-9 w-auto text-white" />
+          </div>
         </div>
         <div className="flex-1 space-y-1">
           <div className="flex items-center py-[8px] my-1">
@@ -2181,7 +2196,7 @@ function AppContent() {
           </div>
           <button
             onClick={() => setActiveView("home")}
-            className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-all ${activeView === "home" ? "bg-[#121212] text-white border border-border border-2" : "text-zinc-500 hover:bg-[#0a0a0a] hover:text-white border-transparent"}`}
+            className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-all rounded-xl ${activeView === "home" ? "bg-[#121212] text-white border border-border border-2" : "text-zinc-500 hover:bg-[#0a0a0a] hover:text-white border-transparent"}`}
           >
             <Home className="w-[18px] h-[18px]" /> หน้าแรก
           </button>
@@ -2190,7 +2205,7 @@ function AppContent() {
               setActiveView("categories");
               window.scrollTo({ top: 0, behavior: "smooth" });
             }}
-            className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-all ${activeView === "categories" ? "bg-[#121212] text-white border border-border border-2" : "text-zinc-500 hover:bg-[#0a0a0a] hover:text-white border-transparent"}`}
+            className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-all rounded-xl ${activeView === "categories" ? "bg-[#121212] text-white border border-border border-2" : "text-zinc-500 hover:bg-[#0a0a0a] hover:text-white border-transparent"}`}
           >
             <ShoppingCart className="w-[18px] h-[18px]" /> สินค้าทั้งหมด
           </button>
@@ -2199,7 +2214,7 @@ function AppContent() {
               setActiveView(user ? "wallet" : "login");
               window.scrollTo({ top: 0, behavior: "smooth" });
             }}
-            className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-all ${activeView === "wallet" ? "bg-[#121212] text-white border border-border border-2" : "text-zinc-500 hover:bg-[#0a0a0a] hover:text-white border-transparent"}`}
+            className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-all rounded-xl ${activeView === "wallet" ? "bg-[#121212] text-white border border-border border-2" : "text-zinc-500 hover:bg-[#0a0a0a] hover:text-white border-transparent"}`}
           >
             <Wallet className="w-[18px] h-[18px]" /> เติมเงิน
           </button>
@@ -2215,35 +2230,35 @@ function AppContent() {
               window.scrollTo({ top: 0, behavior: "smooth" });
             }}
             onMouseEnter={() => toolsImport()}
-            className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-all ${activeView === "tools" ? "bg-[#121212] text-white border border-border border-2" : "text-zinc-500 hover:bg-[#0a0a0a] hover:text-white border-transparent"}`}
+            className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-all rounded-xl ${activeView === "tools" ? "bg-[#121212] text-white border border-border border-2" : "text-zinc-500 hover:bg-[#0a0a0a] hover:text-white border-transparent"}`}
           >
             <Bot className="w-[18px] h-[18px]" /> เครื่องมือฟรี
           </button>
 
           {!user && (
             <>
-              <div className="w-full h-[1px] bg-card my-4 brut-card" />
+              <div className="w-full h-[1px] bg-card my-4 brut-card rounded-xl" />
               <div className="flex flex-col gap-2">
                 <button
                   onClick={() => {
                     setActiveView("login");
                     window.scrollTo({ top: 0, behavior: "smooth" });
                   }}
-                  className={`w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium transition-all active:scale-95 ${activeView === "login" ? "bg-black text-white" : "bg-[#1e1e1e] hover:bg-black hover:text-white text-white"}`}
+                  className={`w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium transition-all active:scale-95 rounded-xl ${activeView === "login" ? "bg-black text-white" : "bg-[#1e1e1e] hover:bg-black hover:text-white text-white"}`}
                 >
                   <LogIn className="w-[18px] h-[18px]" /> เข้าสู่ระบบ
                 </button>
                 <div className="flex items-center gap-3 px-2 py-1">
-                  <div className="flex-1 h-[1px] bg-card brut-card" />
+                  <div className="flex-1 h-[1px] bg-card brut-card rounded-xl" />
                   <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-widest">or</span>
-                  <div className="flex-1 h-[1px] bg-card brut-card" />
+                  <div className="flex-1 h-[1px] bg-card brut-card rounded-xl" />
                 </div>
                 <button
                   onClick={() => {
                     setActiveView("signup");
                     window.scrollTo({ top: 0, behavior: "smooth" });
                   }}
-                  className={`w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium transition-all active:scale-95 border ${activeView === "signup" ? "bg-[#121212] text-white border-[#333333]" : "bg-transparent hover:bg-[#0a0a0a] text-muted-foreground border-border border-2 hover:text-white"}`}
+                  className={`w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium transition-all active:scale-95 border rounded-xl ${activeView === "signup" ? "bg-[#121212] text-white border-[#333333]" : "bg-transparent hover:bg-[#0a0a0a] text-muted-foreground border-border border-2 hover:text-white"}`}
                 >
                   <UserPlus className="w-[18px] h-[18px]" /> สมัครสมาชิก
                 </button>
@@ -2255,7 +2270,7 @@ function AppContent() {
             <>
               <button
                 onClick={() => setIsDesktopToolsOpen(!isDesktopToolsOpen)}
-                className="w-full flex items-center justify-between px-4 py-2.5 text-sm font-medium text-muted-foreground hover:bg-[#0a0a0a] hover:text-white transition-all group mt-2"
+                className="w-full flex items-center justify-between px-4 py-2.5 text-sm font-medium text-muted-foreground hover:bg-[#0a0a0a] hover:text-white transition-all group mt-2 rounded-xl"
               >
                 <div className="flex items-center gap-3">
                   <Bot className="w-[18px] h-[18px]" /> เครื่องมือย่อย
@@ -2270,37 +2285,37 @@ function AppContent() {
                 <div className="flex flex-col gap-1 mt-1 pl-3 border-l border-border border-2 ml-6">
                   <button
                     onClick={() => setActiveView("telegram_catcher")}
-                    className={`w-full flex items-center gap-3 px-3 py-2 text-xs font-medium transition-all ${activeView === "telegram_catcher" ? "bg-[#121212] text-white" : "text-zinc-500 hover:bg-[#0a0a0a] hover:text-white"}`}
+                    className={`w-full flex items-center gap-3 px-3 py-2 text-xs font-medium transition-all rounded-lg ${activeView === "telegram_catcher" ? "bg-[#121212] text-white" : "text-zinc-500 hover:bg-[#0a0a0a] hover:text-white"}`}
                   >
                     <ArrowUpRight className="w-[14px] h-[14px]" /> ดักซองเทเลแกรม
                   </button>
                   <button
                     onClick={() => setActiveView("discord_catcher")}
-                    className={`w-full flex items-center gap-3 px-3 py-2 text-xs font-medium transition-all ${activeView === "discord_catcher" ? "bg-[#121212] text-white" : "text-zinc-500 hover:bg-[#0a0a0a] hover:text-white"}`}
+                    className={`w-full flex items-center gap-3 px-3 py-2 text-xs font-medium transition-all rounded-lg ${activeView === "discord_catcher" ? "bg-[#121212] text-white" : "text-zinc-500 hover:bg-[#0a0a0a] hover:text-white"}`}
                   >
                     <ArrowUpRight className="w-[14px] h-[14px]" /> ดักซองดิสคอร์ด
                   </button>
                   <button
                     onClick={() => setActiveView("discord_on")}
-                    className={`w-full flex items-center gap-3 px-3 py-2 text-xs font-medium transition-all ${activeView === "discord_on" ? "bg-[#121212] text-white" : "text-zinc-500 hover:bg-[#0a0a0a] hover:text-white"}`}
+                    className={`w-full flex items-center gap-3 px-3 py-2 text-xs font-medium transition-all rounded-lg ${activeView === "discord_on" ? "bg-[#121212] text-white" : "text-zinc-500 hover:bg-[#0a0a0a] hover:text-white"}`}
                   >
                     <ArrowUpRight className="w-[14px] h-[14px]" /> รันโทเค่นดิสคอร์ด
                   </button>
                   <button
                     onClick={() => setActiveView("discord_badge")}
-                    className={`w-full flex items-center gap-3 px-3 py-2 text-xs font-medium transition-all ${activeView === "discord_badge" ? "bg-[#121212] text-white" : "text-zinc-500 hover:bg-[#0a0a0a] hover:text-white"}`}
+                    className={`w-full flex items-center gap-3 px-3 py-2 text-xs font-medium transition-all rounded-lg ${activeView === "discord_badge" ? "bg-[#121212] text-white" : "text-zinc-500 hover:bg-[#0a0a0a] hover:text-white"}`}
                   >
                     <ArrowUpRight className="w-[14px] h-[14px]" /> รับตราอัตโนมัติ
                   </button>
                   <button
                     onClick={() => setActiveView("two_fa_generator")}
-                    className={`w-full flex items-center gap-3 px-3 py-2 text-xs font-medium transition-all ${activeView === "two_fa_generator" ? "bg-[#121212] text-white" : "text-zinc-500 hover:bg-[#0a0a0a] hover:text-white"}`}
+                    className={`w-full flex items-center gap-3 px-3 py-2 text-xs font-medium transition-all rounded-lg ${activeView === "two_fa_generator" ? "bg-[#121212] text-white" : "text-zinc-500 hover:bg-[#0a0a0a] hover:text-white"}`}
                   >
                     <ArrowUpRight className="w-[14px] h-[14px]" /> สร้างรหัส 2FA
                   </button>
                   <button
                     onClick={() => setActiveView("proxy_free")}
-                    className={`w-full flex items-center gap-3 px-3 py-2 text-xs font-medium transition-all ${activeView === "proxy_free" ? "bg-[#121212] text-white" : "text-zinc-500 hover:bg-[#0a0a0a] hover:text-white"}`}
+                    className={`w-full flex items-center gap-3 px-3 py-2 text-xs font-medium transition-all rounded-lg ${activeView === "proxy_free" ? "bg-[#121212] text-white" : "text-zinc-500 hover:bg-[#0a0a0a] hover:text-white"}`}
                   >
                     <ArrowUpRight className="w-[14px] h-[14px]" /> พร็อกซี่ฟรี (Proxy)
                   </button>
@@ -2314,7 +2329,7 @@ function AppContent() {
               setActiveView(user ? "history" : "login");
               window.scrollTo({ top: 0, behavior: "smooth" });
             }}
-            className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-all ${activeView === "history" ? "bg-[#121212] text-white border border-border border-2" : "text-zinc-500 hover:bg-[#0a0a0a] hover:text-white border-transparent"}`}
+            className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-all rounded-xl ${activeView === "history" ? "bg-[#121212] text-white border border-border border-2" : "text-zinc-500 hover:bg-[#0a0a0a] hover:text-white border-transparent"}`}
           >
             <History className="w-[18px] h-[18px]" /> ประวัติสั่งซื้อ
           </button>
@@ -2322,14 +2337,14 @@ function AppContent() {
             onClick={() => {
               setShowContactUs(true);
             }}
-            className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-all text-muted-foreground hover:bg-[#0a0a0a] hover:text-white border border-transparent`}
+            className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-all text-muted-foreground hover:bg-[#0a0a0a] hover:text-white border border-transparent rounded-xl`}
           >
             <Phone className="w-[18px] h-[18px]" /> ติดต่อแอดมิน
           </button>
           {user && (
             <button
               onClick={handleLogout}
-              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-all text-red-500 hover:bg-red-500/10 mt-2 border border-transparent"
+              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-all text-red-500 hover:bg-red-500/10 mt-2 border border-transparent rounded-xl"
             >
               <LogOut className="w-[18px] h-[18px]" /> ออกจากระบบ
             </button>
@@ -2347,7 +2362,7 @@ function AppContent() {
                     setSelectedPage(page);
                     setActiveView("custom_page");
                   }}
-                  className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-all ${activeView === "custom_page" && selectedPage?.id === page.id ? "bg-[#121212] text-white border border-border border-2" : "text-zinc-500 hover:bg-[#0a0a0a] hover:text-white border-transparent"}`}
+                  className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-all rounded-xl ${activeView === "custom_page" && selectedPage?.id === page.id ? "bg-[#121212] text-white border border-border border-2" : "text-zinc-500 hover:bg-[#0a0a0a] hover:text-white border-transparent"}`}
                 >
                   <FileText className="w-[18px] h-[18px]" />{" "}
                   {page.title.replace(/^#+\s*/, "")}
@@ -2359,7 +2374,7 @@ function AppContent() {
       </aside>
 
       {/* Top Header */}
-      <header className="sticky top-0 z-[65] w-full bg-[#030303]/95 backdrop-blur-md border-b border-white/[0.08] shadow-lg shadow-black/80 flex-shrink-0 select-none">
+      <header className="sticky top-0 z-[65] w-full bg-[#030303]/90 backdrop-blur-xl border-b border-white/[0.07] shadow-lg shadow-black/60 flex-shrink-0 select-none">
         <div className="flex items-center justify-between h-[72px] px-4 md:px-8 max-w-7xl mx-auto w-full">
           {/* Logo with matching Icon size */}
           <div 
@@ -2369,80 +2384,82 @@ function AppContent() {
               window.scrollTo({ top: 0, behavior: "smooth" });
             }}
           >
-            <img src="https://img2.pic.in.th/IMG_718032ab9d504326a436.png" alt="APEXSTORE Logo" className="h-[36px] md:h-[42px] object-contain" />
+            <div className="flex items-center gap-2 select-none">
+              <DevLogo className="h-9 md:h-10 w-auto text-white" />
+            </div>
           </div>
 
           {/* Desktop Navigation */}
-          <nav className="hidden lg:flex items-center gap-1 bg-white/[0.02] border border-white/[0.04] p-1 rounded-xl">
+          <nav className="hidden lg:flex items-center gap-1.5 bg-white/[0.03] backdrop-blur-xl border border-white/[0.08] p-1.5 rounded-full shadow-inner">
             <button
               onClick={() => {
                 setActiveView("home");
                 window.scrollTo({ top: 0, behavior: "smooth" });
               }}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-mono text-xs font-bold tracking-wider uppercase transition-all duration-150 cursor-pointer ${
+              className={`flex items-center gap-2 px-4 py-2 rounded-full font-mono text-xs font-bold tracking-wider uppercase transition-all duration-200 cursor-pointer ${
                 activeView === "home"
-                  ? "bg-white text-black font-extrabold"
-                  : "text-white/60 hover:text-white hover:bg-white/[0.02]"
+                  ? "bg-white text-black font-extrabold shadow-md shadow-white/10 scale-[1.02]"
+                  : "text-white/60 hover:text-white hover:bg-white/[0.06] active:scale-95"
               }`}
             >
-              <Home size={12} />
-              HOME
+              <Home size={13} />
+              หน้าแรก
             </button>
             <button
               onClick={() => {
                 setActiveView("categories");
                 window.scrollTo({ top: 0, behavior: "smooth" });
               }}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-mono text-xs font-bold tracking-wider uppercase transition-all duration-150 cursor-pointer ${
+              className={`flex items-center gap-2 px-4 py-2 rounded-full font-mono text-xs font-bold tracking-wider uppercase transition-all duration-200 cursor-pointer ${
                 activeView === "categories" || activeView === "category_products" || activeView === "product_detail"
-                  ? "bg-white text-black font-extrabold"
-                  : "text-white/60 hover:text-white hover:bg-white/[0.02]"
+                  ? "bg-white text-black font-extrabold shadow-md shadow-white/10 scale-[1.02]"
+                  : "text-white/60 hover:text-white hover:bg-white/[0.06] active:scale-95"
               }`}
             >
-              <ShoppingBag size={12} />
-              SHOP
+              <ShoppingBag size={13} />
+              ร้านค้า
             </button>
             <button
               onClick={() => {
                 setActiveView(user ? "wallet" : "login");
                 window.scrollTo({ top: 0, behavior: "smooth" });
               }}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-mono text-xs font-bold tracking-wider uppercase transition-all duration-150 cursor-pointer ${
+              className={`flex items-center gap-2 px-4 py-2 rounded-full font-mono text-xs font-bold tracking-wider uppercase transition-all duration-200 cursor-pointer ${
                 activeView === "wallet"
-                  ? "bg-white text-black font-extrabold"
-                  : "text-white/60 hover:text-white hover:bg-white/[0.02]"
+                  ? "bg-white text-black font-extrabold shadow-md shadow-white/10 scale-[1.02]"
+                  : "text-white/60 hover:text-white hover:bg-white/[0.06] active:scale-95"
               }`}
             >
-              <CreditCard size={12} />
-              WALLET
+              <CreditCard size={13} />
+              กระเป๋าเงิน
             </button>
             <button
               onClick={() => {
                 setActiveView(user ? "tools" : "login");
                 window.scrollTo({ top: 0, behavior: "smooth" });
               }}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-mono text-xs font-bold tracking-wider uppercase transition-all duration-150 cursor-pointer ${
+              className={`flex items-center gap-2 px-4 py-2 rounded-full font-mono text-xs font-bold tracking-wider uppercase transition-all duration-200 cursor-pointer ${
                 activeView === "tools" || activeView === "telegram_catcher" || activeView === "discord_catcher" || activeView === "discord_on" || activeView === "discord_badge" || activeView === "two_fa_generator" || activeView === "proxy_ff_ios" || activeView === "proxy_free" || activeView === "api_proxy_gen"
-                  ? "bg-white text-black font-extrabold"
-                  : "text-white/60 hover:text-white hover:bg-white/[0.02]"
+                  ? "bg-white text-black font-extrabold shadow-md shadow-white/10 scale-[1.02]"
+                  : "text-white/60 hover:text-white hover:bg-white/[0.06] active:scale-95"
               }`}
             >
-              <Zap size={12} />
-              TOOLS
+              <Zap size={13} />
+              เครื่องมือ
             </button>
             <button
               onClick={() => {
                 setActiveView(user ? "log_categories" : "login");
                 window.scrollTo({ top: 0, behavior: "smooth" });
               }}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-mono text-xs font-bold tracking-wider uppercase transition-all duration-150 cursor-pointer ${
+              className={`flex items-center gap-2 px-4 py-2 rounded-full font-mono text-xs font-bold tracking-wider uppercase transition-all duration-200 cursor-pointer ${
                 activeView === "log_categories" || activeView === "vip_logs" || activeView === "free_logs" || activeView === "logs" || activeView === "history" || activeView === "order_history" || activeView === "random_history" || activeView === "wallet_history" || activeView === "checker_logs"
-                  ? "bg-white text-black font-extrabold"
-                  : "text-white/60 hover:text-white hover:bg-white/[0.02]"
+                  ? "bg-white text-black font-extrabold shadow-md shadow-white/10 scale-[1.02]"
+                  : "text-white/60 hover:text-white hover:bg-white/[0.06] active:scale-95"
               }`}
             >
-              <History size={12} />
-              LOGS
+              <History size={13} />
+              ประวัติ
             </button>
             {isAdmin && (
               <button
@@ -2450,14 +2467,14 @@ function AppContent() {
                   setActiveView("admin");
                   window.scrollTo({ top: 0, behavior: "smooth" });
                 }}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-mono text-xs font-bold tracking-wider uppercase transition-all duration-150 cursor-pointer ${
+                className={`flex items-center gap-2 px-4 py-2 rounded-full font-mono text-xs font-bold tracking-wider uppercase transition-all duration-200 cursor-pointer ${
                   activeView === "admin"
-                    ? "text-[#0a0a0a] bg-neon-yellow font-extrabold"
-                    : "text-neon-yellow hover:text-neon-green hover:bg-white/[0.02]"
+                    ? "text-[#0a0a0a] bg-neon-yellow font-extrabold shadow-md shadow-neon-yellow/20 scale-[1.02]"
+                    : "text-neon-yellow hover:text-neon-green hover:bg-white/[0.06] active:scale-95"
                 }`}
               >
-                <Settings size={12} />
-                ADMIN
+                <Settings size={13} />
+                แอดมิน
               </button>
             )}
           </nav>
@@ -2467,10 +2484,10 @@ function AppContent() {
             {/* Search Button */}
             <button
               onClick={() => setActiveView("search")}
-              className="w-10 h-10 rounded-xl flex items-center justify-center text-white/50 hover:text-white bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.06] transition-all duration-200 cursor-pointer"
+              className="w-10 h-10 rounded-full flex items-center justify-center text-white/50 hover:text-white bg-white/[0.03] hover:bg-white/[0.08] border border-white/[0.08] transition-all duration-200 cursor-pointer shadow-sm hover:scale-105 active:scale-95"
               aria-label="Search"
             >
-              <Search className="w-4.5 h-4.5" />
+              <Search className="w-4 h-4" />
             </button>
 
             {/* Profile / Status */}
@@ -2478,7 +2495,7 @@ function AppContent() {
               {user ? (
                 <>
                   <div 
-                    className="flex items-center gap-3 px-3 py-1.5 rounded-full border border-white/[0.06] hover:border-white/[0.12] transition-colors cursor-pointer bg-white/[0.02] hover:bg-white/[0.04]"
+                    className="flex items-center gap-3 px-3.5 py-1.5 rounded-full border border-white/[0.08] hover:border-white/[0.16] transition-colors cursor-pointer bg-white/[0.03] hover:bg-white/[0.06] shadow-sm"
                     onClick={() => setActiveView("profile")}
                   >
                     <div className="flex flex-col text-right font-mono pr-1">
@@ -2500,32 +2517,32 @@ function AppContent() {
                   </div>
                   <button
                     onClick={handleLogout}
-                    className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-rose-500/10 bg-rose-500/5 hover:bg-rose-500/15 font-mono text-xs font-bold tracking-widest uppercase transition-all duration-150 text-rose-450 hover:text-rose-400 cursor-pointer"
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-full border border-rose-500/20 bg-rose-500/10 hover:bg-rose-500/20 font-mono text-xs font-bold tracking-wider uppercase transition-all duration-150 text-rose-400 hover:text-rose-300 cursor-pointer shadow-sm active:scale-95"
                   >
                     <LogOut size={12} />
-                    LOGOUT
+                    ออกจากระบบ
                   </button>
                 </>
               ) : (
                 <button
                   onClick={() => setActiveView("login")}
-                  className="px-5 py-2.5 bg-white text-black font-extrabold text-[11px] tracking-wider rounded-xl uppercase hover:bg-zinc-200 transition-all duration-150 cursor-pointer shadow-lg shadow-white/5 active:scale-95"
+                  className="px-5 py-2.5 bg-white text-black font-extrabold text-[11px] tracking-wider rounded-full uppercase hover:bg-zinc-200 transition-all duration-150 cursor-pointer shadow-lg shadow-white/10 active:scale-95"
                 >
                   ลงชื่อเข้าใช้
                 </button>
               )}
               {/* Online Indicator */}
               <div className="h-4 w-px bg-white/[0.08] animate-fade-in" />
-              <span className="font-mono text-xs text-white/40 whitespace-nowrap animate-fade-in flex items-center gap-1.5">
-                <span className="text-neon-green animate-blink">▮</span> ONLINE
-              </span>
+              <div className="px-3 py-1 rounded-full bg-white/[0.03] border border-white/[0.06] font-mono text-xs text-white/40 whitespace-nowrap animate-fade-in flex items-center gap-1.5">
+                <span className="text-neon-green animate-blink">▮</span> ออนไลน์
+              </div>
             </div>
 
             {/* Mobile Burger Trigger */}
             <motion.button
               whileTap={{ scale: 0.9 }}
               onClick={() => setIsMobileMenuOpen(true)}
-              className="lg:hidden w-10 h-10 rounded-xl flex items-center justify-center text-white/50 hover:text-white bg-white/[0.03] hover:bg-white/[0.08] border border-white/[0.05] transition-all duration-200 active:scale-95 cursor-pointer"
+              className="lg:hidden w-10 h-10 rounded-full flex items-center justify-center text-white/50 hover:text-white bg-white/[0.03] hover:bg-white/[0.08] border border-white/[0.08] transition-all duration-200 active:scale-95 cursor-pointer shadow-sm"
               aria-label="Menu"
             >
               <Menu className="w-5 h-5" />
@@ -2565,16 +2582,16 @@ function AppContent() {
                 {/* Header / Logo */}
                 <div className="flex flex-col items-start px-6 pt-8 pb-5 shrink-0 relative z-[70]">
                   <div 
-                    className="flex items-center gap-2.5 cursor-pointer select-none"
+                    className="flex items-center gap-2.5 cursor-pointer select-none group"
                     onClick={() => {
                       setActiveView("home");
                       setIsMobileMenuOpen(false);
                     }}
                   >
-                    <img src="https://img2.pic.in.th/IMG_718032ab9d504326a436.png" alt="APEXSTORE Logo" className="h-[32px] object-contain" />
+                    <DevLogo className="h-8 w-auto text-white" />
                   </div>
-                  <span className="text-[9px] font-mono font-semibold text-white/20 tracking-[0.2em] uppercase mt-1 ml-8.5">
-                    PREMIUM STOREFRONT
+                  <span className="text-[9px] font-mono font-semibold text-white/30 tracking-[0.2em] uppercase mt-1">
+                    DIGITAL STORE & PLATFORM
                   </span>
                 </div>
 
@@ -2868,7 +2885,7 @@ function AppContent() {
 
         {/* Global Page Header (Based on activeView) for Mobile */}
         {activeView !== "home" && (
-          <div className="lg:hidden px-[18px] pt-[14px] pb-[10px] flex gap-[12px] items-center shrink-0 border-b border-border border-2 bg-card brut-card">
+          <div className="lg:hidden px-[18px] pt-[14px] pb-[10px] flex gap-[12px] items-center shrink-0 border-b border-border border-2 bg-card brut-card rounded-xl">
             <div>
               <div className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest leading-none mb-1">
                 {activeView === "categories" ? "Main Shop" :
@@ -3187,12 +3204,17 @@ function AppContent() {
         </div>
 
         {/* Footer */}
-        <footer className="mt-auto pt-16 pb-8 border-t border-[#3B82F6]/10 relative overflow-hidden bg-card brut-card">
+        <footer className="mt-auto pt-16 pb-8 border-t border-[#3B82F6]/10 relative overflow-hidden bg-card brut-card rounded-xl">
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-px from-transparent via-[#3B82F6]/50 to-transparent"></div>
 
           <div className="max-w-7xl mx-auto px-6 md:px-12 w-full">
-            <div className="flex justify-center items-center gap-4 text-xs text-muted-foreground">
-              <p>© {new Date().getFullYear()} เอเพ็กซ์สโตร์ — สงวนลิขสิทธิ์</p>
+            <div className="flex flex-col sm:flex-row justify-between items-center gap-4 text-xs text-muted-foreground">
+              <div className="flex items-center gap-2.5">
+                <DevLogo className="h-6 w-auto text-white/80" />
+                <span className="text-white/20">|</span>
+                <span className="text-zinc-400">ระบบร้านค้าดิจิทัลอัตโนมัติ 24 ชั่วโมง</span>
+              </div>
+              <p>© {new Date().getFullYear()} DEV — สงวนลิขสิทธิ์</p>
             </div>
           </div>
         </footer>
@@ -3211,7 +3233,7 @@ function AppContent() {
                 animate={{ scale: 1, opacity: 1, y: 0 }}
                 exit={{ scale: 0.95, opacity: 0, y: 20 }}
                 transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                className="bg-card border border-border border-2 p-6 sm:p-8 max-w-3xl w-full max-h-[90vh] flex flex-col relative brut-card"
+                className="bg-card border border-border border-2 p-6 sm:p-8 max-w-3xl w-full max-h-[90vh] flex flex-col relative brut-card rounded-2xl sm:rounded-3xl shadow-2xl"
               >
                 <h2 className="text-xl sm:text-2xl font-bold mb-6 text-white flex items-center gap-2">
                   <Shield className="w-6 h-6 shrink-0 text-[#2563EB]" />{" "}
@@ -3302,7 +3324,7 @@ function AppContent() {
                       </li>
                       <li>
                         เพื่อใช้ป้องกันและรักษาความปลอดภัยต่อชีวิต
-                        หรือปกป้องทรัพย์สินของ APEXSTORE{" "}
+                        หรือปกป้องทรัพย์สินของ DEV{" "}
                       </li>
                     </ul>
                   </div>
@@ -3349,7 +3371,7 @@ function AppContent() {
                 <div className="pt-6 mt-6 border-t border-border border-2 flex gap-3 flex-col sm:flex-row justify-end">
                   <button
                     onClick={() => setShowPrivacy(false)}
-                    className="bg-primary text-primary-foreground hover:bg-purple-600/25 text-blue-600 font-bold py-3 px-8 transition-colors w-full sm:w-auto"
+                    className="bg-primary text-primary-foreground hover:bg-purple-600/25 text-blue-600 font-bold py-3 px-8 transition-colors w-full sm:w-auto rounded-xl"
                   >
                     ทำความเข้าใจและปิดหน้าต่าง
                   </button>
@@ -3370,7 +3392,7 @@ function AppContent() {
                 animate={{ scale: 1, opacity: 1, y: 0 }}
                 exit={{ scale: 0.95, opacity: 0, y: 20 }}
                 transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                className="bg-card border border-border border-2 p-6 sm:p-8 max-w-3xl w-full max-h-[90vh] flex flex-col relative brut-card"
+                className="bg-card border border-border border-2 p-6 sm:p-8 max-w-3xl w-full max-h-[90vh] flex flex-col relative brut-card rounded-2xl sm:rounded-3xl shadow-2xl"
               >
                 <h2 className="text-xl sm:text-2xl font-bold mb-6 flex items-center gap-2 text-white">
                   <ListChecks className="w-6 h-6 shrink-0 text-[#2563EB]" />{" "}
@@ -3385,7 +3407,7 @@ function AppContent() {
                       การเข้าถึงและใช้งานบริการ เครื่องมือตรวจสอบ บอท
                       และผลิตภัณฑ์ของเรา
                       ถือเป็นการรับรองว่าท่านได้ทำความเข้าใจและตกลงยอมรับเงื่อนไขการใช้บริการของ{" "}
-                      <strong>APEXSTORE</strong> อย่างครบถ้วนทุกประการ
+                      <strong>DEV</strong> อย่างครบถ้วนทุกประการ
                       หากคุณไม่เห็นด้วยกับกฎหมายและข้อบังคับเหล่านี้กรุณายุติการเข้าถึงและการใช้งานโดยทันที
                     </p>
                   </div>
@@ -3439,7 +3461,7 @@ function AppContent() {
                     </h3>
                     <p className="mb-2">
                       เมื่อคุณยืนยันเติมเครดิต ชำระคีย์ โอนเงินซื้อบัญชี
-                      หรือสินค้าดิจิทัลใน APEXSTORE คำสั่งซื้อดังกล่าว{" "}
+                      หรือสินค้าดิจิทัลใน DEV คำสั่งซื้อดังกล่าว{" "}
                       <strong>
                         ไม่สามารถคืนเป็นเงินสด (Non-Refundable) ในทุกกรณี
                       </strong>{" "}
@@ -3479,7 +3501,7 @@ function AppContent() {
                       5. สิทธิของการยุติการให้บริการ และ IP Ban
                     </h3>
                     <p>
-                      ทีมงาน APEXSTORE ถือสิทธิเด็ดขาดสูงสุดในการเตะ
+                      ทีมงาน DEV ถือสิทธิเด็ดขาดสูงสุดในการเตะ
                       หรือถอดถอนผู้ใช้ ระงับบัญชี (Ban)
                       เปลี่ยนแปลงแก้ไขการใช้งาน และระงับช่องทางการเข้าถึง (IP
                       Blocking) โดยไม่ต้องแจ้งตักเตือนรวมถึงชดใช้ค่าเสียหายใดๆ
@@ -3556,7 +3578,7 @@ function AppContent() {
                     </ul>
                     <p className="mt-2 text-muted-foreground italic">
                       "ขอบคุณผู้ใช้งานและพันธมิตรทุกคน
-                      ที่เล็งเห็นคุณค่าและก้าวเดินไปพร้อมกับ APEXSTORE
+                      ที่เล็งเห็นคุณค่าและก้าวเดินไปพร้อมกับ DEV
                       ขวากหนามทางดิจิทัลไหนที่ยาก... เราพร้อมเบิกทางให้คุณ"
                     </p>
                   </div>
@@ -3585,7 +3607,7 @@ function AppContent() {
                 animate={{ scale: 1, opacity: 1, y: 0 }}
                 exit={{ scale: 0.95, opacity: 0, y: 20 }}
                 transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                className="bg-card border border-border border-2 p-6 sm:p-8 max-w-md w-full flex flex-col relative brut-card"
+                className="bg-card border border-border border-2 p-6 sm:p-8 max-w-md w-full flex flex-col relative brut-card rounded-2xl sm:rounded-3xl shadow-2xl"
               >
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-xl sm:text-2xl font-bold flex items-center gap-2 text-white">
@@ -3594,7 +3616,7 @@ function AppContent() {
                   </h2>
                   <button
                     onClick={() => setShowContactUs(false)}
-                    className="p-2 hover:bg-white/10 transition-colors"
+                    className="p-2 hover:bg-white/10 transition-colors rounded-lg"
                   >
                     <X className="w-5 h-5 text-muted-foreground" />
                   </button>
@@ -3605,9 +3627,9 @@ function AppContent() {
                     href="https://discord.gg/EvFjgkSB4W"
                     target="_blank"
                     rel="noreferrer"
-                    className="flex items-center gap-4 p-4 bg-card hover:bg-[#5865F2]/20 border border-[#5865F2]/20 text-white transition-all group brut-card"
+                    className="flex items-center gap-4 p-4 bg-card hover:bg-[#5865F2]/20 border border-[#5865F2]/20 text-white transition-all group brut-card rounded-2xl"
                   >
-                    <div className="w-12 h-12 bg-card flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform brut-card">
+                    <div className="w-12 h-12 bg-card flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform brut-card rounded-xl">
                       <span className="font-bold text-xl block">D</span>
                     </div>
                     <div>
@@ -3621,9 +3643,9 @@ function AppContent() {
                   {siteSettings?.contact_email && (
                     <a
                       href={`mailto:${siteSettings.contact_email}`}
-                      className="flex items-center gap-4 p-4 bg-card hover:bg-[#1e1e1e] border border-border border-2 hover:border-white/10 text-white transition-all group brut-card"
+                      className="flex items-center gap-4 p-4 bg-card hover:bg-[#1e1e1e] border border-border border-2 hover:border-white/10 text-white transition-all group brut-card rounded-2xl"
                     >
-                      <div className="w-12 h-12 bg-card flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform brut-card">
+                      <div className="w-12 h-12 bg-card flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform brut-card rounded-xl">
                         <Mail className="w-6 h-6" />
                       </div>
                       <div>
@@ -3639,7 +3661,7 @@ function AppContent() {
                 <div className="pt-6 mt-6 border-t border-border border-2 flex justify-end w-full">
                   <button
                     onClick={() => setShowContactUs(false)}
-                    className="bg-primary text-primary-foreground hover:bg-purple-600/25 text-blue-600 font-bold py-3 px-8 transition-all w-full sm:w-auto"
+                    className="bg-primary text-primary-foreground hover:bg-purple-600/25 text-blue-600 font-bold py-3 px-8 transition-all w-full sm:w-auto rounded-xl"
                   >
                     ปิดหน้าต่างนี้
                   </button>
@@ -3662,8 +3684,8 @@ function AppContent() {
         {/* Turnstile Modal */}
         {showTurnstileModal && (
           <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-[70] font-sans animate-in zoom-in-95 duration-200">
-            <div className="bg-card border border-border border-2 p-6 sm:p-8 max-w-sm w-full relative overflow-hidden flex flex-col items-center brut-card">
-              <div className="bg-card border border-border border-2 mb-2 relative overflow-hidden w-full h-[58px] brut-card">
+            <div className="bg-card border border-border border-2 p-6 sm:p-8 max-w-sm w-full relative overflow-hidden flex flex-col items-center brut-card rounded-2xl shadow-2xl">
+              <div className="bg-card border border-border border-2 mb-2 relative overflow-hidden w-full h-[58px] brut-card rounded-xl">
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[110%] scale-[0.92] flex justify-center">
                   {TURNSTILE_SITE_KEY ? (
                     <Turnstile

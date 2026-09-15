@@ -95,7 +95,7 @@ const seedData: Record<string, any[]> = {
       originalPrice: 360,
       stock: 30,
       soldCount: 410,
-      imageUrl: 'https://images.unsplash.com/photo-1612287233285-8a2b53b8114a?auto=format&fit=crop&w=600&q=80',
+      imageUrl: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=600&q=80',
       category: 'game-cards',
       isPopular: false,
       tag: 'Steam',
@@ -170,8 +170,8 @@ const seedData: Record<string, any[]> = {
     {
       key: 'site',
       id: 'site',
-      site_name: 'STORETH CHECK',
-      contact_line: '@storeth',
+      site_name: 'DEV',
+      contact_line: '@dev',
       truewallet_phone: '0812345678',
       discord_link: 'https://discord.gg',
       announcement_text: 'ระบบจำลอง Mock Simulation ทำงาน 100% สมบูรณ์แบบ ไม่ต้องตั้งค่า Environment Variable',
@@ -188,8 +188,8 @@ const seedData: Record<string, any[]> = {
       key: 'payment',
       id: 'payment',
       promptpayNumber: '0812345678',
-      accountNameTh: 'สโตร์ทีเอช',
-      accountNameEn: 'STORETH',
+      accountNameTh: 'เดฟ',
+      accountNameEn: 'DEV',
       truewalletPhone: '0812345678'
     }
   ],
@@ -199,9 +199,9 @@ const seedData: Record<string, any[]> = {
       slug: 'sys_site',
       title: 'sys_site',
       content: JSON.stringify({
-        site_name: 'STORETH CHECK',
+        site_name: 'DEV',
         announcement_text: 'ระบบจำลอง Mock Mode ทำงานเต็มรูปแบบ พร้อมใช้งานทุกฟังก์ชัน',
-        contact_line: '@storeth',
+        contact_line: '@dev',
         truewallet_phone: '0812345678',
         banners: [
           'https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=1200&q=80'
@@ -213,9 +213,9 @@ const seedData: Record<string, any[]> = {
       slug: 'sys_site_dev',
       title: 'sys_site_dev',
       content: JSON.stringify({
-        site_name: 'STORETH CHECK',
+        site_name: 'DEV',
         announcement_text: 'ระบบจำลอง Mock Mode ทำงานเต็มรูปแบบ',
-        contact_line: '@storeth',
+        contact_line: '@dev',
         truewallet_phone: '0812345678'
       })
     }

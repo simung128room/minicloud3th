@@ -123,7 +123,7 @@ export default function AdminStockManagement({ products, categories, setProducts
       <div className="animate-in fade-in zoom-in-95 duration-200">
          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
             <div className="flex items-center gap-4">
-                <button onClick={() => setSelectedProduct(null)} className="p-2 bg-card border border-border border-2 hover:bg-[#121212] transition-colors brut-card">
+                <button onClick={() => setSelectedProduct(null)} className="p-2 bg-card border border-border border-2 hover:bg-[#121212] transition-colors brut-card rounded-xl">
                     <ArrowLeft className="w-5 h-5 text-white" />
                 </button>
                 <div>
@@ -140,12 +140,12 @@ export default function AdminStockManagement({ products, categories, setProducts
                   placeholder="ค้นหาสต็อก..."
                   value={searchTerm}
                   onChange={e => { setSearchTerm(e.target.value); setPage(1); }}
-                  className="w-full bg-card border border-border border-2 py-2 pl-9 pr-4 text-sm text-white focus:border-[#2563EB] focus:outline-none transition-colors brut-card"
+                  className="w-full bg-card border border-border border-2 py-2 pl-9 pr-4 text-sm text-white focus:border-[#2563EB] focus:outline-none transition-colors brut-card rounded-xl"
                 />
             </div>
          </div>
          
-         <div className="bg-card border border-border border-2 p-4 overflow-hidden brut-card">
+         <div className="bg-card border border-border border-2 p-4 overflow-hidden brut-card rounded-xl">
              {loading ? (
                  <div className="text-center py-20">
                     <div className="animate-spin h-12 w-12 border-b-2 border-[#2563EB] mx-auto mb-4"></div>
@@ -159,13 +159,13 @@ export default function AdminStockManagement({ products, categories, setProducts
              ) : (
                 <div className="space-y-2">
                     {paginated.map(({item, originalIndex}, idx) => (
-                        <div key={idx} className="flex bg-card p-4 border border-border border-2 items-center justify-between hover:border-white/10 transition-colors group brut-card">
+                        <div key={idx} className="flex bg-card p-4 border border-border border-2 items-center justify-between hover:border-white/10 transition-colors group brut-card rounded-xl">
                             <span className="text-muted-foreground font-mono text-xs max-w-[80%] truncate select-all">{item}</span>
                             <div className="flex gap-2 opacity-100 sm:opacity-50 sm:group-hover:opacity-100 transition-opacity">
-                                <button onClick={() => handleEdit(originalIndex, item)} className="p-2 bg-card border border-border border-2 hover:border-blue-500/50 hover:bg-white/100/10 text-muted-foreground hover:text-blue-400 transition-all brut-card">
+                                <button onClick={() => handleEdit(originalIndex, item)} className="p-2 bg-card border border-border border-2 hover:border-blue-500/50 hover:bg-white/100/10 text-muted-foreground hover:text-blue-400 transition-all brut-card rounded-xl">
                                     <Edit2 className="w-4 h-4"/>
                                 </button>
-                                <button onClick={() => handleDelete(originalIndex)} className="p-2 bg-card border border-border border-2 hover:border-red-500/50 hover:bg-red-500/10 text-muted-foreground hover:text-red-400 transition-all brut-card">
+                                <button onClick={() => handleDelete(originalIndex)} className="p-2 bg-card border border-border border-2 hover:border-red-500/50 hover:bg-red-500/10 text-muted-foreground hover:text-red-400 transition-all brut-card rounded-xl">
                                     <Trash2 className="w-4 h-4"/>
                                 </button>
                             </div>
@@ -176,10 +176,10 @@ export default function AdminStockManagement({ products, categories, setProducts
          </div>
 
          {totalPages > 1 && (
-            <div className="flex items-center gap-4 justify-between bg-card border border-border border-2 p-4 mt-4 brut-card">
-               <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="px-5 py-2 bg-card border border-border border-2 hover:bg-[#1e1e1e] text-white text-sm font-bold disabled:opacity-50 disabled:cursor-not-allowed transition-colors brut-card">ก่อนหน้า</button>
+            <div className="flex items-center gap-4 justify-between bg-card border border-border border-2 p-4 mt-4 brut-card rounded-xl">
+               <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="px-5 py-2 bg-card border border-border border-2 hover:bg-[#1e1e1e] text-white text-sm font-bold disabled:opacity-50 disabled:cursor-not-allowed transition-colors brut-card rounded-xl">ก่อนหน้า</button>
                <span className="text-muted-foreground text-sm font-bold">หน้า {page} จาก {totalPages}</span>
-               <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} className="px-5 py-2 bg-card border border-border border-2 hover:bg-[#1e1e1e] text-white text-sm font-bold disabled:opacity-50 disabled:cursor-not-allowed transition-colors brut-card">ถัดไป</button>
+               <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} className="px-5 py-2 bg-card border border-border border-2 hover:bg-[#1e1e1e] text-white text-sm font-bold disabled:opacity-50 disabled:cursor-not-allowed transition-colors brut-card rounded-xl">ถัดไป</button>
             </div>
          )}
       </div>
@@ -196,14 +196,14 @@ export default function AdminStockManagement({ products, categories, setProducts
       </div>
 
       {productsByCategory.length === 0 ? (
-          <div className="bg-card border border-border border-2 p-12 text-center brut-card">
+          <div className="bg-card border border-border border-2 p-12 text-center brut-card rounded-2xl">
               <Package className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
               <p className="text-muted-foreground">ยังไม่มีสินค้าในระบบ</p>
           </div>
       ) : (
           <div className="space-y-6">
               {productsByCategory.map((cat: any) => (
-                 <div key={cat.id} className="bg-card border border-border border-2 p-6 brut-card">
+                 <div key={cat.id} className="bg-card border border-border border-2 p-6 brut-card rounded-2xl">
                     <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
                         <LayoutGrid className="w-5 h-5 text-blue-600" /> {cat.name}
                     </h3>
@@ -211,7 +211,7 @@ export default function AdminStockManagement({ products, categories, setProducts
                        {cat.products.map((p: any) => {
                            const stockCount = p.stockData?.length || p.stock || 0;
                            return (
-                               <div key={p.id} onClick={() => setSelectedProduct(p)} className="p-4 bg-card border border-border border-2 hover:border-[#3B82F6]/30 cursor-pointer hover:bg-purple-600/5 transition-all flex items-center justify-between group brut-card">
+                               <div key={p.id} onClick={() => setSelectedProduct(p)} className="p-4 bg-card border border-border border-2 hover:border-[#3B82F6]/30 cursor-pointer hover:bg-purple-600/5 transition-all flex items-center justify-between group brut-card rounded-xl">
                                   <div>
                                       <p className="font-bold text-muted-foreground group-hover:text-white transition-colors">{p.name}</p>
                                       <div className="flex items-center gap-2 mt-2">
@@ -220,7 +220,7 @@ export default function AdminStockManagement({ products, categories, setProducts
                                           </span>
                                       </div>
                                   </div>
-                                  <div className="w-8 h-8 bg-card border border-border border-2 flex items-center justify-center opacity-50 group-hover:opacity-100 group-hover:bg-purple-600 group-hover:border-[#3B82F6] transition-all brut-card">
+                                  <div className="w-8 h-8 bg-card border border-border border-2 flex items-center justify-center opacity-50 group-hover:opacity-100 group-hover:bg-purple-600 group-hover:border-[#3B82F6] transition-all brut-card rounded-xl">
                                       <Edit2 className="w-3 h-3 text-muted-foreground group-hover:text-white" />
                                   </div>
                                </div>

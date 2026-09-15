@@ -137,7 +137,7 @@ export const ProxyFreeTool: React.FC = () => {
           </h2>
           <p className="text-muted-foreground mt-2 flex items-center gap-2">
             อัปเดต Proxy อัตโนมัติจาก{" "}
-            <span className="px-2 py-1 bg-card text-xs font-mono text-white brut-card">
+            <span className="px-2 py-1 bg-card text-xs font-mono text-white brut-card rounded-md">
               proxifly/free-proxy-list
             </span>
           </p>
@@ -147,7 +147,7 @@ export const ProxyFreeTool: React.FC = () => {
           <button
             onClick={fetchProxies}
             disabled={loading}
-            className="bg-primary text-primary-foreground text-blue-600 border border-[#3B82F6]/20 hover:bg-purple-600/20 px-5 py-3 font-bold flex items-center gap-2 transition-all disabled:opacity-50"
+            className="bg-primary text-primary-foreground text-blue-600 border border-[#3B82F6]/20 hover:bg-purple-600/20 px-5 py-3 font-bold flex items-center gap-2 transition-all disabled:opacity-50 rounded-xl"
           >
             <RefreshCcw
               className={`w-5 h-5 ${loading ? "animate-spin" : ""}`}
@@ -207,8 +207,8 @@ export const ProxyFreeTool: React.FC = () => {
         ))}
       </div>
 
-      <div className="bg-card border border-border border-2 overflow-hidden flex flex-col brut-card">
-        <div className="border-b border-border border-2 bg-card brut-card">
+      <div className="bg-card border border-border border-2 overflow-hidden flex flex-col brut-card rounded-xl">
+        <div className="border-b border-border border-2 bg-card brut-card rounded-xl">
           <div className="flex overflow-x-auto hide-scrollbar px-2 pt-2">
             {[
               { id: "all", label: "ทั้งหมด (All)" },
@@ -243,23 +243,23 @@ export const ProxyFreeTool: React.FC = () => {
               <button
                 onClick={downloadFile}
                 disabled={currentList.length === 0}
-                className="flex-1 sm:flex-none justify-center bg-card hover:bg-[#1e1e1e] text-white px-4 py-2.5 text-xs font-bold flex items-center gap-2 transition-all disabled:opacity-50 brut-card"
+                className="flex-1 sm:flex-none justify-center bg-card hover:bg-[#1e1e1e] text-white px-4 py-2.5 text-xs font-bold flex items-center gap-2 transition-all disabled:opacity-50 brut-card rounded-md"
               >
                 <Download className="w-4 h-4" /> บันทึกไฟล์ (.txt)
               </button>
               <button
                 onClick={copyToClipboard}
                 disabled={currentList.length === 0}
-                className="flex-1 sm:flex-none justify-center bg-primary text-primary-foreground hover:bg-[#166BCC] text-white px-4 py-2.5 text-xs font-bold flex items-center gap-2 transition-all disabled:opacity-50"
+                className="flex-1 sm:flex-none justify-center bg-primary text-primary-foreground hover:bg-[#166BCC] text-white px-4 py-2.5 text-xs font-bold flex items-center gap-2 transition-all disabled:opacity-50 rounded-lg"
               >
                 <Copy className="w-4 h-4" /> คัดลอกทั้งหมด
               </button>
             </div>
           </div>
 
-          <div className="flex-1 min-h-[400px] h-[500px] bg-card border border-border border-2 p-4 overflow-hidden relative brut-card">
+          <div className="flex-1 min-h-[400px] h-[500px] bg-card border border-border border-2 p-4 overflow-hidden relative brut-card rounded-xl">
             {loading ? (
-              <div className="absolute inset-0 flex flex-col items-center justify-center text-muted-foreground bg-card z-10 brut-card">
+              <div className="absolute inset-0 flex flex-col items-center justify-center text-muted-foreground bg-card z-10 brut-card rounded-xl">
                 <RefreshCcw className="w-10 h-10 animate-spin mb-4 text-blue-600" />
                 <p className="font-bold tracking-wide">กำลังรวบรวม IP...</p>
               </div>

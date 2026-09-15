@@ -37,7 +37,7 @@ export const CategoriesView: React.FC<CategoriesViewProps> = ({ categories = [],
       <div className="flex items-center gap-4 mb-8">
         <button 
           onClick={onBack}
-          className="p-3 bg-card hover:bg-[#121212] border border-border border-2 transition-colors group brut-card"
+          className="p-3 bg-card hover:bg-[#121212] border border-border border-2 transition-colors group brut-card rounded-xl"
         >
           <ArrowLeft className="w-5 h-5 text-muted-foreground group-hover:text-white" />
         </button>
@@ -55,7 +55,7 @@ export const CategoriesView: React.FC<CategoriesViewProps> = ({ categories = [],
           label="ทุกหมวดหมู่"
           itemCountDesc={`ทั้งหมด ${getProductCountText('all')}`}
           priceRangeStr={allPriceInfo || undefined}
-          bgImage={siteSettings?.banners?.[0] || "https://img1.pic.in.th/images/-81_20260601213128.png"}
+          bgImage={siteSettings?.banners?.[0] || "https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=2070&auto=format&fit=crop"}
           index={0}
           onClick={() => onSelectCategory('all')}
           accentColor="#0066ff"

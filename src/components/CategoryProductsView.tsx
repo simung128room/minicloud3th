@@ -44,7 +44,7 @@ export const CategoryProductsView: React.FC<CategoryProductsViewProps> = ({
         <div className="flex items-center gap-4">
           <button
             onClick={onBack}
-            className="p-3 bg-card hover:bg-[#121212] border border-border border-2 transition-colors group shrink-0 brut-card"
+            className="p-3 bg-card hover:bg-[#121212] border border-border border-2 transition-colors group shrink-0 brut-card rounded-xl"
           >
             <ArrowLeft className="w-5 h-5 text-muted-foreground group-hover:text-white" />
           </button>
@@ -59,7 +59,7 @@ export const CategoryProductsView: React.FC<CategoryProductsViewProps> = ({
                 </div>
               ) : (
                 <div className="flex items-center gap-3 uppercase">
-                  <div className="w-12 h-12 bg-card flex items-center justify-center brut-card">
+                  <div className="w-12 h-12 bg-card flex items-center justify-center brut-card rounded-xl">
                     <ShoppingCart className="w-7 h-7 text-white" />
                   </div>
                   {categoryInfo?.title || category}
@@ -76,7 +76,7 @@ export const CategoryProductsView: React.FC<CategoryProductsViewProps> = ({
       </div>
 
       {!filteredProducts || filteredProducts.length === 0 ? (
-        <div className="border-2 border-dashed border-border bg-card p-16 text-center brut-card">
+        <div className="border-2 border-dashed border-border bg-card p-16 text-center brut-card rounded-xl">
           <div className="animate-pulse mb-6 flex justify-center">
             <Package className="w-16 h-16 text-muted-foreground" />
           </div>
@@ -130,7 +130,7 @@ export const CategoryProductsView: React.FC<CategoryProductsViewProps> = ({
                       <span className="text-4xl font-black text-white mix-blend-overlay opacity-65">
                         {(product.name || "P")[0].toUpperCase()}
                       </span>
-                      <span className="text-[10px] font-bold text-white/50 uppercase tracking-widest mt-1">{product.category || "STORETH"}</span>
+                      <span className="text-[10px] font-bold text-white/50 uppercase tracking-widest mt-1">{product.category || "DEV"}</span>
                     </div>
 
                     {/* Diagonal "Best Seller" ribbon in image corner */}
@@ -213,7 +213,7 @@ export const CategoryProductsView: React.FC<CategoryProductsViewProps> = ({
             <div className="mt-12 flex justify-center">
               <button
                 onClick={() => setRenderLimit(prev => prev + 20)}
-                className="px-8 py-3 bg-card border border-border border-2 hover:border-white/20 text-white font-bold transition-all active:scale-95 brut-card"
+                className="px-8 py-3 bg-card border border-border border-2 hover:border-white/20 text-white font-bold transition-all active:scale-95 brut-card rounded-xl"
               >
                 โหลดเพิ่มเติม ({filteredProducts.length - visibleProducts.length} รายการ)
               </button>

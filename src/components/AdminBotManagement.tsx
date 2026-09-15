@@ -50,14 +50,14 @@ export const AdminBotManagement: React.FC = () => {
                 href="/bot-code"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="bg-card text-[#2563EB] px-5 py-3 font-bold hover:bg-[#2563EB]/20 border border-[#2563EB]/30 flex items-center gap-2 transition-all brut-card"
+                className="bg-card text-[#2563EB] px-5 py-3 font-bold hover:bg-[#2563EB]/20 border border-[#2563EB]/30 flex items-center gap-2 transition-all brut-card rounded-xl"
             >
                 <Download className="w-5 h-5" /> ดาวน์โหลด bot.py
             </a>
             <button
                 onClick={handleSave}
                 disabled={isSaving}
-                className="bg-primary text-primary-foreground text-white hover:bg-[#1D4ED8] px-6 py-3 font-bold flex items-center gap-2 transition-all"
+                className="bg-primary text-primary-foreground text-white hover:bg-[#1D4ED8] px-6 py-3 font-bold flex items-center gap-2 transition-all rounded-xl"
             >
                 <Save className="w-5 h-5" /> {isSaving ? "Saving..." : "บันทึกสคริปต์"}
             </button>
@@ -66,7 +66,7 @@ export const AdminBotManagement: React.FC = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Help Panel */}
-        <div className="bg-card border border-border border-2 p-6 relative overflow-hidden flex flex-col space-y-4 brut-card">
+        <div className="bg-card border border-border border-2 p-6 relative overflow-hidden flex flex-col space-y-4 brut-card rounded-2xl">
             <h3 className="text-white font-bold flex items-center gap-2 text-lg">
                 <HelpCircle className="w-5 h-5 text-indigo-400" />
                 วิธีใช้งาน (How to run)
@@ -86,7 +86,7 @@ export const AdminBotManagement: React.FC = () => {
         </div>
 
         {/* Config Editor */}
-        <div className="lg:col-span-2 bg-card border border-border border-2 p-6 relative overflow-hidden flex flex-col brut-card">
+        <div className="lg:col-span-2 bg-card border border-border border-2 p-6 relative overflow-hidden flex flex-col brut-card rounded-2xl">
             <h3 className="text-white font-bold mb-4 flex items-center gap-2">
                 <Terminal className="w-5 h-5 text-blue-600" />
                 ตัวจัดการสคริปต์ bot.py
@@ -95,7 +95,7 @@ export const AdminBotManagement: React.FC = () => {
                 value={config}
                 onChange={(e) => setConfig(e.target.value)}
                 spellCheck={false}
-                className="w-full flex-1 min-h-[500px] bg-card border border-border border-2 p-4 text-xs font-mono text-muted-foreground focus:outline-none focus:border-[#3B82F6]/50 scrollbar-thin scrollbar-thumb-zinc-600 brut-card"
+                className="w-full flex-1 min-h-[500px] bg-card border border-border border-2 p-4 text-xs font-mono text-muted-foreground focus:outline-none focus:border-[#3B82F6]/50 scrollbar-thin scrollbar-thumb-zinc-600 brut-card rounded-md"
             />
         </div>
       </div>

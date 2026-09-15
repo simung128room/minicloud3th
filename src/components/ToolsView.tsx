@@ -139,7 +139,7 @@ export const ToolsView: React.FC<ToolsViewProps> = ({ setActiveView }) => {
           
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8 z-10">
             <div className="max-w-2xl">
-              <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-card border border-border border-2 text-blue-400 text-xs font-black uppercase tracking-widest mb-6 backdrop-blur-sm brut-card">
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-card border border-border border-2 text-blue-400 text-xs font-black uppercase tracking-widest mb-6 backdrop-blur-sm brut-card rounded-md">
                 <Sparkles className="w-4 h-4 text-blue-400" /> ชุดเครื่องมือ APEX
               </div>
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-white tracking-tight mb-6 leading-tight">
@@ -187,9 +187,9 @@ export const ToolsView: React.FC<ToolsViewProps> = ({ setActiveView }) => {
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="flex flex-col items-center justify-center py-24 text-center border-2 border-dashed border-border bg-card brut-card"
+            className="flex flex-col items-center justify-center py-24 text-center border-2 border-dashed border-border bg-card brut-card rounded-xl"
           >
-            <div className="w-20 h-20 bg-card flex items-center justify-center mb-6 brut-card">
+            <div className="w-20 h-20 bg-card flex items-center justify-center mb-6 brut-card rounded-xl">
               <Search className="w-8 h-8 text-muted-foreground" />
             </div>
             <h3 className="text-xl font-bold text-white mb-2">ไม่พบเครื่องมือที่ต้องการ</h3>
@@ -253,7 +253,7 @@ export const ToolsView: React.FC<ToolsViewProps> = ({ setActiveView }) => {
                        <span className={`text-xs font-bold uppercase tracking-widest transition-colors ${tool.iconColor} opacity-70 group-hover:opacity-100 flex items-center gap-2`}>
                           เข้าใช้งานระบบ
                        </span>
-                       <div className="w-10 h-10 bg-card flex items-center justify-center text-muted-foreground group-hover:text-white group-hover:bg-white/10 transition-all duration-300 shrink-0 brut-card">
+                       <div className="w-10 h-10 bg-card flex items-center justify-center text-muted-foreground group-hover:text-white group-hover:bg-white/10 transition-all duration-300 shrink-0 brut-card rounded-xl">
                           {(tool as any).link ? (
                             <ExternalLink className="w-4 h-4 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 transition-transform" />
                           ) : (
@@ -270,7 +270,7 @@ export const ToolsView: React.FC<ToolsViewProps> = ({ setActiveView }) => {
 
         {/* Informational Footer */}
         <div className="mt-16 flex justify-center pb-8">
-            <div className="inline-flex flex-col sm:flex-row items-center gap-4 px-8 py-5 bg-card border border-border border-2 backdrop-blur-sm brut-card">
+            <div className="inline-flex flex-col sm:flex-row items-center gap-4 px-8 py-5 bg-card border border-border border-2 backdrop-blur-sm brut-card rounded-xl">
                <div className="w-10 h-10 bg-amber-500/10 flex items-center justify-center shrink-0">
                  <ShieldCheck className="w-5 h-5 text-amber-500" /> 
                </div>

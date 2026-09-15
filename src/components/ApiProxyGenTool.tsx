@@ -49,7 +49,7 @@ export const ApiProxyGenTool: React.FC = () => {
         </p>
       </div>
 
-      <div className="bg-card border border-border border-2 p-6 brut-card">
+      <div className="bg-card border border-border border-2 p-6 brut-card rounded-2xl">
         <h3 className="text-lg font-bold text-white mb-4">การตั้งค่า API</h3>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -98,7 +98,7 @@ export const ApiProxyGenTool: React.FC = () => {
             animate={{ opacity: 1, y: 0 }}
             className="space-y-6"
           >
-            <div className="bg-card border border-purple-500/30 p-6 relative overflow-hidden brut-card">
+            <div className="bg-card border border-purple-500/30 p-6 relative overflow-hidden brut-card rounded-2xl">
               <div className="absolute top-0 left-0 w-1 h-full bg-primary text-primary-foreground"></div>
               <h3 className="text-lg font-bold text-white mb-2">API URL ของคุณ</h3>
               <div className="flex flex-col sm:flex-row items-center gap-3">
@@ -106,7 +106,7 @@ export const ApiProxyGenTool: React.FC = () => {
                   type="text" 
                   readOnly 
                   value={generateApiUrl()}
-                  className="w-full flex-1 bg-black/50 border border-border border-2 py-3 px-4 text-blue-600 font-mono text-sm focus:outline-none"
+                  className="w-full flex-1 bg-black/50 border border-border border-2 py-3 px-4 text-blue-600 font-mono text-sm focus:outline-none rounded-xl"
                 />
                 <button 
                   onClick={() => copyToClipboard(generateApiUrl())}
@@ -117,8 +117,8 @@ export const ApiProxyGenTool: React.FC = () => {
               </div>
             </div>
 
-            <div className="bg-card border border-border border-2 overflow-hidden brut-card">
-              <div className="bg-card px-4 py-3 sm:px-6 sm:py-4 border-b border-border border-2 flex flex-col sm:flex-row sm:items-center justify-between gap-3 brut-card">
+            <div className="bg-card border border-border border-2 overflow-hidden brut-card rounded-xl">
+              <div className="bg-card px-4 py-3 sm:px-6 sm:py-4 border-b border-border border-2 flex flex-col sm:flex-row sm:items-center justify-between gap-3 brut-card rounded-xl">
                 <h3 className="text-sm font-bold text-white flex items-center gap-2 whitespace-nowrap">
                   <Code className="w-4 h-4 text-muted-foreground" /> ตัวอย่างโค้ด (ดึงทุก 0.1 วิ)
                 </h3>
@@ -137,7 +137,7 @@ export const ApiProxyGenTool: React.FC = () => {
               <div className="p-4 relative group">
                 <button 
                   onClick={() => copyToClipboard(codeSnippets[activeTab])}
-                  className="absolute top-2 right-2 sm:top-4 sm:right-4 bg-card hover:bg-white/10 border border-border border-2 p-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all text-muted-foreground hover:text-white brut-card"
+                  className="absolute top-2 right-2 sm:top-4 sm:right-4 bg-card hover:bg-white/10 border border-border border-2 p-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all text-muted-foreground hover:text-white brut-card rounded-xl"
                 >
                   <Copy className="w-4 h-4" />
                 </button>

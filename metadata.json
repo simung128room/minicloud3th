@@ -1,6 +1,6 @@
 {
-  "name": "STORETH Check",
-  "description": "Professional automated game account checker tool.",
+  "name": "DEV",
+  "description": "DEV - ร้านค้าและบริการเกมดิจิทัลครบวงจร",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

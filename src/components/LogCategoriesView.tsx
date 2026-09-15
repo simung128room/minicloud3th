@@ -108,20 +108,20 @@ export const LogCategoriesView: React.FC<LogCategoriesViewProps> = ({ userPlan, 
             <p className="text-sm font-medium text-muted-foreground mt-2">ดาวน์โหลดไฟล์และเอกสารฟรี & พรีเมียม</p>
          </div>
          {isAdmin && (
-           <button onClick={() => setShowAdmin(!showAdmin)} className="flex bg-card text-white px-4 py-2 text-sm font-bold self-start md:self-auto hover:-translate-y-1 transition-all brut-card">
+           <button onClick={() => setShowAdmin(!showAdmin)} className="flex bg-card text-white px-4 py-2 text-sm font-bold self-start md:self-auto hover:-translate-y-1 transition-all brut-card rounded-xl">
               {showAdmin ? 'ปิดจัดการเนื้อหา' : 'เพิ่มเนื้อหา (แอดมิน)'}
            </button>
          )}
        </div>
 
        {showAdmin ? (
-         <div className="bg-card border border-border border-2 p-4 sm:p-6 mb-8 brut-card">
+         <div className="bg-card border border-border border-2 p-4 sm:p-6 mb-8 brut-card rounded-2xl">
            <AdminToolsManagement />
          </div>
        ) : selectedCategory ? (
          <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
             <div className="flex items-center gap-4 mb-6">
-               <button onClick={() => setSelectedCategory(null)} className="px-4 py-2 bg-card hover:bg-white/10 border border-border border-2 text-white font-bold text-sm brut-card">
+               <button onClick={() => setSelectedCategory(null)} className="px-4 py-2 bg-card hover:bg-white/10 border border-border border-2 text-white font-bold text-sm brut-card rounded-xl">
                  กลับ
                </button>
                <h2 className="text-xl font-bold text-white flex items-center gap-2">
@@ -130,7 +130,7 @@ export const LogCategoriesView: React.FC<LogCategoriesViewProps> = ({ userPlan, 
                </h2>
                <div className="ml-auto w-48 relative">
                  <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                 <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="ค้นหา..." className="w-full bg-card border border-border border-2 pl-9 pr-4 py-2 text-sm text-white brut-card" />
+                 <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="ค้นหา..." className="w-full bg-card border border-border border-2 pl-9 pr-4 py-2 text-sm text-white brut-card rounded-xl" />
                </div>
             </div>
 
@@ -165,11 +165,11 @@ export const LogCategoriesView: React.FC<LogCategoriesViewProps> = ({ userPlan, 
                    animate={{ opacity: 1, y: 0 }}
                    transition={{ delay: i * 0.05 }}
                    onClick={() => { setSelectedCategory(c); setSearch(''); }}
-                   className="bg-card border border-border border-2 hover:border-[#2563EB]/30 overflow-hidden transition-all cursor-pointer group flex flex-col pt-2 brut-card"
+                   className="bg-card border border-border border-2 hover:border-[#2563EB]/30 overflow-hidden transition-all cursor-pointer group flex flex-col pt-2 brut-card rounded-xl"
                  >
                    <div className="p-6 flex-1 flex flex-col">
                       <div className="flex items-center justify-between mb-4">
-                        <div className="w-12 h-12 bg-card border border-border border-2 flex items-center justify-center text-[#2563EB] group-hover:scale-110 transition-transform brut-card">
+                        <div className="w-12 h-12 bg-card border border-border border-2 flex items-center justify-center text-[#2563EB] group-hover:scale-110 transition-transform brut-card rounded-xl">
                           <Folder className="w-6 h-6" />
                         </div>
                         {c.isVip && <span className="bg-amber-500/10 text-amber-500 border border-amber-500/20 px-3 py-1 text-xs font-black uppercase tracking-wider">VIP</span>}
@@ -179,7 +179,7 @@ export const LogCategoriesView: React.FC<LogCategoriesViewProps> = ({ userPlan, 
                       
                       <div className="w-full flex items-center justify-between pt-4 border-t border-border border-2 mt-auto">
                         <span className="text-xs font-bold text-muted-foreground">{catItemsCount} รายการ</span>
-                        <div className="w-8 h-8 bg-card flex items-center justify-center text-muted-foreground group-hover:bg-purple-600/10 group-hover:text-[#2563EB] transition-all brut-card">
+                        <div className="w-8 h-8 bg-card flex items-center justify-center text-muted-foreground group-hover:bg-purple-600/10 group-hover:text-[#2563EB] transition-all brut-card rounded-xl">
                           <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-all" />
                         </div>
                       </div>

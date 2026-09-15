@@ -5,10 +5,10 @@ dotenv.config({ override: true });
 
 // Mock & Simulation Defaults (remove dependency on external environment variables)
 process.env.ADMIN_EMAILS = process.env.ADMIN_EMAILS || 'abopboa.b@gmail.com,admin@apex-studio.com';
-process.env.SITE_NAME = process.env.SITE_NAME || 'STORETH CHECK';
+process.env.SITE_NAME = process.env.SITE_NAME || 'DEV';
 process.env.SHOP_PROMPTPAY_NUMBER = process.env.SHOP_PROMPTPAY_NUMBER || '0812345678';
-process.env.SHOP_ACCOUNT_NAME_TH = process.env.SHOP_ACCOUNT_NAME_TH || 'สโตร์ทีเอช';
-process.env.SHOP_ACCOUNT_NAME_EN = process.env.SHOP_ACCOUNT_NAME_EN || 'STORETH';
+process.env.SHOP_ACCOUNT_NAME_TH = process.env.SHOP_ACCOUNT_NAME_TH || 'เดฟ';
+process.env.SHOP_ACCOUNT_NAME_EN = process.env.SHOP_ACCOUNT_NAME_EN || 'DEV';
 process.env.TRUEWALLET_PHONE = process.env.TRUEWALLET_PHONE || '0812345678';
 process.env.TURNSTILE_SECRET_KEY = process.env.TURNSTILE_SECRET_KEY || '';
 process.env.BACKEND_ENCRYPTION_KEY = process.env.BACKEND_ENCRYPTION_KEY || 'mock-encryption-key-32-characters';
@@ -549,11 +549,33 @@ app.set('trust proxy', 1);
 
   const globalLimiter = rateLimit({
     windowMs: 1 * 60 * 1000, 
-    max: 200, 
+    max: 2000, // 2000 requests per minute
     standardHeaders: true,
     legacyHeaders: false,
+    keyGenerator: userRateLimitKeyGenerator,
     validate: { xForwardedForHeader: false, trustProxy: false },
-    message: { error: 'Too many requests, please try again later.' }
+    message: { error: 'Too many requests, please try again later.' },
+    skip: (req: any) => {
+      // Do not rate limit public GET read-only requests for store catalog, settings, stats, pages, and health
+      if (req.method === 'GET' || req.method === 'OPTIONS' || req.method === 'HEAD') {
+        const publicPrefixes = [
+          '/api/health',
+          '/api/settings',
+          '/api/products',
+          '/api/categories',
+          '/api/stats',
+          '/api/pages',
+          '/api/latest-purchases',
+          '/api/announcements',
+          '/api/logs-system'
+        ];
+        const path = req.originalUrl?.split('?')[0] || req.path || '';
+        if (publicPrefixes.some(p => path === p || path.startsWith(p + '/'))) {
+          return true;
+        }
+      }
+      return false;
+    }
   });
 
   app.use('/api/', globalLimiter);
@@ -811,7 +833,7 @@ import healthRoute from './src/routes/health.route.js';
   let cachedStats: any = null;
   const invalidateStatsCache = () => { lastStatsFetch = 0; cachedStats = null; cacheRevisionCounter++; };
   let siteSettings: any = {
-    site_name: process.env.SITE_NAME || 'STORETH',
+    site_name: process.env.SITE_NAME || 'DEV',
     truewallet_phone: process.env.TRUEWALLET_PHONE || '',
     contact_line: process.env.CONTACT_LINE || '',
     discord_link: '',
@@ -820,10 +842,10 @@ import healthRoute from './src/routes/health.route.js';
     contact_email: 'support.apexstoreth@gmail.com',
     stats_users_offset: 0,
     stats_sales_offset: 0,
-    popup_img_url: 'https://img2.pic.in.th/Red-Black-White-Anime-Podcast-Discord-Logocc6d3bfe807340af.png',
-    popup_enabled: true,
+    popup_img_url: '',
+    popup_enabled: false,
     popup_link: '',
-    banners: ["https://img2.pic.in.th/-71_20260516210303.png"],
+    banners: ["https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=1200&q=80"],
     spotify_url: 'https://youtu.be/WczSfh3gJaU?si=PI1i4X0p0FGbdEfq',
     spotify_autoplay: true,
     proxies: process.env.DEFAULT_PROXY_URL ? [process.env.DEFAULT_PROXY_URL] : [],

@@ -1,9 +1,9 @@
 export const ANIMATED_AVATARS = [
-  'https://s.imgz.io/2026/05/19/IMG_6675e5deac3eabebbd12.jpeg',
-  'https://s.imgz.io/2026/05/19/IMG_6677723bedbed1f3f659.jpeg',
-  'https://s.imgz.io/2026/05/19/IMG_667634c017684418573b.jpeg',
-  'https://s.imgz.io/2026/05/19/IMG_667842ea8c862646193b.jpeg',
-  'https://s.imgz.io/2026/05/19/IMG_6679b09c7e069e25d550.jpeg'
+  'https://api.dicebear.com/7.x/bottts/svg?seed=ApexOne',
+  'https://api.dicebear.com/7.x/bottts/svg?seed=ApexTwo',
+  'https://api.dicebear.com/7.x/bottts/svg?seed=ApexThree',
+  'https://api.dicebear.com/7.x/bottts/svg?seed=ApexFour',
+  'https://api.dicebear.com/7.x/bottts/svg?seed=ApexFive'
 ];
 
 export function getAvatarUrl(seed: string) {

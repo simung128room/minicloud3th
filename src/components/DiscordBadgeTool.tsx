@@ -117,7 +117,7 @@ export const DiscordBadgeTool: React.FC = () => {
           <div className="max-w-4xl mx-auto space-y-8 pb-20 mt-4 md:mt-8">
             <div className="flex flex-col md:flex-row gap-6 items-start justify-between">
                 <div className="flex-1">
-                  <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-card text-[#5865F2] text-xs font-bold mb-4 border border-[#5865F2]/20  brut-card">
+                  <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-card text-[#5865F2] text-xs font-bold mb-4 border border-[#5865F2]/20  brut-card rounded-md">
                      <Star className="w-4 h-4" /> DISCORD TOOL
                   </div>
                   <h2 className="text-4xl md:text-5xl font-black text-white flex items-center gap-4 tracking-tight">
@@ -139,7 +139,7 @@ export const DiscordBadgeTool: React.FC = () => {
                 </div>
             </div>
 
-            <div className="bg-card border border-border border-2 p-8 relative overflow-hidden brut-card">
+            <div className="bg-card border border-border border-2 p-8 relative overflow-hidden brut-card rounded-2xl">
                 <div className="absolute top-0 left-0 w-full h-[2px] from-transparent via-[#5865F2]/80 to-transparent"></div>
                 
                 <div className="space-y-8 relative z-10">
@@ -176,7 +176,7 @@ export const DiscordBadgeTool: React.FC = () => {
                             value={token}
                             onChange={(e) => setToken(e.target.value)}
                             placeholder="••••••••••••••••••••••••" 
-                            className="w-full bg-card border border-border border-2 px-6 py-4 text-white text-sm font-medium placeholder-zinc-700 outline-none focus:border-[#5865F2]/40 focus:ring-4 focus:ring-[#5865F2]/10 transition-all font-mono brut-card"
+                            className="w-full bg-card border border-border border-2 px-6 py-4 text-white text-sm font-medium placeholder-zinc-700 outline-none focus:border-[#5865F2]/40 focus:ring-4 focus:ring-[#5865F2]/10 transition-all font-mono brut-card rounded-xl"
                         />
                     </div>
 
@@ -184,7 +184,7 @@ export const DiscordBadgeTool: React.FC = () => {
                         <button 
                             onClick={handleSetBadge} 
                             disabled={isLoading}
-                            className="flex-1 relative group overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="flex-1 relative group overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed rounded-xl"
                         >
                             <div className="absolute inset-0 from-[#5865F2] to-indigo-600 transition-transform duration-300 group-hover:scale-[1.02]"></div>
                             <div className="relative w-full flex items-center justify-center gap-2 py-4 text-white font-bold text-sm transition-all">
@@ -195,7 +195,7 @@ export const DiscordBadgeTool: React.FC = () => {
                         <button 
                             onClick={handleRemoveBadge}
                             disabled={isLoading}
-                            className="sm:w-auto w-full flex items-center justify-center gap-2 bg-red-500/10 hover:bg-red-500 hover:text-white text-red-400 border border-red-500/20 py-4 px-8 font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="sm:w-auto w-full flex items-center justify-center gap-2 bg-red-500/10 hover:bg-red-500 hover:text-white text-red-400 border border-red-500/20 py-4 px-8 font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed rounded-xl"
                         >
                             {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <><ShieldBan className="w-5 h-5" /> Remove Badge</>}
                         </button>

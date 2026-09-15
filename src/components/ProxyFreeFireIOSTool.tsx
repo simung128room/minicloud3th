@@ -39,7 +39,7 @@ export const ProxyFreeFireIOSTool: React.FC = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
         {/* Server Info Card */}
-        <div className="bg-card border border-border border-2 p-8 relative overflow-hidden flex flex-col justify-between brut-card">
+        <div className="bg-card border border-border border-2 p-8 relative overflow-hidden flex flex-col justify-between brut-card rounded-2xl">
           <div className="absolute -right-16 -top-16 w-48 h-48 bg-primary text-primary-foreground blur-[60px] pointer-events-none"></div>
           
           <div>
@@ -54,27 +54,27 @@ export const ProxyFreeFireIOSTool: React.FC = () => {
             </div>
 
             <div className="space-y-4">
-              <div className="bg-card p-4 border border-border border-2 flex items-center justify-between brut-card">
+              <div className="bg-card p-4 border border-border border-2 flex items-center justify-between brut-card rounded-xl">
                 <div>
                   <div className="text-[10px] font-bold text-muted-foreground mb-1 tracking-wider">SERVER (IP)</div>
                   <div className="text-white font-mono text-lg">{serverIp}</div>
                 </div>
                 <button 
                   onClick={() => copyToClipboard(serverIp, "Server IP")}
-                  className="w-10 h-10 bg-card hover:bg-white/10 flex items-center justify-center text-muted-foreground hover:text-white transition-all brut-card"
+                  className="w-10 h-10 bg-card hover:bg-white/10 flex items-center justify-center text-muted-foreground hover:text-white transition-all brut-card rounded-xl"
                 >
                   <Copy className="w-4 h-4" />
                 </button>
               </div>
 
-              <div className="bg-card p-4 border border-border border-2 flex items-center justify-between brut-card">
+              <div className="bg-card p-4 border border-border border-2 flex items-center justify-between brut-card rounded-xl">
                 <div>
                   <div className="text-[10px] font-bold text-muted-foreground mb-1 tracking-wider">PORT</div>
                   <div className="text-white font-mono text-lg">{port}</div>
                 </div>
                 <button 
                   onClick={() => copyToClipboard(port, "Port")}
-                  className="w-10 h-10 bg-card hover:bg-white/10 flex items-center justify-center text-muted-foreground hover:text-white transition-all brut-card"
+                  className="w-10 h-10 bg-card hover:bg-white/10 flex items-center justify-center text-muted-foreground hover:text-white transition-all brut-card rounded-xl"
                 >
                   <Copy className="w-4 h-4" />
                 </button>
@@ -84,7 +84,7 @@ export const ProxyFreeFireIOSTool: React.FC = () => {
         </div>
 
         {/* Certificate Card */}
-        <div className="bg-card border border-border border-2 p-8 relative overflow-hidden flex flex-col justify-between brut-card">
+        <div className="bg-card border border-border border-2 p-8 relative overflow-hidden flex flex-col justify-between brut-card rounded-2xl">
           <div className="absolute -left-16 -bottom-16 w-48 h-48 bg-primary text-primary-foreground blur-[60px] pointer-events-none"></div>
           
           <div>
@@ -98,7 +98,7 @@ export const ProxyFreeFireIOSTool: React.FC = () => {
               </div>
             </div>
 
-            <div className="bg-card p-6 border border-border border-2 brut-card">
+            <div className="bg-card p-6 border border-border border-2 brut-card rounded-2xl">
               <div className="flex flex-col items-center text-center">
                 <Download className="w-10 h-10 text-muted-foreground mb-3" />
                 <div className="text-sm font-medium text-muted-foreground mb-1">BFUN IOS PROXY 💀.cer</div>

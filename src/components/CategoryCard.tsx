@@ -27,11 +27,11 @@ export const CategoryCard: React.FC<CategoryCardProps> = ({
   return (
     <div
       onClick={onClick}
-      className="relative group overflow-hidden rounded-2xl border border-white/[0.08] bg-[#0c0c0e] hover:border-white/20 transition-all duration-300 flex flex-col cursor-pointer hover:-translate-y-1 shadow-lg"
+      className="relative group overflow-hidden rounded-[26px] border border-white/[0.08] bg-[#0c0c0e] hover:border-white/20 transition-all duration-300 flex flex-col cursor-pointer hover:-translate-y-1.5 shadow-xl shadow-black/40"
       style={{ animationDelay: `${index * 0.05}s` }}
     >
       {/* Banner Area */}
-      <div className="relative aspect-[21/5] w-full overflow-hidden shrink-0 bg-[#141416]">
+      <div className="relative aspect-[21/6] w-full overflow-hidden shrink-0 bg-[#141416]">
         {bgImage ? (
           <img
             src={bgImage}
@@ -56,16 +56,16 @@ export const CategoryCard: React.FC<CategoryCardProps> = ({
           {title}
         </h3>
         
-        <div className="flex items-center justify-between text-xs font-semibold mt-3 pt-3 border-t border-white/[0.04]">
+        <div className="flex items-center justify-between text-xs font-semibold mt-3 pt-3 border-t border-white/[0.05]">
           {/* Item Count */}
-          <span className="text-white/40 flex items-center gap-1.5 uppercase font-bold tracking-wider">
-            <Package className="w-3.5 h-3.5 text-white/35 shrink-0" />
+          <span className="text-white/50 flex items-center gap-1.5 uppercase font-bold tracking-wider">
+            <Package className="w-3.5 h-3.5 text-white/40 shrink-0" />
             <span>มีสินค้าทั้งหมด <span className="text-neon-green font-black">{itemCountDesc?.replace(/[^0-9]/g, '') || '0'}</span> รายการ</span>
           </span>
           
           {/* Price Range */}
           {priceRangeStr && (
-            <span className="text-white font-mono font-black tracking-wider text-xs bg-white/[0.03] px-2.5 py-1.5 rounded-lg border border-white/[0.06] shadow-sm">
+            <span className="text-white font-mono font-black tracking-wider text-xs bg-white/[0.04] px-3 py-1.5 rounded-full border border-white/[0.08] shadow-sm">
               {priceRangeStr.replace("฿", "")}
             </span>
           )}
