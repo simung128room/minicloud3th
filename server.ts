@@ -3,6 +3,16 @@ import dotenv from 'dotenv';
 import { LRUCache } from 'lru-cache';
 dotenv.config({ override: true });
 
+// Mock & Simulation Defaults (remove dependency on external environment variables)
+process.env.ADMIN_EMAILS = process.env.ADMIN_EMAILS || 'abopboa.b@gmail.com,admin@apex-studio.com';
+process.env.SITE_NAME = process.env.SITE_NAME || 'STORETH CHECK';
+process.env.SHOP_PROMPTPAY_NUMBER = process.env.SHOP_PROMPTPAY_NUMBER || '0812345678';
+process.env.SHOP_ACCOUNT_NAME_TH = process.env.SHOP_ACCOUNT_NAME_TH || 'สโตร์ทีเอช';
+process.env.SHOP_ACCOUNT_NAME_EN = process.env.SHOP_ACCOUNT_NAME_EN || 'STORETH';
+process.env.TRUEWALLET_PHONE = process.env.TRUEWALLET_PHONE || '0812345678';
+process.env.TURNSTILE_SECRET_KEY = process.env.TURNSTILE_SECRET_KEY || '';
+process.env.BACKEND_ENCRYPTION_KEY = process.env.BACKEND_ENCRYPTION_KEY || 'mock-encryption-key-32-characters';
+
 import path from 'path';
 import cors from 'cors';
 import axios from 'axios';
@@ -276,20 +286,8 @@ app.use((req: any, res: any, next: any) => {
   });
 
 app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", process.env.NODE_ENV === 'production' ? "" : "'unsafe-inline'", "https://www.youtube.com", "https://s.ytimg.com", "https://unpkg.com", "https://va.vercel-scripts.com"].filter(Boolean),
-      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
-      imgSrc: ["'self'", "data:", "https:"], // Allow external images (avatars, product images) via HTTPS only
-      mediaSrc: ["'self'", "https:"],
-      connectSrc: ["'self'", "https://*.supabase.co", "https://api.ipify.org", "wss://*.supabase.co", "ws:", "wss:"],
-      frameSrc: ["'self'", "https://www.youtube.com", "https://discord.com", "https://www.youtube-nocookie.com"],
-      fontSrc: ["'self'", "https://fonts.gstatic.com", "data:"],
-      objectSrc: ["'none'"],
-      upgradeInsecureRequests: [],
-    }
-  },
+  contentSecurityPolicy: false,
+  xFrameOptions: false,
   crossOriginEmbedderPolicy: false,
   crossOriginResourcePolicy: { policy: "cross-origin" }
 }));
@@ -832,8 +830,8 @@ import healthRoute from './src/routes/health.route.js';
     auto_proxy: true
   };
 
-  // Load from DB (HIGH-05: blocking start until loaded to prevent race conditions)
-  const isSupabaseConfigured = !!(process.env.SUPABASE_URL && process.env.SUPABASE_URL.startsWith('http') && (process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY));
+  // Load from DB (Mock Database is always available)
+  const isSupabaseConfigured = true;
   if (isSupabaseConfigured) {
     try {
       const docName = process.env.NODE_ENV === 'production' ? 'sys_site' : 'sys_site_dev';

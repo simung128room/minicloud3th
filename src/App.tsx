@@ -2087,12 +2087,7 @@ function AppContent() {
   };
 
   const [useCustomCursor, setUseCustomCursor] = useState(() => {
-    // Disable custom cursor automatically on touch devices (pointer: coarse)
-    if (typeof window !== 'undefined' && window.matchMedia("(pointer: coarse)").matches) {
-      return false;
-    }
-    const saved = localStorage.getItem('apexstore_custom_cursor');
-    return saved !== 'false'; // default to true
+    return false; // disable custom cursor by default as requested
   });
 
   const toggleCustomCursor = () => {

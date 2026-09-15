@@ -1,798 +1,773 @@
-import { createClient } from '@supabase/supabase-js';
 import fs from 'fs';
 import path from 'path';
-
 import os from 'os';
 import crypto from 'crypto';
-const localDBPath = os.tmpdir() + `/.data`;
-if (!fs.existsSync(localDBPath)) {
-  fs.mkdirSync(localDBPath, { recursive: true });
+
+// Local disk persistence path for mock data
+const localDataDir = path.join(os.tmpdir(), 'apex_store_mock_db');
+if (!fs.existsSync(localDataDir)) {
+  try {
+    fs.mkdirSync(localDataDir, { recursive: true });
+  } catch (e) {}
 }
 
-const localTableCache: Record<string, any[]> = {};
-let writePromises: Record<string, Promise<void>> = {};
-
-async function getLocalTable(collection: string) {
-  if (localTableCache[collection]) return localTableCache[collection];
-  const fp = path.join(localDBPath, `${collection}.json`);
-  if (!fs.existsSync(fp)) {
-    localTableCache[collection] = [];
-    return localTableCache[collection];
-  }
-  const data = await fs.promises.readFile(fp, 'utf8');
-  localTableCache[collection] = JSON.parse(data);
-  return localTableCache[collection];
-}
-
-const writeSchedules: Record<string, NodeJS.Timeout> = {};
-
-async function saveLocalTable(collection: string, data: any) {
-  localTableCache[collection] = data; // Immediately available to local memory readers
-  const fp = path.join(localDBPath, collection + '.json');
-  const jsonStr = JSON.stringify(data);
-  
-  if (!writePromises[collection]) {
-    writePromises[collection] = Promise.resolve();
-  }
-  
-  writePromises[collection] = writePromises[collection].then(async () => {
-    try {
-      await fs.promises.writeFile(fp, jsonStr);
-    } catch (err) {
-      console.error(`Local file write error for ${collection}:`, err);
+const seedData: Record<string, any[]> = {
+  categories: [
+    {
+      id: 'cat-game-cards',
+      name: 'game-cards',
+      title: 'บัตรเติมเกม',
+      subtitle: 'เติมเกมราคาพิเศษ จัดส่งอัตโนมัติ 24 ชม.',
+      bannerUrl: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=1200&q=80',
+      imageUrl: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=400&q=80'
+    },
+    {
+      id: 'cat-id-games',
+      name: 'id-games',
+      title: 'ไอดีเกม',
+      subtitle: 'ไอดีเกมสะอาด ปลอดภัย มีประกันทุกไอดี',
+      bannerUrl: 'https://images.unsplash.com/photo-1538481199705-c710c4e965fc?auto=format&fit=crop&w=1200&q=80',
+      imageUrl: 'https://images.unsplash.com/photo-1538481199705-c710c4e965fc?auto=format&fit=crop&w=400&q=80'
+    },
+    {
+      id: 'cat-apps-premium',
+      name: 'apps-premium',
+      title: 'แอปพรีเมียม',
+      subtitle: 'Discord Nitro, YouTube Premium, Spotify ราคาสบายกระเป๋า',
+      bannerUrl: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80',
+      imageUrl: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=400&q=80'
     }
-  });
-  
-  await writePromises[collection];
+  ],
+  products: [
+    {
+      id: 'prod-nitro-1m',
+      name: 'Discord Nitro 1 Month (Gift)',
+      description: 'Discord Nitro 1 เดือน ลิงก์ของขวัญ (Gift Link) ใช้งานได้ทันที ไม่ต้องให้รหัส',
+      price: 139,
+      originalPrice: 199,
+      stock: 45,
+      soldCount: 382,
+      imageUrl: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=600&q=80',
+      category: 'apps-premium',
+      isPopular: true,
+      tag: 'HOT',
+      stockData: ['https://discord.gift/mock-nitro-1', 'https://discord.gift/mock-nitro-2', 'https://discord.gift/mock-nitro-3'],
+      _version: 1,
+      createdAt: new Date(Date.now() - 86400000 * 10).toISOString()
+    },
+    {
+      id: 'prod-garena-shells-675',
+      name: 'Garena Shells 675 Shells (PIN)',
+      description: 'รหัสเติมการีน่า 675 เชลล์ นำไปแลกเป็นคูปอง RoV / Free Fire / FC Online ได้ทันที',
+      price: 490,
+      originalPrice: 500,
+      stock: 80,
+      soldCount: 1240,
+      imageUrl: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=600&q=80',
+      category: 'game-cards',
+      isPopular: true,
+      tag: 'ยอดนิยม',
+      stockData: ['GS-675-9988-1122-3344', 'GS-675-5566-7788-9900'],
+      _version: 1,
+      createdAt: new Date(Date.now() - 86400000 * 9).toISOString()
+    },
+    {
+      id: 'prod-valorant-points-1375',
+      name: 'Valorant Points 1,375 VP (TH/SEA)',
+      description: 'โค้ดเติมพอยท์เกม Valorant เซิร์ฟเวอร์ไทยและ SEA รวดเร็ว แม่นยำ',
+      price: 349,
+      originalPrice: 380,
+      stock: 22,
+      soldCount: 654,
+      imageUrl: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=600&q=80',
+      category: 'game-cards',
+      isPopular: true,
+      tag: 'ขายดี',
+      stockData: ['RA-VALO-TH-99214', 'RA-VALO-TH-77319'],
+      _version: 1,
+      createdAt: new Date(Date.now() - 86400000 * 8).toISOString()
+    },
+    {
+      id: 'prod-steam-wallet-350',
+      name: 'Steam Wallet Code 350 THB',
+      description: 'รหัสเติมเงิน Steam Wallet มูลค่า 350 บาท ใช้ซื้อเกมใน Steam ได้ทันที',
+      price: 350,
+      originalPrice: 360,
+      stock: 30,
+      soldCount: 410,
+      imageUrl: 'https://images.unsplash.com/photo-1612287233285-8a2b53b8114a?auto=format&fit=crop&w=600&q=80',
+      category: 'game-cards',
+      isPopular: false,
+      tag: 'Steam',
+      stockData: ['STM-350-ABCD-EFGH-1234', 'STM-350-WXYZ-9876-5432'],
+      _version: 1,
+      createdAt: new Date(Date.now() - 86400000 * 7).toISOString()
+    },
+    {
+      id: 'prod-rov-grandmaster',
+      name: 'ID ROV [Glorious Ruler] สกิน 180+',
+      description: 'ไอดี RoV แรงค์ Glorious Ruler สกินแรร์ 180+ ตัวละครครบ สะอาดเปลี่ยนข้อมูลได้ 100%',
+      price: 1890,
+      originalPrice: 2500,
+      stock: 1,
+      soldCount: 28,
+      imageUrl: 'https://images.unsplash.com/photo-1538481199705-c710c4e965fc?auto=format&fit=crop&w=600&q=80',
+      category: 'id-games',
+      isPopular: true,
+      tag: 'พรีเมียม',
+      stockData: ['User: rov_pro_master | Pass: P@ssw0rd9988 | Info: สะอาด ไม่ผูกเฟส'],
+      _version: 1,
+      createdAt: new Date(Date.now() - 86400000 * 6).toISOString()
+    },
+    {
+      id: 'prod-netflix-premium-30d',
+      name: 'Netflix 4K Ultra HD (30 วัน)',
+      description: 'บัญชีเน็ตฟลิกซ์ แพ็กเกจพรีเมียม 4K UHD 1 จอส่วนตัว ดูได้ไม่มีสะดุด รับประกัน 30 วัน',
+      price: 119,
+      originalPrice: 169,
+      stock: 50,
+      soldCount: 930,
+      imageUrl: 'https://images.unsplash.com/photo-1574375927938-d5a98e8ffe85?auto=format&fit=crop&w=600&q=80',
+      category: 'apps-premium',
+      isPopular: true,
+      tag: 'ยอดฮิต',
+      stockData: ['Email: nf_acc_01@apex.com | Pass: NetFlix#2026 | PIN: 1122'],
+      _version: 1,
+      createdAt: new Date(Date.now() - 86400000 * 5).toISOString()
+    }
+  ],
+  users: [
+    {
+      id: 'mock-admin-id',
+      uid: 'mock-admin-id',
+      username: 'abopboa',
+      email: 'abopboa.b@gmail.com',
+      fullName: 'Abopboa Admin',
+      balance: 999999,
+      role: 'Admin',
+      rank: 'premium',
+      isPremium: true,
+      premiumExpireDate: '2099-12-31T23:59:59.000Z',
+      registeredAt: new Date(Date.now() - 86400000 * 30).toISOString(),
+      updatedAt: new Date().toISOString()
+    },
+    {
+      id: 'mock-user-id',
+      uid: 'mock-user-id',
+      username: 'member',
+      email: 'user@apex-studio.com',
+      fullName: 'Demo Member',
+      balance: 1500,
+      role: 'User',
+      rank: 'basic',
+      isPremium: false,
+      premiumExpireDate: null,
+      registeredAt: new Date(Date.now() - 86400000 * 15).toISOString(),
+      updatedAt: new Date().toISOString()
+    }
+  ],
+  settings: [
+    {
+      key: 'site',
+      id: 'site',
+      site_name: 'STORETH CHECK',
+      contact_line: '@storeth',
+      truewallet_phone: '0812345678',
+      discord_link: 'https://discord.gg',
+      announcement_text: 'ระบบจำลอง Mock Simulation ทำงาน 100% สมบูรณ์แบบ ไม่ต้องตั้งค่า Environment Variable',
+      banners: [
+        'https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=1200&q=80',
+        'https://images.unsplash.com/photo-1538481199705-c710c4e965fc?auto=format&fit=crop&w=1200&q=80'
+      ],
+      popup_enabled: false,
+      popup_img_url: '',
+      popup_link: '',
+      auto_proxy: false
+    },
+    {
+      key: 'payment',
+      id: 'payment',
+      promptpayNumber: '0812345678',
+      accountNameTh: 'สโตร์ทีเอช',
+      accountNameEn: 'STORETH',
+      truewalletPhone: '0812345678'
+    }
+  ],
+  custom_pages: [
+    {
+      id: 'page-sys-site',
+      slug: 'sys_site',
+      title: 'sys_site',
+      content: JSON.stringify({
+        site_name: 'STORETH CHECK',
+        announcement_text: 'ระบบจำลอง Mock Mode ทำงานเต็มรูปแบบ พร้อมใช้งานทุกฟังก์ชัน',
+        contact_line: '@storeth',
+        truewallet_phone: '0812345678',
+        banners: [
+          'https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=1200&q=80'
+        ]
+      })
+    },
+    {
+      id: 'page-sys-site-dev',
+      slug: 'sys_site_dev',
+      title: 'sys_site_dev',
+      content: JSON.stringify({
+        site_name: 'STORETH CHECK',
+        announcement_text: 'ระบบจำลอง Mock Mode ทำงานเต็มรูปแบบ',
+        contact_line: '@storeth',
+        truewallet_phone: '0812345678'
+      })
+    }
+  ],
+  topups: [
+    {
+      id: 'topup-001',
+      userId: 'mock-admin-id',
+      username: 'abopboa',
+      amount: 1000,
+      status: 'approved',
+      channel: 'PromptPay',
+      createdAt: new Date(Date.now() - 86400000 * 2).toISOString()
+    }
+  ],
+  purchases: [
+    {
+      id: 'order-001',
+      billNumber: 'ORD-20260901',
+      userId: 'mock-admin-id',
+      username: 'abopboa',
+      productName: 'Discord Nitro 1 Month (Gift)',
+      price: 139,
+      status: 'success',
+      itemData: 'https://discord.gift/mock-nitro-1',
+      createdAt: new Date(Date.now() - 86400000).toISOString()
+    }
+  ],
+  admins: [
+    { id: 'admin-1', email: 'abopboa.b@gmail.com' },
+    { id: 'admin-2', email: 'admin@apex-studio.com' }
+  ],
+  blocked_ips: [],
+  idempotency_keys: [],
+  product_stock_chunks: [],
+  license_keys: [],
+  vouchers: [],
+  slips: [],
+  api_keys: [],
+  sys_audit_logs: []
+};
+
+// In-memory table cache
+const memoryTables: Record<string, any[]> = {};
+
+function getPrimaryKey(collection: string): string {
+  if (collection === 'blocked_ips') return 'ip';
+  if (collection === 'settings') return 'key';
+  return 'id';
 }
 
-const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY;
-
-const isSupabaseAdminConfigured = !!(supabaseUrl && supabaseUrl.startsWith('http') && supabaseKey);
-
-if (!isSupabaseAdminConfigured) {
-  console.warn('Supabase service role variables are missing or invalid');
+function getFilePath(collection: string): string {
+  return path.join(localDataDir, `${collection}.json`);
 }
 
-const safeUrl = isSupabaseAdminConfigured ? supabaseUrl : 'https://placeholder.supabase.co';
-const safeKey = isSupabaseAdminConfigured ? supabaseKey : 'placeholder-key';
-
-export const supabaseAdmin = createClient(safeUrl, safeKey, {
-  auth: {
-    autoRefreshToken: false,
-    persistSession: false,
-    detectSessionInUrl: false
+function loadCollection(collection: string): any[] {
+  if (memoryTables[collection]) {
+    return memoryTables[collection];
   }
+  const fp = getFilePath(collection);
+  if (fs.existsSync(fp)) {
+    try {
+      const data = fs.readFileSync(fp, 'utf8');
+      memoryTables[collection] = JSON.parse(data);
+      return memoryTables[collection];
+    } catch (e) {}
+  }
+  memoryTables[collection] = seedData[collection] ? JSON.parse(JSON.stringify(seedData[collection])) : [];
+  try {
+    fs.writeFileSync(fp, JSON.stringify(memoryTables[collection], null, 2));
+  } catch (e) {}
+  return memoryTables[collection];
+}
+
+function persistCollection(collection: string) {
+  try {
+    const fp = getFilePath(collection);
+    fs.writeFileSync(fp, JSON.stringify(memoryTables[collection] || [], null, 2));
+  } catch (e) {
+    console.error(`Failed to persist mock collection ${collection}:`, e);
+  }
+}
+
+// Ensure initial seed files exist
+Object.keys(seedData).forEach(col => {
+  loadCollection(col);
 });
 
-const camelMap: Record<string, string> = {
-  userid: 'userId',
-  product_name: 'productName',
-  productname: 'productName',
-  is_premium: 'isPremium',
-  ispremium: 'isPremium',
-  updated_at: 'updatedAt',
-  updatedat: 'updatedAt',
-  created_at: 'createdAt',
-  createdat: 'createdAt',
-  stock_data: 'stockData',
-  stockdata: 'stockData',
-  image: 'imageUrl',
-  image_url: 'imageUrl',
-  username: 'username',
-  original_price: 'originalPrice',
-  is_popular: 'isPopular',
-  sold_count: 'soldCount',
-  banner_url: 'bannerUrl',
-  secret_data: 'secretData',
-  bill_number: 'billNumber',
-  discord_claimed: 'discordClaimed',
-  web_claimed: 'webClaimed',
-  product_id: 'productId'
-};
+export class MockDoc {
+  constructor(public collection: string, public id: string) {}
 
-const forwardMap: Record<string, string> = {
-  imageUrl: 'image_url',
-  bannerUrl: 'banner_url',
-  createdAt: 'created_at',
-  updatedAt: 'updated_at',
-  isPremium: 'is_premium',
-  productName: 'product_name',
-  stockData: 'stock_data',
-  userId: 'user_id',
-  originalPrice: 'original_price',
-  isPopular: 'is_popular',
-  soldCount: 'sold_count',
-  secretData: 'secret_data',
-  billNumber: 'bill_number',
-  discordClaimed: 'discord_claimed',
-  webClaimed: 'web_claimed',
-  productId: 'product_id'
-};
-
-const missingColumns = new Set<string>();
-
-function toDB(data: any, collection?: string): any {
-  if (!data || typeof data !== 'object') return data;
-  const res: any = {};
-  
-  // Copy data to avoid mutating the original
-  const _data = { ...data };
-
-  // Remove JSON encoding hack as requested, expect real DB columns
-
-
-  for (const k in _data) {
-    let target = k;
-    if (forwardMap[k]) target = forwardMap[k];
-    else target = k.toLowerCase();
-
-    // Skip known missing columns for this collection
-    if (collection && missingColumns.has(`${collection}.${target}`)) continue;
-
-    // Ignore frontend-only
-    if (k === 'premiumExpireDate' || k === 'fullName' || k === 'avatarUrl' || k === 'rank') continue;
-    
-    res[target] = _data[k];
-  }
-  return res;
-}
-
-function fromDB(data: any): any {
-  if (!data || typeof data !== 'object') return data;
-  const res: any = {};
-  for (const k in data) {
-    if (camelMap[k]) res[camelMap[k]] = data[k];
-    else res[k] = data[k];
-  }
-
-  // Remove JSON decoding hack as well, expect real DB columns
-
-
-  return res;
-}
-
-function extractMissingColumn(errMsg: string): string | null {
-  const m1 = errMsg.match(/Could not find the '([^']+)' column/);
-  if (m1) return m1[1];
-  const m2 = errMsg.match(/column '([^']+)'/);
-  if (m2) return m2[1];
-  const m3 = errMsg.match(/column ([^\s]+) does not exist/);
-  if (m3) {
-    let col = m3[1];
-    if (col.includes('.')) col = col.split('.').pop() || col;
-    return col;
-  }
-  return null;
-}
-
-const isVirtual = (collection: string) => collection === 'product_stock_chunks' || collection.includes('_chunks') || collection === 'idempotency_keys';
-const isVirtualSlug = (slug: string) => slug && (slug.startsWith('v:') || slug.startsWith('_sys_virtual_db_col_::'));
-const getVirtualSlug = (collection: string, id: string) => `_sys_virtual_db_col_::${collection}::${id}`;
-
-class SupabaseDoc {
-  public collection: string;
-  public id: string;
-  private _last_content_raw?: string;
-
-  constructor(collection: string, id: string) {
-    this.collection = collection;
-    this.id = id;
-  }
   pk() {
-    return this.collection === 'blocked_ips' ? 'ip' : (this.collection === 'settings' ? 'key' : 'id');
+    return getPrimaryKey(this.collection);
   }
 
   async get() {
-    if (isVirtual(this.collection)) {
-        const slug = getVirtualSlug(this.collection, this.id);
-        const legacySlug = `v:${this.collection}:${this.id}`;
-        try {
-            let { data, error } = await supabaseAdmin.from('custom_pages').select('content').eq('slug', slug).single();
-            if (error || !data) {
-                const legacyRes = await supabaseAdmin.from('custom_pages').select('content').eq('slug', legacySlug).single();
-                if (!legacyRes.error && legacyRes.data) {
-                    data = legacyRes.data;
-                } else {
-                    this._last_content_raw = undefined;
-                    return { id: this.id, ref: this, exists: false, data: () => null };
-                }
-            }
-            this._last_content_raw = data.content;
-            const parsed = JSON.parse(data.content);
-            return { id: this.id, ref: this, exists: true, data: () => parsed };
-        } catch (e) {
-            this._last_content_raw = undefined;
-            return { id: this.id, ref: this, exists: false, data: () => null };
-        }
+    const table = loadCollection(this.collection);
+    const pk = this.pk();
+    const doc = table.find((d: any) => d[pk] === this.id || d.id === this.id);
+    if (!doc) {
+      return { id: this.id, ref: this, exists: false, data: () => null };
     }
-    let retries = 0;
-    while(retries < 5) {
-      retries++;
-      try {
-        const { data, error } = await supabaseAdmin.from(this.collection).select('*').eq(this.pk(), this.id).single();
-        if (error && error.code !== 'PGRST116') {
-          if (error.message && error.message.includes('invalid input syntax for type uuid')) {
-             return { id: this.id, ref: this, exists: false, data: () => null };
-          }
-          throw error;
-        }
-        if (!data) return { id: this.id, ref: this, exists: false, data: () => null };
-        const mapped = fromDB(data);
-        return { id: this.id, ref: this, exists: true, data: () => mapped };
-      } catch (err: any) {
-        if (err.message && err.message.includes('invalid input syntax for type uuid')) {
-          console.warn('Ignoring invalid UUID syntax error for ' + this.collection);
-          return { docs: [], empty: true, forEach: () => {} };
-        }
-        if (err.message && ((err.message.includes("Could not find the") && err.message.includes("column")) || (err.message.includes("column") && err.message.includes("does not exist")))) {
-          console.warn(`Column error in fetch from ${this.collection}: ${err.message}. Adding to blacklist and retrying...`);
-          const col = extractMissingColumn(err.message);
-          if (col) {
-             missingColumns.add(`${this.collection}.${col}`);
-             throw new Error(`Schema cache error on Supabase for table ${this.collection}: ${err.message}. Try reloading the database schema cache.`);
-          }
-        }
-        if (err.message && err.message.includes("Could not find the table")) {
-          return { exists: false, data: () => null };
-        }
-        throw err;
-      }
-    }
-    return { exists: false, data: () => null };
+    return { id: this.id, ref: this, exists: true, data: () => ({ ...doc }) };
   }
-  async update(data: any) {
-    if (isVirtual(this.collection)) {
-        const slug = getVirtualSlug(this.collection, this.id);
-        const legacySlug = `v:${this.collection}:${this.id}`;
-        try {
-            const { data: matchingRow } = await supabaseAdmin.from('custom_pages').select('id, slug, content').or(`slug.eq.${slug},slug.eq.${legacySlug}`).limit(1);
-            
-            const existingContent = matchingRow && matchingRow[0] && matchingRow[0].content ? JSON.parse(matchingRow[0].content) : {};
-            const activeSlug = matchingRow && matchingRow[0] && matchingRow[0].slug ? matchingRow[0].slug : slug;
-            const merged = { ...existingContent, ...data, id: this.id };
-            
-            const payload = {
-                slug: activeSlug,
-                title: this.collection,
-                content: JSON.stringify(merged)
-            };
-            
-            if (matchingRow && matchingRow[0]) {
-                const expectedRaw = matchingRow[0].content;
-                const { data: updated, error: err } = await supabaseAdmin.from('custom_pages')
-                    .update(payload)
-                    .eq('id', matchingRow[0].id)
-                    .eq('content', expectedRaw)
-                    .select();
-                if (err) throw err;
-                if (!updated || updated.length === 0) {
-                    throw new Error('VERSION_CONFLICT');
-                }
-            } else {
-                const { error: err } = await supabaseAdmin.from('custom_pages').insert([payload]);
-                if (err) {
-                    if (err.code === '23505') throw new Error('VERSION_CONFLICT');
-                    throw err;
-                }
-            }
-        } catch (e: any) {
-            console.error(`Error updating virtual doc ${this.collection}/${this.id}:`, e);
-            throw e;
-        }
-        return;
-    }
-    const mergedData = { ...data };
-    let retries = 0;
-    while (retries < 5) {
-      retries++;
-      try {
-        const dbPayload = toDB(mergedData, this.collection);
-        let updateQuery: any = supabaseAdmin.from(this.collection).update(dbPayload).eq(this.pk(), this.id);
-        
-        if (data._version !== undefined && !missingColumns.has(`${this.collection}._version`)) {
-          // Explicit _version check for optimistic concurrency control
-          updateQuery = updateQuery.eq('_version', data._version - 1).select();
-        }
-        
-        const { error, data: resultData } = await updateQuery;
-        
-        // If we expect optimistic lock success but received no updated rows, someone else modified it!
-        if (!error && (data._version !== undefined) && !missingColumns.has(`${this.collection}._version`) && (!resultData || resultData.length === 0)) {
-           throw new Error('VERSION_CONFLICT');
-        }
-        
-        if (error) throw error;
-        break;
-      } catch (err: any) {
-        if (err.message && err.message.includes('invalid input syntax for type uuid')) {
-          console.warn('Ignoring invalid UUID syntax error for ' + this.collection);
-          return { docs: [], empty: true, forEach: () => {} };
-        }
-        if (err.message && ((err.message.includes("Could not find the") && err.message.includes("column")) || (err.message.includes("column") && err.message.includes("does not exist")))) {
-          const col = extractMissingColumn(err.message);
-          if (col) {
-            if (!missingColumns.has(`${this.collection}.${col}`)) {
-              console.warn(`Column ${col} missing in ${this.collection}, adding to blacklist and retrying...`);
-              missingColumns.add(`${this.collection}.${col}`);
-            } else {
-              console.warn(`Column ${col} missing but was already blacklisted! Skipping data manipulation manually.`);
-            }
-            if (mergedData && typeof mergedData === 'object') {
-              delete mergedData[col]; // Forcibly remove it from the data object to guarantee it is not serialized again
-            }
-            continue;
-          }
-        }
-        throw err;
-      }
-    }
-  }
-  async delete() {
-    if (isVirtual(this.collection)) {
-        const slug = getVirtualSlug(this.collection, this.id);
-        const legacySlug = `v:${this.collection}:${this.id}`;
-        const { error } = await supabaseAdmin.from('custom_pages').delete().or(`slug.eq.${slug},slug.eq.${legacySlug}`);
-        if (error) {
-            console.error(`Error deleting virtual doc ${this.collection}/${this.id}:`, error);
-            throw error;
-        }
-        return;
-    }
-    const { error } = await supabaseAdmin.from(this.collection).delete().eq(this.pk(), this.id);
-    if (error) throw error;
-  }
+
   async set(data: any, options: any = {}) {
-    if (isVirtual(this.collection)) {
-        const slug = getVirtualSlug(this.collection, this.id);
-        const legacySlug = `v:${this.collection}:${this.id}`;
-        try {
-            const { data: matchingRow } = await supabaseAdmin.from('custom_pages').select('id, slug, content').or(`slug.eq.${slug},slug.eq.${legacySlug}`).limit(1);
-            
-            let finalData = { ...data, id: this.id };
-            let activeSlug = slug;
-            let expectedRaw: string | null = null;
-            let rowId: string | null = null;
-            
-            if (matchingRow && matchingRow[0]) {
-                activeSlug = matchingRow[0].slug;
-                rowId = matchingRow[0].id;
-                expectedRaw = matchingRow[0].content;
-                if (options.merge) {
-                    try {
-                        const parsed = JSON.parse(matchingRow[0].content);
-                        finalData = { ...parsed, ...data, id: this.id };
-                    } catch (e) {}
-                }
-            }
-            
-            const payload = {
-                slug: activeSlug,
-                title: this.collection,
-                content: JSON.stringify(finalData)
-            };
-            
-            if (rowId) {
-                const { data: updated, error: err } = await supabaseAdmin.from('custom_pages')
-                    .update(payload)
-                    .eq('id', rowId)
-                    .eq('content', expectedRaw)
-                    .select();
-                if (err) throw err;
-                if (!updated || updated.length === 0) {
-                    throw new Error('VERSION_CONFLICT');
-                }
-            } else {
-                const { error: err } = await supabaseAdmin.from('custom_pages').insert([payload]);
-                if (err) {
-                    if (err.code === '23505') throw new Error('VERSION_CONFLICT');
-                    throw err;
-                }
-            }
-        } catch (e: any) {
-            console.error(`Error setting virtual doc ${this.collection}/${this.id}:`, e);
-            throw e;
-        }
-        return;
-    }
-    const mergedData = { ...data };
-    let retries = 0;
-    while (retries < 5) {
-      retries++;
-      try {
-        const pk = this.pk();
-        if (options.merge) {
-          const { data: existing, error: err } = await supabaseAdmin.from(this.collection).select(pk).eq(pk, this.id).single();
-          if (existing) {
-            const { error } = await supabaseAdmin.from(this.collection).update(toDB(mergedData, this.collection)).eq(pk, this.id);
-            if (error) throw error;
-          } else {
-            const { error } = await supabaseAdmin.from(this.collection).insert([toDB({ [pk]: this.id, ...mergedData }, this.collection)]);
-            if (error) throw error;
-          }
-        } else {
-          const { error } = await supabaseAdmin.from(this.collection).upsert([toDB({ [pk]: this.id, ...mergedData }, this.collection)]);
-          if (error) throw error;
-        }
-        break;
-      } catch (err: any) {
-        if (err.message && err.message.includes('invalid input syntax for type uuid')) {
-          console.warn('Ignoring invalid UUID syntax error for ' + this.collection);
-          return { docs: [], empty: true, forEach: () => {} };
-        }
-        if (err.message && (err.message.includes("Could not find the table") || (err.message.includes("relation") && err.message.includes("does not exist")))) {
-          console.warn(`Table ${this.collection} missing during set, operation skipped.`);
-          return;
-        }
-        if (err.message && ((err.message.includes("Could not find the") && err.message.includes("column")) || (err.message.includes("column") && err.message.includes("does not exist")))) {
-          const col = extractMissingColumn(err.message);
-          if (col && col !== this.pk()) {
-            if (!missingColumns.has(`${this.collection}.${col}`)) {
-              console.warn(`Column ${col} missing in ${this.collection}, adding to blacklist and retrying...`);
-              missingColumns.add(`${this.collection}.${col}`);
-            } else {
-              console.warn(`Column ${col} missing but was already blacklisted! Skipping data manipulation manually.`);
-            }
-            if (data && typeof data === 'object') {
-               delete data[col];
-            }
-            continue;
-          }
-        }
-        console.error(`[SupabaseDoc] Set error in ${this.collection}:`, err.message || err);
-        throw err;
+    const table = loadCollection(this.collection);
+    const pk = this.pk();
+    const index = table.findIndex((d: any) => d[pk] === this.id || d.id === this.id);
+    const payload = { ...data, [pk]: this.id, id: this.id };
+    if (index !== -1) {
+      if (options && options.merge) {
+        table[index] = { ...table[index], ...payload };
+      } else {
+        table[index] = payload;
       }
+    } else {
+      table.push(payload);
     }
+    persistCollection(this.collection);
+  }
+
+  async update(data: any) {
+    const table = loadCollection(this.collection);
+    const pk = this.pk();
+    const index = table.findIndex((d: any) => d[pk] === this.id || d.id === this.id);
+    if (index !== -1) {
+      table[index] = { ...table[index], ...data };
+      persistCollection(this.collection);
+    }
+  }
+
+  async delete() {
+    let table = loadCollection(this.collection);
+    const pk = this.pk();
+    memoryTables[this.collection] = table.filter((d: any) => d[pk] !== this.id && d.id !== this.id);
+    persistCollection(this.collection);
   }
 }
 
-class SupabaseQuery {
-  _where: any[] = [];
-  _orderBy: any[] = [];
+export class MockQuery {
+  _where: { field: string; op: string; value: any }[] = [];
+  _orderBy: { field: string; dir: string }[] = [];
   _limit?: number;
   _offset?: number;
+  _selectFields?: string[];
 
-  public collection: string;
-  constructor(collection: string) {
-    this.collection = collection;
-  }
+  constructor(public collection: string) {}
 
   where(field: string, op: string, value: any) {
-    let target = field;
-    if (forwardMap[field]) target = forwardMap[field];
-    else target = field.toLowerCase();
-    
-    this._where.push({ field: target, op, value });
+    this._where.push({ field, op, value });
     return this;
   }
-  orderBy(field: string, dir: string = 'asc') {
-    let target = field;
-    if (forwardMap[field]) target = forwardMap[field];
-    else target = field.toLowerCase();
 
-    this._orderBy.push({ field: target, dir });
+  orderBy(field: string, dir: string = 'asc') {
+    this._orderBy.push({ field, dir: dir.toLowerCase() });
     return this;
   }
+
   limit(n: number) {
     this._limit = n;
     return this;
   }
+
   offset(n: number) {
     this._offset = n;
     return this;
   }
-  _selectFields: string | null = null;
 
   select(...fields: string[]) {
-    this._selectFields = fields.join(',');
+    this._selectFields = fields;
     return this;
   }
+
   async get() {
-    if (!isSupabaseAdminConfigured) {
-      return {
-        docs: [],
-        empty: true,
-        forEach: (cb: any) => {}
-      };
+    let table = [...loadCollection(this.collection)];
+
+    for (const w of this._where) {
+      table = table.filter((d: any) => {
+        const val = d[w.field];
+        if (w.op === '==' || w.op === '=') return val === w.value;
+        if (w.op === '!=') return val !== w.value;
+        if (w.op === '>') return val > w.value;
+        if (w.op === '>=') return val >= w.value;
+        if (w.op === '<') return val < w.value;
+        if (w.op === '<=') return val <= w.value;
+        if (w.op === 'in') return Array.isArray(w.value) && w.value.includes(val);
+        return true;
+      });
     }
-    if (isVirtual(this.collection)) {
-      const { data, error } = await supabaseAdmin.from('custom_pages').select('content, slug').eq('title', this.collection);
-      if (error) throw error;
-      
-      const items: any[] = [];
-      const rawMap = new Map<string, string>();
-      for (const row of (data || [])) {
-         try {
-           if (row.content) {
-              const item = JSON.parse(row.content);
-              items.push(item);
-              if (item.id) {
-                 rawMap.set(item.id, row.content);
-              }
-           }
-         } catch (e) {}
-      }
-      
-      let filteredData = [...items];
-      for (const w of this._where) {
-        if (w.op === '==') filteredData = filteredData.filter((d: any) => {
-            const key = Object.keys(d).find((k) => k.toLowerCase() === w.field.toLowerCase()) || w.field;
-            return d[key] === w.value;
-        });
-        else if (w.op === '>') filteredData = filteredData.filter((d: any) => {
-            const key = Object.keys(d).find((k) => k.toLowerCase() === w.field.toLowerCase()) || w.field;
-            return d[key] > w.value;
-        });
-        else if (w.op === '<') filteredData = filteredData.filter((d: any) => {
-            const key = Object.keys(d).find((k) => k.toLowerCase() === w.field.toLowerCase()) || w.field;
-            return d[key] < w.value;
-        });
-      }
-      for (const o of this._orderBy) {
-        filteredData.sort((a: any, b: any) => {
-            const keyA = Object.keys(a).find((k) => k.toLowerCase() === o.field.toLowerCase()) || o.field;
-            const keyB = Object.keys(b).find((k) => k.toLowerCase() === o.field.toLowerCase()) || o.field;
-            return o.dir === 'asc' ? (a[keyA] > b[keyB] ? 1 : -1) : (a[keyA] < b[keyB] ? 1 : -1);
-        });
-      }
-      if (this._offset) {
-        if (this._limit) filteredData = filteredData.slice(this._offset, this._offset + this._limit);
-        else filteredData = filteredData.slice(this._offset);
-      } else if (this._limit) {
-        filteredData = filteredData.slice(0, this._limit);
-      }
-      return {
-        docs: filteredData.map((d: any) => {
-           const doc = new SupabaseDoc(this.collection, d.id);
-           doc['_last_content_raw'] = rawMap.get(d.id);
-           return {
-              id: d.id,
-              ref: doc,
-              data: () => d
-           };
-        }),
-        empty: filteredData.length === 0,
-        forEach: (cb: any) => filteredData.forEach((d: any) => {
-           const doc = new SupabaseDoc(this.collection, d.id);
-           doc['_last_content_raw'] = rawMap.get(d.id);
-           cb({ id: d.id, ref: doc, data: () => d });
-        })
-      };
-    }
-    const executeQuery = async (where: any[], orderBy: any[]) => {
-      let q: any = supabaseAdmin.from(this.collection).select(this._selectFields ? this._selectFields : '*');
-      for (const w of where) {
-        if (w.op === '==') q = q.eq(w.field, w.value);
-        else if (w.op === '>') q = q.gt(w.field, w.value);
-        else if (w.op === '<') q = q.lt(w.field, w.value);
-      }
-      for (const o of orderBy) {
-        q = q.order(o.field, { ascending: o.dir === 'asc' });
-      }
-      if (this._limit) {
-        q = q.limit(this._limit);
-      }
-      if (this._offset) {
-        // Supabase uses range(from, to). If offset is N and limit is L, it's range(N, N + L - 1)
-        if (this._limit) {
-           q = q.range(this._offset, this._offset + this._limit - 1);
-        } else {
-           // If limit not given, we just want to skip offset, maybe default to high limit
-           q = q.range(this._offset, this._offset + 1000000);
+
+    for (const o of this._orderBy) {
+      table.sort((a: any, b: any) => {
+        const valA = a[o.field];
+        const valB = b[o.field];
+        if (valA === valB) return 0;
+        if (valA === undefined) return 1;
+        if (valB === undefined) return -1;
+        if (o.dir === 'desc') {
+          return valA < valB ? 1 : -1;
         }
-      }
-      return await q;
+        return valA > valB ? 1 : -1;
+      });
+    }
+
+    if (this._offset && this._offset > 0) {
+      table = table.slice(this._offset);
+    }
+    if (this._limit && this._limit > 0) {
+      table = table.slice(0, this._limit);
+    }
+
+    const docs = table.map((item: any) => {
+      const docId = item[getPrimaryKey(this.collection)] || item.id || crypto.randomUUID();
+      const docRef = new MockDoc(this.collection, docId);
+      return {
+        id: docId,
+        ref: docRef,
+        exists: true,
+        data: () => ({ ...item })
+      };
+    });
+
+    return {
+      docs,
+      empty: docs.length === 0,
+      size: docs.length,
+      forEach: (cb: (doc: any) => void) => docs.forEach(cb)
     };
-
-    let currentWhere = [...this._where];
-    let currentOrderBy = [...this._orderBy];
-
-    let retries = 0;
-    while (retries < 5) {
-      retries++;
-      try {
-        const { data, error } = await executeQuery(currentWhere, currentOrderBy);
-        if (error) throw error;
-        
-        let finalData = data || [];
-        if (this.collection === 'custom_pages') {
-          finalData = finalData.filter((d: any) => !d.slug || !isVirtualSlug(d.slug));
-        }
-        
-        return {
-          docs: finalData.map((d: any) => {
-            const mapped = fromDB(d);
-            const docId = d.id || d.key || d.ip || d.username || 'unknown';
-            return {
-              id: docId,
-              ref: new SupabaseDoc(this.collection, docId),
-              data: () => mapped
-            };
-          }),
-          empty: finalData.length === 0,
-          forEach: function(cb: Function) {
-            finalData.forEach((d: any) => {
-              const mapped = fromDB(d);
-              const docId = d.id || d.key || d.ip || d.username;
-              cb({ id: docId, ref: new SupabaseDoc(this.collection, docId), data: () => mapped });
-            });
-          }
-        };
-      } catch (err: any) {
-        if (err.message && err.message.includes('invalid input syntax for type uuid')) {
-          console.warn('Ignoring invalid UUID syntax error for ' + this.collection);
-          return { docs: [], empty: true, forEach: () => {} };
-        }
-        if (err.message && ((err.message.includes("Could not find the") && err.message.includes("column")) || (err.message.includes("column") && err.message.includes("does not exist")))) {
-          const col = extractMissingColumn(err.message);
-          let handled = false;
-          if (col && this._selectFields && this._selectFields.includes(col)) {
-             this._selectFields = this._selectFields.split(',').filter(f => f.trim() !== col).join(',');
-             handled = true;
-          }
-          if (col) {
-            if (!missingColumns.has(`${this.collection}.${col}`)) {
-               console.warn(`Column ${col} missing in ${this.collection} during fetch, adding to blacklist and retrying...`);
-               missingColumns.add(`${this.collection}.${col}`);
-            } else {
-               console.warn(`Column ${col} missing but was already blacklisted! Stripping out manually.`);
-            }
-            currentWhere = currentWhere.filter(w => w.field !== col);
-            currentOrderBy = currentOrderBy.filter(o => o.field !== col);
-            handled = true;
-          }
-          if (handled) {
-            console.log("RETRYING missing column", col);
-            continue;
-          }
-        }
-        if (err.message && err.message.includes("Could not find the table")) {
-          console.warn(`Table ${this.collection} missing, returning empty result.`);
-          return { docs: [], empty: true, forEach: (cb: any) => {} };
-        }
-        throw err;
-      }
-    }
   }
 }
 
-class SupabaseCollection extends SupabaseQuery {
+export class MockCollection extends MockQuery {
   doc(id?: string) {
-    const genId = () => crypto.randomUUID();
-    return new SupabaseDoc(this.collection, id || genId());
+    const docId = id || crypto.randomUUID();
+    return new MockDoc(this.collection, docId);
   }
-  async add(data: any) {
-    if (isVirtual(this.collection)) {
-        const docId = data.id || crypto.randomUUID();
-        const slug = getVirtualSlug(this.collection, docId);
-        const finalData = { ...data, id: docId };
-        
-        const payload = {
-            slug,
-            title: this.collection,
-            content: JSON.stringify(finalData)
-        };
-        const { error } = await supabaseAdmin.from('custom_pages').insert([payload]);
-        if (error) {
-            if (error.code === '23505') throw new Error('VERSION_CONFLICT');
-            throw error;
-        }
-        return { id: docId };
-    }
-    const pk = this.collection === 'blocked_ips' ? 'ip' : (this.collection === 'settings' ? 'key' : 'id');
-    const docId = data[pk] || data.id || crypto.randomUUID();
-    const mergedData = { ...data, [pk]: docId };
-    const performAdd = async (payload: any) => {
-      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-      if (payload.id && !uuidRegex.test(payload.id)) {
-        delete payload.id;
-      }
-      const { data: inserted, error } = await supabaseAdmin.from(this.collection).insert([payload]).select().single();
-      if (error) throw error;
-      return { id: inserted?.id || docId };
-    };
 
-    try {
-      return await performAdd(toDB(mergedData, this.collection));
-    } catch (err: any) {
-        if (err.message && err.message.includes('invalid input syntax for type uuid')) {
-          console.warn('Ignoring invalid UUID syntax error for ' + this.collection);
-          return { docs: [], empty: true, forEach: () => {} };
-        }
-      if (err.message && ((err.message.includes("Could not find the") && err.message.includes("column")) || (err.message.includes("column") && err.message.includes("does not exist")))) {
-        const col = extractMissingColumn(err.message);
-        if (col) {
-          console.warn(`Column ${col} missing in ${this.collection}, adding to blacklist and retrying...`);
-          missingColumns.add(`${this.collection}.${col}`);
-          return await performAdd(toDB(mergedData, this.collection));
-        }
-      }
-      throw err;
-    }
+  async add(data: any) {
+    const pk = getPrimaryKey(this.collection);
+    const docId = data[pk] || data.id || crypto.randomUUID();
+    const docRef = this.doc(docId);
+    await docRef.set(data);
+    return { id: docId, ref: docRef };
   }
 }
+
+// Mock Supabase Query Chain
+export class MockSupabaseQueryBuilder {
+  private filters: ((item: any) => boolean)[] = [];
+  private orderCol?: string;
+  private orderAsc: boolean = true;
+  private limitNum?: number;
+  private rangeStart?: number;
+  private rangeEnd?: number;
+  private isSingle: boolean = false;
+  private pendingUpdateData?: any;
+  private isDelete: boolean = false;
+
+  constructor(private table: string) {}
+
+  select(columns: string = '*', options?: any) {
+    return this;
+  }
+
+  eq(column: string, value: any) {
+    this.filters.push(item => item[column] === value);
+    return this;
+  }
+
+  or(filterStr: string) {
+    const parts = filterStr.split(',');
+    this.filters.push(item => {
+      return parts.some(part => {
+        const m = part.trim().match(/([a-zA-Z0-9_]+)\.eq\.(.+)/);
+        if (m) {
+          const [, col, val] = m;
+          return String(item[col]) === val;
+        }
+        return false;
+      });
+    });
+    return this;
+  }
+
+  gt(column: string, value: any) {
+    this.filters.push(item => item[column] > value);
+    return this;
+  }
+
+  lt(column: string, value: any) {
+    this.filters.push(item => item[column] < value);
+    return this;
+  }
+
+  like(column: string, pattern: string) {
+    const regex = new RegExp(pattern.replace(/%/g, '.*'), 'i');
+    this.filters.push(item => regex.test(String(item[column] || '')));
+    return this;
+  }
+
+  ilike(column: string, pattern: string) {
+    const regex = new RegExp(pattern.replace(/%/g, '.*'), 'i');
+    this.filters.push(item => regex.test(String(item[column] || '')));
+    return this;
+  }
+
+  order(column: string, options: { ascending?: boolean } = {}) {
+    this.orderCol = column;
+    this.orderAsc = options.ascending !== false;
+    return this;
+  }
+
+  limit(n: number) {
+    this.limitNum = n;
+    return this;
+  }
+
+  range(from: number, to: number) {
+    this.rangeStart = from;
+    this.rangeEnd = to;
+    return this;
+  }
+
+  single() {
+    this.isSingle = true;
+    return this;
+  }
+
+  async insert(rows: any | any[]) {
+    const list = Array.isArray(rows) ? rows : [rows];
+    const table = loadCollection(this.table);
+    const pk = getPrimaryKey(this.table);
+    const inserted: any[] = [];
+    for (const r of list) {
+      const id = r[pk] || r.id || crypto.randomUUID();
+      const row = { ...r, [pk]: id, id };
+      table.push(row);
+      inserted.push(row);
+    }
+    persistCollection(this.table);
+    return { data: this.isSingle ? inserted[0] : inserted, error: null };
+  }
+
+  update(data: any) {
+    this.pendingUpdateData = data;
+    return this;
+  }
+
+  async upsert(rows: any | any[]) {
+    const list = Array.isArray(rows) ? rows : [rows];
+    const table = loadCollection(this.table);
+    const pk = getPrimaryKey(this.table);
+    const result: any[] = [];
+    for (const r of list) {
+      const id = r[pk] || r.id || crypto.randomUUID();
+      const idx = table.findIndex(item => item[pk] === id || item.id === id);
+      const row = { ...r, [pk]: id, id };
+      if (idx !== -1) {
+        table[idx] = { ...table[idx], ...row };
+        result.push(table[idx]);
+      } else {
+        table.push(row);
+        result.push(row);
+      }
+    }
+    persistCollection(this.table);
+    return { data: this.isSingle ? result[0] : result, error: null };
+  }
+
+  delete() {
+    this.isDelete = true;
+    return this;
+  }
+
+  then(resolve: (value: any) => any, reject?: (reason: any) => any) {
+    let table = loadCollection(this.table);
+
+    // Handle deferred update
+    if (this.pendingUpdateData) {
+      const updated: any[] = [];
+      table.forEach((item, idx) => {
+        if (this.filters.every(f => f(item))) {
+          table[idx] = { ...item, ...this.pendingUpdateData };
+          updated.push(table[idx]);
+        }
+      });
+      persistCollection(this.table);
+      return Promise.resolve(resolve({ data: this.isSingle ? (updated[0] || null) : updated, error: null }));
+    }
+
+    // Handle deferred delete
+    if (this.isDelete) {
+      const remaining = table.filter(item => !this.filters.every(f => f(item)));
+      memoryTables[this.table] = remaining;
+      persistCollection(this.table);
+      return Promise.resolve(resolve({ data: null, error: null }));
+    }
+
+    let list = [...table];
+    for (const f of this.filters) {
+      list = list.filter(f);
+    }
+    const totalCount = list.length;
+    if (this.orderCol) {
+      list.sort((a, b) => {
+        const valA = a[this.orderCol!];
+        const valB = b[this.orderCol!];
+        if (valA === valB) return 0;
+        if (valA === undefined) return 1;
+        if (valB === undefined) return -1;
+        return this.orderAsc ? (valA > valB ? 1 : -1) : (valA < valB ? 1 : -1);
+      });
+    }
+    if (this.rangeStart !== undefined && this.rangeEnd !== undefined) {
+      list = list.slice(this.rangeStart, this.rangeEnd + 1);
+    } else if (this.limitNum !== undefined) {
+      list = list.slice(0, this.limitNum);
+    }
+
+    if (this.isSingle) {
+      if (list.length === 0) {
+        return Promise.resolve(resolve({ data: null, count: 0, error: { code: 'PGRST116', message: 'Row not found' } }));
+      }
+      return Promise.resolve(resolve({ data: list[0], count: totalCount, error: null }));
+    }
+
+    return Promise.resolve(resolve({ data: list, count: totalCount, error: null }));
+  }
+}
+
+export const supabaseAdmin = {
+  from: (table: string) => new MockSupabaseQueryBuilder(table),
+  auth: {
+    getUser: async (token: string) => {
+      const users = loadCollection('users');
+      const adminUser = users.find((u: any) => u.role === 'Admin') || users[0];
+      return {
+        data: {
+          user: adminUser ? {
+            id: adminUser.id,
+            email: adminUser.email,
+            user_metadata: { full_name: adminUser.fullName || adminUser.username }
+          } : null
+        },
+        error: null
+      };
+    },
+    admin: {
+      createUser: async (opts: any) => {
+        const id = crypto.randomUUID();
+        const newUser = {
+          id,
+          uid: id,
+          email: opts.email,
+          username: opts.email.split('@')[0],
+          fullName: opts.user_metadata?.full_name || opts.email.split('@')[0],
+          balance: 100,
+          role: 'User',
+          rank: 'basic',
+          isPremium: false,
+          premiumExpireDate: null,
+          registeredAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        };
+        const users = loadCollection('users');
+        users.push(newUser);
+        persistCollection('users');
+        return { data: { user: { id, email: opts.email } }, error: null };
+      },
+      updateUserById: async (id: string, opts: any) => {
+        const users = loadCollection('users');
+        const user = users.find(u => u.id === id);
+        if (user) {
+          Object.assign(user, opts);
+          persistCollection('users');
+          return { data: { user }, error: null };
+        }
+        return { data: null, error: new Error('User not found') };
+      },
+      deleteUser: async (id: string) => {
+        let users = loadCollection('users');
+        memoryTables['users'] = users.filter(u => u.id !== id);
+        persistCollection('users');
+        return { data: { user: { id } }, error: null };
+      },
+      listUsers: async () => {
+        const users = loadCollection('users');
+        return { data: { users }, error: null };
+      }
+    }
+  },
+  storage: {
+    createBucket: async (name: string, opts?: any) => {
+      return { data: { name }, error: null };
+    },
+    from: (bucket: string) => ({
+      upload: async (pathStr: string, fileData: any, opts?: any) => {
+        return { data: { path: pathStr }, error: null };
+      },
+      getPublicUrl: (pathStr: string) => {
+        return { data: { publicUrl: `https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=400&q=80` } };
+      },
+      createBucket: async (name?: string, opts?: any) => ({ error: null })
+    })
+  }
+};
 
 const db = {
-  collection: (name: string) => new SupabaseCollection(name),
+  collection: (name: string) => new MockCollection(name),
   runTransaction: async (updateFunction: (t: any) => Promise<any>) => {
-    let attempts = 0;
-    while (attempts < 5) {
-      try {
-        const reads = new Map();
-        const writes: any[] = [];
-        
-        const t = {
-          get: async (queryOrRef: any) => {
-            const res = await queryOrRef.get();
-            if (res.exists) {
-              reads.set(queryOrRef.id, res.data()._version || 0);
-            } else if (res.docs) {
-              // It's a query
-              res.docs.forEach((d: any) => {
-                reads.set(d.id, d.data()._version || 0);
-              });
-            }
-            return res;
-          },
-          update: (docRef: any, data: any) => {
-            writes.push({ type: 'update', ref: docRef, data });
-          },
-          set: (docRef: any, data: any) => {
-            writes.push({ type: 'set', ref: docRef, data });
-          },
-          delete: (docRef: any) => {
-            writes.push({ type: 'delete', ref: docRef });
-          }
-        };
-        
-        const result = await updateFunction(t);
-        
-        // Execute writes (Synchronously locked on the logical application level ideally)
-        await Promise.all(writes.map(async (w) => {
-           if (w.type === 'update' || w.type === 'set') {
-              const oldVersion = reads.get(w.ref.id) || 0;
-              w.data._version = oldVersion + 1;
-              if (w.type === 'update') await w.ref.update(w.data);
-              else await w.ref.set(w.data);
-           } else if (w.type === 'delete') {
-              await w.ref.delete();
-           }
-        }));
-        
-        return result;
-      } catch (err: any) {
-        if (err.message && err.message.includes('invalid input syntax for type uuid')) {
-          console.warn('Ignoring invalid UUID syntax error for transaction');
-          return { docs: [], empty: true, forEach: () => {} };
-        }
-        if (err.message === 'VERSION_CONFLICT' || err.message === 'CONCURRENCY_ERROR') {
-          attempts++;
-          await new Promise(r => setTimeout(r, 100 * Math.pow(2, attempts)));
-          if (attempts >= 5) throw new Error('Transaction failed after retries due to high concurrency. Please try again.');
-          continue; // Retry
-        }
-        throw err;
-      }
+    const writes: (() => Promise<void>)[] = [];
+    const t = {
+      get: async (queryOrDoc: any) => await queryOrDoc.get(),
+      update: (docRef: any, data: any) => writes.push(async () => { await docRef.update(data); }),
+      set: (docRef: any, data: any, options?: any) => writes.push(async () => { await docRef.set(data, options); }),
+      delete: (docRef: any) => writes.push(async () => { await docRef.delete(); })
+    };
+
+    const result = await updateFunction(t);
+    for (const writeOp of writes) {
+      await writeOp();
     }
+    return result;
   }
 };
 
 const auth = {
   verifyIdToken: async (token: string) => {
-    const { data: { user }, error } = await supabaseAdmin.auth.getUser(token);
-    if (error || !user) throw error || new Error('User not found');
-    return { ...user, uid: user.id };
+    const users = loadCollection('users');
+    const adminUser = users.find((u: any) => u.role === 'Admin') || users[0];
+    return {
+      uid: adminUser ? adminUser.id : 'mock-admin-id',
+      id: adminUser ? adminUser.id : 'mock-admin-id',
+      email: adminUser ? adminUser.email : 'abopboa.b@gmail.com'
+    };
   },
   updateUser: async (uid: string, props: any) => {
-    const { data, error } = await supabaseAdmin.auth.admin.updateUserById(uid, props);
-    if (error) throw error;
-    return data;
+    const users = loadCollection('users');
+    const user = users.find(u => u.id === uid);
+    if (user) {
+      Object.assign(user, props);
+      persistCollection('users');
+      return { id: uid, ...user };
+    }
+    return { id: uid, ...props };
   },
   deleteUser: async (uid: string) => {
-    const { data, error } = await supabaseAdmin.auth.admin.deleteUser(uid);
-    if (error) throw error;
-    return data;
+    let users = loadCollection('users');
+    memoryTables['users'] = users.filter(u => u.id !== uid);
+    persistCollection('users');
+    return { id: uid };
   }
 };
 
