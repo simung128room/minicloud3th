@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Key, Plus, Trash2, CheckCircle2, XCircle, Power, PowerOff } from 'lucide-react';
+import { Key, Plus, Trash2, Power, PowerOff, Copy, Check, ShieldCheck, X } from 'lucide-react';
 import Swal from 'sweetalert2';
 
 export const AdminApiKeys: React.FC = () => {
@@ -10,6 +10,7 @@ export const AdminApiKeys: React.FC = () => {
   const [newKeyName, setNewKeyName] = useState('');
   const [isLifetime, setIsLifetime] = useState(true);
   const [expireDays, setExpireDays] = useState('30');
+  const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
   const fetchKeys = async () => {
     setIsLoading(true);
@@ -21,8 +22,8 @@ export const AdminApiKeys: React.FC = () => {
       Swal.fire({
         icon: 'error',
         title: 'Error',
-        text: err.response?.data?.error || 'Failed to fetch API keys',
-        background: '#121417',
+        text: err.response?.data?.error || 'ไม่สามารถดึงข้อมูล API keys ได้',
+        background: '#0d1017',
         color: '#fff',
       });
     } finally {
@@ -43,12 +44,11 @@ export const AdminApiKeys: React.FC = () => {
         expire_days: expireDays
       });
       Swal.fire({
-        title: 'Success',
-        text: 'API Key Created',
+        title: 'สร้าง API Key สำเร็จ',
         icon: 'success',
         timer: 1500,
         showConfirmButton: false,
-        background: '#121417',
+        background: '#0d1017',
         color: '#fff',
       });
       setIsAdding(false);
@@ -57,9 +57,9 @@ export const AdminApiKeys: React.FC = () => {
     } catch (err: any) {
       Swal.fire({
         title: 'Error',
-        text: err.response?.data?.error || 'Failed to create API key',
+        text: err.response?.data?.error || 'ไม่สามารถสร้าง API key ได้',
         icon: 'error',
-        background: '#121417',
+        background: '#0d1017',
         color: '#fff',
       });
     }
@@ -74,9 +74,9 @@ export const AdminApiKeys: React.FC = () => {
     } catch (err: any) {
       Swal.fire({
         title: 'Error',
-        text: err.response?.data?.error || 'Failed to update API key',
+        text: err.response?.data?.error || 'ไม่สามารถอัปเดตสถานะได้',
         icon: 'error',
-        background: '#121417',
+        background: '#0d1017',
         color: '#fff',
       });
     }
@@ -84,14 +84,15 @@ export const AdminApiKeys: React.FC = () => {
 
   const handleDelete = async (key: string) => {
     const confirm = await Swal.fire({
-      title: 'Are you sure?',
-      text: "You won't be able to revert this!",
+      title: 'ต้องการลบ API Key นี้หรือไม่?',
+      text: 'บริการหรือสคริปต์ที่ใช้ Key นี้จะไม่สามารถเข้าถึง API ได้อีกต่อไป',
       icon: 'warning',
       showCancelButton: true,
-      confirmButtonColor: '#d33',
-      cancelButtonColor: '#3085d6',
-      confirmButtonText: 'Yes, delete it!',
-      background: '#121417',
+      confirmButtonColor: '#f43f5e',
+      cancelButtonColor: '#27272a',
+      confirmButtonText: 'ใช่, ลบเลย',
+      cancelButtonText: 'ยกเลิก',
+      background: '#0d1017',
       color: '#fff',
     });
 
@@ -99,151 +100,133 @@ export const AdminApiKeys: React.FC = () => {
       try {
         await axios.delete(`/api/api_keys/${key}`);
         Swal.fire({
-          title: 'Deleted!',
-          text: 'The API Key has been deleted.',
+          title: 'ลบเรียบร้อยแล้ว',
           icon: 'success',
           timer: 1500,
           showConfirmButton: false,
-          background: '#121417',
+          background: '#0d1017',
           color: '#fff',
         });
         fetchKeys();
       } catch (err: any) {
         Swal.fire({
           title: 'Error',
-          text: err.response?.data?.error || 'Failed to delete API key',
+          text: err.response?.data?.error || 'ไม่สามารถลบ API key ได้',
           icon: 'error',
-          background: '#121417',
+          background: '#0d1017',
           color: '#fff',
         });
       }
     }
   };
 
+  const copyKey = (key: string) => {
+    navigator.clipboard.writeText(key);
+    setCopiedKey(key);
+    setTimeout(() => setCopiedKey(null), 2000);
+  };
+
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h2 className="text-2xl font-black text-white flex items-center gap-2">
-            <Key className="w-6 h-6 text-[#2563EB]" />
-            API Keys Management
-          </h2>
-          <p className="text-sm text-muted-foreground mt-1">
-            สร้าง API Keys สำหรับการเรียกใช้งาน /api/check แบบ bypass การตรวจสอบ Cloudflare
-          </p>
+      {/* Header */}
+      <div className="bg-[#0f121a] border border-white/[0.08] rounded-2xl p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
+            <Key className="w-5 h-5" />
+          </div>
+          <div>
+            <h2 className="text-base font-bold text-white">จัดการ API Keys (Access Tokens)</h2>
+            <p className="text-xs text-zinc-400">สร้าง Access Token สำหรับเชื่อมต่อ API ภายนอกหรือระบบบอท</p>
+          </div>
         </div>
+
         <button
-          onClick={() => setIsAdding(!isAdding)}
-          className="bg-card text-white px-4 py-2 text-sm font-bold hover:bg-[#2563EB]/80 flex items-center gap-2 brut-card rounded-xl"
+          onClick={() => setIsAdding(true)}
+          className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition-all shadow-md shadow-blue-500/20 flex items-center gap-1.5 shrink-0"
         >
-          {isAdding ? <XCircle className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
-          {isAdding ? 'Cancel' : 'Create Key'}
+          <Plus className="w-4 h-4" /> สร้าง API Key ใหม่
         </button>
       </div>
 
-      {isAdding && (
-        <form onSubmit={handleAddKey} className="bg-card border border-border border-2 p-6 flex flex-col gap-4 brut-card rounded-2xl">
-          <div className="flex flex-col gap-2">
-            <label className="text-xs font-bold text-muted-foreground uppercase">Key Name / Description</label>
-            <input
-              required
-              type="text"
-              value={newKeyName}
-              onChange={e => setNewKeyName(e.target.value)}
-              placeholder="e.g. My Python Checker Script"
-              className="bg-card text-white px-4 py-3 border border-border border-2 focus:border-[#2563EB] outline-none brut-card rounded-xl"
-            />
-          </div>
-          <div className="flex items-center gap-3">
-            <input
-              type="checkbox"
-              id="isLifetime"
-              checked={isLifetime}
-              onChange={e => setIsLifetime(e.target.checked)}
-              className="w-4 h-4 rounded bg-card border-border border-2 text-[#2563EB] focus:ring-[#2563EB] brut-card"
-            />
-            <label htmlFor="isLifetime" className="text-sm font-bold text-white">Lifetime (ถาวร)</label>
-          </div>
-          {!isLifetime && (
-            <div className="flex flex-col gap-2">
-              <label className="text-xs font-bold text-muted-foreground uppercase">Expire In (Days)</label>
-              <input
-                type="number"
-                min="1"
-                required
-                value={expireDays}
-                onChange={e => setExpireDays(e.target.value)}
-                className="bg-card text-white px-4 py-3 border border-border border-2 focus:border-[#2563EB] outline-none brut-card rounded-xl"
-              />
-            </div>
-          )}
-          <button type="submit" className="bg-card text-white font-bold py-3 mt-2 brut-card rounded-xl">
-            Generate Key
-          </button>
-        </form>
-      )}
-
-      <div className="bg-card border border-border border-2 overflow-hidden brut-card rounded-xl">
-        <div className="overflow-x-auto min-h-[300px]">
-          <table className="w-full text-left border-collapse">
+      {/* API Keys Table */}
+      <div className="bg-[#0f121a] border border-white/[0.08] rounded-2xl overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse text-sm text-zinc-300">
             <thead>
-              <tr className="border-b border-border border-2 bg-card text-xs text-muted-foreground uppercase font-black tracking-widest brut-card rounded-md">
-                <th className="px-6 py-4">Status</th>
-                <th className="px-6 py-4">Name</th>
-                <th className="px-6 py-4">API Key</th>
-                <th className="px-6 py-4">Created At</th>
-                <th className="px-6 py-4">Expires At</th>
-                <th className="px-6 py-4">Last Used</th>
-                <th className="px-6 py-4 text-right">Actions</th>
+              <tr className="border-b border-white/[0.06] bg-white/[0.02] text-[11px] text-zinc-400 uppercase font-semibold tracking-wider">
+                <th className="px-5 py-3.5">สถานะ</th>
+                <th className="px-5 py-3.5">ชื่ออ้างอิง</th>
+                <th className="px-5 py-3.5">API Key</th>
+                <th className="px-5 py-3.5">สร้างเมื่อ</th>
+                <th className="px-5 py-3.5">วันหมดอายุ</th>
+                <th className="px-5 py-3.5">ใช้งานล่าสุด</th>
+                <th className="px-5 py-3.5 text-right">การจัดการ</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/5 text-sm text-muted-foreground">
+            <tbody className="divide-y divide-white/[0.04]">
               {isLoading ? (
                 <tr>
-                  <td colSpan={7} className="text-center py-8">Loading...</td>
+                  <td colSpan={7} className="text-center py-12 text-zinc-500 text-xs">กำลังโหลดข้อมูล...</td>
                 </tr>
               ) : apiKeys.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="text-center py-8 text-muted-foreground">No API Keys found</td>
+                  <td colSpan={7} className="text-center py-12 text-zinc-500 text-xs">ยังไม่มี API Key ในระบบ</td>
                 </tr>
               ) : (
                 apiKeys.map(k => (
-                  <tr key={k.key} className="hover:bg-[#121212]/30 transition-colors">
-                    <td className="px-6 py-4">
+                  <tr key={k.key} className="hover:bg-white/[0.02] transition-colors">
+                    <td className="px-5 py-3.5">
                       {k.status === 'active' ? (
-                        <span className="bg-primary text-primary-foreground text-blue-600 px-3 py-1 text-xs font-bold border border-emerald-500/20">Active</span>
+                        <span className="bg-emerald-500/15 text-emerald-400 border border-emerald-500/25 px-2.5 py-0.5 rounded-full text-[10px] font-bold">ใช้งานได้</span>
                       ) : k.status === 'expired' ? (
-                        <span className="bg-amber-500/20 text-amber-400 px-3 py-1 text-xs font-bold border border-amber-500/20">Expired</span>
+                        <span className="bg-amber-500/15 text-amber-400 border border-amber-500/25 px-2.5 py-0.5 rounded-full text-[10px] font-bold">หมดอายุ</span>
                       ) : (
-                        <span className="bg-red-500/20 text-red-400 px-3 py-1 text-xs font-bold border border-red-500/20">Disabled</span>
+                        <span className="bg-rose-500/15 text-rose-400 border border-rose-500/25 px-2.5 py-0.5 rounded-full text-[10px] font-bold">ระงับ</span>
                       )}
                     </td>
-                    <td className="px-6 py-4 font-bold text-white">{k.name}</td>
-                    <td className="px-6 py-4 font-mono text-xs text-[#2563EB] select-all cursor-pointer bg-card px-2 py-1 rounded border border-[#2563EB]/20 brut-card">
-                      {k.key}
+                    <td className="px-5 py-3.5 font-bold text-white text-xs">{k.name}</td>
+                    <td className="px-5 py-3.5">
+                      <div className="flex items-center gap-1.5 font-mono text-xs bg-white/[0.03] border border-white/[0.06] px-2.5 py-1 rounded-lg w-max">
+                        <span className="text-blue-400">{k.key.substring(0, 16)}...</span>
+                        <button
+                          onClick={() => copyKey(k.key)}
+                          className="text-zinc-500 hover:text-white p-0.5"
+                          title="คัดลอกคีย์"
+                        >
+                          {copiedKey === k.key ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                        </button>
+                      </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">{new Date(k.created_at).toLocaleString()}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {k.expires_at ? new Date(k.expires_at).toLocaleString() : 'Lifetime'}
+                    <td className="px-5 py-3.5 whitespace-nowrap text-xs text-zinc-400">{new Date(k.created_at).toLocaleDateString('th-TH')}</td>
+                    <td className="px-5 py-3.5 whitespace-nowrap text-xs text-zinc-400">
+                      {k.expires_at ? new Date(k.expires_at).toLocaleDateString('th-TH') : (
+                        <span className="text-blue-400 font-medium">ตลอดชีพ (Lifetime)</span>
+                      )}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {k.last_used ? new Date(k.last_used).toLocaleString() : 'Never'}
+                    <td className="px-5 py-3.5 whitespace-nowrap text-xs text-zinc-400">
+                      {k.last_used ? new Date(k.last_used).toLocaleDateString('th-TH') : 'ยังไม่เคยใช้'}
                     </td>
-                    <td className="px-6 py-4 text-right flex items-center justify-end gap-2">
-                      <button
-                        onClick={() => handleToggleStatus(k.key, k.status)}
-                        className={`p-2 transition-all ${k.status === 'active' ? 'bg-amber-500/10 text-amber-500 hover:bg-amber-500/20' : 'bg-blue-600/10 text-blue-500 hover:bg-blue-600/20'}`}
-                        title={k.status === 'active' ? 'Disable Key' : 'Enable Key'}
-                      >
-                        {k.status === 'active' ? <PowerOff className="w-4 h-4" /> : <Power className="w-4 h-4" />}
-                      </button>
-                      <button
-                        onClick={() => handleDelete(k.key)}
-                        className="bg-red-500/10 text-red-500 p-2 hover:bg-red-500/20 transition-all"
-                        title="Delete Key"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                    <td className="px-5 py-3.5 text-right">
+                      <div className="flex items-center justify-end gap-1.5">
+                        <button
+                          onClick={() => handleToggleStatus(k.key, k.status)}
+                          className={`p-2 rounded-xl transition-all ${
+                            k.status === 'active' 
+                              ? 'text-amber-400 hover:bg-amber-500/10' 
+                              : 'text-emerald-400 hover:bg-emerald-500/10'
+                          }`}
+                          title={k.status === 'active' ? 'ระงับการใช้งาน' : 'เปิดใช้งาน'}
+                        >
+                          {k.status === 'active' ? <PowerOff className="w-4 h-4" /> : <Power className="w-4 h-4" />}
+                        </button>
+                        <button
+                          onClick={() => handleDelete(k.key)}
+                          className="p-2 rounded-xl text-zinc-400 hover:text-rose-400 hover:bg-rose-500/10 transition-all"
+                          title="ลบ Key"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -252,6 +235,95 @@ export const AdminApiKeys: React.FC = () => {
           </table>
         </div>
       </div>
+
+      {/* Create Key Modal */}
+      {isAdding && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-[100]" onClick={() => setIsAdding(false)}>
+          <div 
+            className="bg-[#0f121a] border border-white/[0.1] w-full max-w-md rounded-2xl shadow-2xl overflow-hidden"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="p-6 border-b border-white/[0.08] flex items-center justify-between bg-[#121622]/60">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
+                  <Key className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-white">สร้าง API Key ใหม่</h3>
+                  <p className="text-xs text-zinc-400">กำหนดชื่อและระยะเวลาการใช้งาน</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setIsAdding(false)} 
+                className="w-9 h-9 rounded-xl flex items-center justify-center text-zinc-400 hover:text-white hover:bg-white/[0.06]"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleAddKey} className="p-6 space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-zinc-300 mb-1.5">
+                  ชื่อ API Key หรือคำอธิบาย <span className="text-rose-400">*</span>
+                </label>
+                <input
+                  required
+                  type="text"
+                  value={newKeyName}
+                  onChange={e => setNewKeyName(e.target.value)}
+                  placeholder="เช่น บอท Discord ตรวจสอบยอด, สคริปต์ Python"
+                  className="w-full bg-[#151926] border border-white/[0.08] rounded-xl px-4 py-2.5 text-xs text-white placeholder:text-zinc-600 focus:outline-none focus:border-blue-500"
+                />
+              </div>
+
+              <div className="flex items-center gap-3 p-3.5 rounded-xl bg-[#151926] border border-white/[0.06]">
+                <input
+                  type="checkbox"
+                  id="isLifetime"
+                  checked={isLifetime}
+                  onChange={e => setIsLifetime(e.target.checked)}
+                  className="w-4 h-4 rounded bg-black/40 border-white/20 text-blue-600 focus:ring-blue-500"
+                />
+                <label htmlFor="isLifetime" className="text-xs font-semibold text-white cursor-pointer select-none">
+                  ใช้งานตลอดชีพ (Lifetime Key ไม่มีวันหมดอายุ)
+                </label>
+              </div>
+
+              {!isLifetime && (
+                <div>
+                  <label className="block text-xs font-semibold text-zinc-300 mb-1.5">
+                    จำนวนวันก่อนหมดอายุ (วัน) <span className="text-rose-400">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    required
+                    value={expireDays}
+                    onChange={e => setExpireDays(e.target.value)}
+                    className="w-full bg-[#151926] border border-white/[0.08] rounded-xl px-4 py-2.5 text-xs text-white placeholder:text-zinc-600 focus:outline-none focus:border-blue-500 font-mono"
+                  />
+                </div>
+              )}
+
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-white/[0.08]">
+                <button 
+                  type="button" 
+                  onClick={() => setIsAdding(false)}
+                  className="px-5 py-2.5 rounded-xl border border-white/[0.08] hover:bg-white/[0.05] text-zinc-300 text-xs font-semibold"
+                >
+                  ยกเลิก
+                </button>
+                <button 
+                  type="submit"
+                  className="px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition-all shadow-md shadow-blue-500/20"
+                >
+                  สร้าง Key ทันที
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

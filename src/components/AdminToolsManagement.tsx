@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Gift, Plus, Trash2, Calendar, FileText, Image as ImageIcon, Download, Check, X, Folder, Edit2 } from 'lucide-react';
+import { Gift, Plus, Trash2, FileText, Image as ImageIcon, Download, Check, X, Folder, Layers, Sparkles } from 'lucide-react';
 import Swal from 'sweetalert2';
 import axios from 'axios';
 
@@ -41,8 +41,6 @@ export const AdminToolsManagement = () => {
   const [title, setTitle] = useState('');
   const [keyword, setKeyword] = useState('');
   const [itemType, setItemType] = useState<'free' | 'premium'>('free');
-  const [unlockAtDate, setUnlockAtDate] = useState('');
-  const [unlockAtTime, setUnlockAtTime] = useState('');
   
   const [attachments, setAttachments] = useState<{type: 'text'|'image'|'file', data: string}[]>([]);
   const [attType, setAttType] = useState<'text'|'image'|'file'>('text');
@@ -67,16 +65,16 @@ export const AdminToolsManagement = () => {
       await axios.post('/api/logs-system', { categories: newCats, items: newItems });
       setCategories(newCats);
       setItems(newItems);
-      Swal.fire({title: 'บันทึกสำเร็จ!', icon: 'success', timer: 1500, showConfirmButton: false, background:'#09090b', color:'#fff'});
+      Swal.fire({ title: 'บันทึกสำเร็จ!', icon: 'success', timer: 1500, showConfirmButton: false, background: '#0d1017', color: '#fff' });
     } catch (err) {
-      Swal.fire({title: 'เกิดข้อผิดพลาด', icon: 'error', background:'#09090b', color:'#fff'});
+      Swal.fire({ title: 'เกิดข้อผิดพลาด', icon: 'error', background: '#0d1017', color: '#fff' });
     }
   };
 
   const handleSaveCategory = () => {
-    if (!catName) return Swal.fire({title:'กรอกข้อมูลให้ครบ', icon:'error', background:'#09090b', color:'#fff'});
+    if (!catName) return Swal.fire({ title: 'กรุณากรอกชื่อหมวดหมู่', icon: 'warning', background: '#0d1017', color: '#fff' });
     const newCat: LogCategory = {
-      id: Math.random().toString(36).substring(2,9),
+      id: Math.random().toString(36).substring(2, 9),
       name: catName,
       subtitle: catSubtitle,
       icon: catIcon,
@@ -90,7 +88,16 @@ export const AdminToolsManagement = () => {
   };
 
   const handleDeleteCategory = (id: string) => {
-    Swal.fire({ title: 'ยืนยันการลบ?', showCancelButton: true, background: '#09090b', color: '#fff' }).then(r => {
+    Swal.fire({ 
+      title: 'ยืนยันการลบหมวดหมู่นี้?', 
+      text: 'เนื้อหาทั้งหมดที่อยู่ในหมวดหมู่นี้จะถูกลบไปด้วย',
+      showCancelButton: true, 
+      confirmButtonText: 'ใช่, ลบเลย',
+      cancelButtonText: 'ยกเลิก',
+      confirmButtonColor: '#f43f5e',
+      background: '#0d1017', 
+      color: '#fff' 
+    }).then(r => {
       if (r.isConfirmed) {
         saveData(categories.filter(x => x.id !== id), items.filter(x => x.categoryId !== id));
       }
@@ -103,97 +110,182 @@ export const AdminToolsManagement = () => {
   };
 
   const handleSaveItem = () => {
-    if (!title || !itemCategoryId) return Swal.fire({title:'กรอกข้อมูลให้ครบ', icon:'error', background:'#09090b', color:'#fff'});
-    if (attachments.length === 0) return Swal.fire({title:'ต้องมีอย่างน้อย 1 ไฟล์/เนื้อหา', icon:'error', background:'#09090b', color:'#fff'});
-    
-    let unlockAt: string | undefined = undefined;
-    if (unlockAtDate && unlockAtTime) {
-      unlockAt = new Date(`${unlockAtDate}T${unlockAtTime}`).toISOString();
-    }
+    if (!title || !itemCategoryId) return Swal.fire({ title: 'กรุณากรอกหัวข้อและเลือกหมวดหมู่', icon: 'warning', background: '#0d1017', color: '#fff' });
+    if (attachments.length === 0) return Swal.fire({ title: 'ต้องมีอย่างน้อย 1 ไฟล์หรือเนื้อหาแนบ', icon: 'warning', background: '#0d1017', color: '#fff' });
 
     const newItem: ContentItem = {
-      id: Math.random().toString(36).substring(2,9),
+      id: Math.random().toString(36).substring(2, 9),
       categoryId: itemCategoryId,
       type: itemType,
       title,
       keyword,
       attachments,
-      unlockAt,
       createdAt: new Date().toISOString()
     };
 
     saveData(categories, [newItem, ...items]);
     setIsAddingItem(false);
-    setTitle(''); setKeyword(''); setUnlockAtDate(''); setUnlockAtTime(''); setAttachments([]); setAttData('');
+    setTitle(''); setKeyword(''); setAttachments([]); setAttData('');
   };
 
   const handleDeleteItem = (id: string) => {
-    Swal.fire({ title: 'ยืนยันการลบ?', showCancelButton: true, background: '#09090b', color: '#fff' }).then(r => {
+    Swal.fire({ 
+      title: 'ยืนยันการลบเนื้อหานี้?', 
+      showCancelButton: true, 
+      confirmButtonText: 'ใช่, ลบ',
+      cancelButtonText: 'ยกเลิก',
+      confirmButtonColor: '#f43f5e',
+      background: '#0d1017', 
+      color: '#fff' 
+    }).then(r => {
       if (r.isConfirmed) saveData(categories, items.filter(x => x.id !== id));
     });
   };
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-white flex items-center gap-3">
-          <Gift className="w-6 h-6 text-indigo-400" />
-          ระบบหมวดหมู่ / เนื้อหา
-        </h2>
-        <div className="flex bg-card border border-border border-2 p-1 brut-card rounded-xl">
-          <button onClick={() => setActiveTab('categories')} className={`px-4 py-1.5 text-sm font-bold transition-all ${activeTab === 'categories' ? 'bg-[#050505]/10 text-white' : 'text-zinc-500 hover:text-white'}`}>หมวดหมู่</button>
-          <button onClick={() => setActiveTab('items')} className={`px-4 py-1.5 text-sm font-bold transition-all ${activeTab === 'items' ? 'bg-[#050505]/10 text-white' : 'text-zinc-500 hover:text-white'}`}>เนื้อหา / ไฟล์</button>
+      {/* Top Header */}
+      <div className="bg-[#0f121a] border border-white/[0.08] rounded-2xl p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
+            <Gift className="w-5 h-5" />
+          </div>
+          <div>
+            <h2 className="text-base font-bold text-white">ระบบแจกไฟล์และเนื้อหา (Content & Rewards)</h2>
+            <p className="text-xs text-zinc-400">จัดการไฟล์ดาวน์โหลด โค้ดฟรี และสิทธิพิเศษสมาชิก</p>
+          </div>
+        </div>
+
+        <div className="flex items-center bg-[#151926] p-1 rounded-xl border border-white/[0.08]">
+          <button 
+            onClick={() => setActiveTab('items')} 
+            className={`px-4 py-1.5 text-xs font-semibold rounded-lg transition-all ${
+              activeTab === 'items' ? 'bg-blue-600 text-white shadow-sm' : 'text-zinc-400 hover:text-white'
+            }`}
+          >
+            รายการเนื้อหา ({items.length})
+          </button>
+          <button 
+            onClick={() => setActiveTab('categories')} 
+            className={`px-4 py-1.5 text-xs font-semibold rounded-lg transition-all ${
+              activeTab === 'categories' ? 'bg-blue-600 text-white shadow-sm' : 'text-zinc-400 hover:text-white'
+            }`}
+          >
+            หมวดหมู่ ({categories.length})
+          </button>
         </div>
       </div>
 
       {activeTab === 'categories' && (
         <div className="space-y-4">
-          <div className="flex justify-end">
-            {!isAddingCategory && <button onClick={() => setIsAddingCategory(true)} className="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 text-sm font-bold flex items-center gap-2"><Plus className="w-4 h-4"/> เพิ่มหมวดหมู่</button>}
+          <div className="flex justify-between items-center">
+            <p className="text-xs text-zinc-400">จัดกลุ่มเนื้อหาหรือไฟล์แจกเพื่อการเข้าถึงที่ง่ายขึ้น</p>
+            {!isAddingCategory && (
+              <button 
+                onClick={() => setIsAddingCategory(true)} 
+                className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition-all shadow-md shadow-blue-500/20 flex items-center gap-1.5"
+              >
+                <Plus className="w-4 h-4"/> เพิ่มหมวดหมู่
+              </button>
+            )}
           </div>
 
           {isAddingCategory && (
-            <div className="bg-card border border-border border-2 p-6 brut-card rounded-2xl">
-              <h3 className="text-lg font-bold text-white mb-4">สร้างหมวดหมู่ใหม่</h3>
+            <div className="bg-[#0f121a] border border-white/[0.08] rounded-2xl p-6">
+              <h3 className="text-sm font-bold text-white mb-4 flex items-center gap-2">
+                <Folder className="w-4 h-4 text-blue-400" /> สร้างหมวดหมู่ใหม่
+              </h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                 <div>
-                  <label className="block text-xs font-bold text-muted-foreground mb-1">ชื่อหมวดหมู่</label>
-                  <input value={catName} onChange={e=>setCatName(e.target.value)} className="w-full bg-card border border-border border-2 px-4 py-2 text-white brut-card rounded-xl" placeholder="เช่น VIP PH LOG" />
+                  <label className="block text-xs font-semibold text-zinc-300 mb-1.5">ชื่อหมวดหมู่</label>
+                  <input 
+                    value={catName} 
+                    onChange={e => setCatName(e.target.value)} 
+                    className="w-full bg-[#151926] border border-white/[0.08] rounded-xl px-4 py-2.5 text-xs text-white placeholder:text-zinc-600 focus:outline-none focus:border-blue-500" 
+                    placeholder="เช่น VIP แจกไฟล์ฟรี, อักษรพิเศษ" 
+                  />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-muted-foreground mb-1">ชื่อย่อย (Subtitle)</label>
-                  <input value={catSubtitle} onChange={e=>setCatSubtitle(e.target.value)} className="w-full bg-card border border-border border-2 px-4 py-2 text-white brut-card rounded-xl" placeholder="คำอธิบาย..." />
-                </div>
-                <div className="flex items-center gap-2 mt-4">
-                  <input type="checkbox" id="isVipCheck" checked={catIsVip} onChange={e=>setCatIsVip(e.target.checked)} className="w-4 h-4 rounded border-border border-2" />
-                  <label htmlFor="isVipCheck" className="text-sm text-amber-400 font-bold">VIP หมวดหมู่</label>
-                </div>
-                <div className="flex items-center gap-2 mt-4">
-                  <input type="checkbox" id="isVisibleCheck" checked={catIsVisible} onChange={e=>setCatIsVisible(e.target.checked)} className="w-4 h-4 rounded border-border border-2" />
-                  <label htmlFor="isVisibleCheck" className="text-sm text-blue-600 font-bold">เปิดใช้งาน</label>
+                  <label className="block text-xs font-semibold text-zinc-300 mb-1.5">คำอธิบายย่อย</label>
+                  <input 
+                    value={catSubtitle} 
+                    onChange={e => setCatSubtitle(e.target.value)} 
+                    className="w-full bg-[#151926] border border-white/[0.08] rounded-xl px-4 py-2.5 text-xs text-white placeholder:text-zinc-600 focus:outline-none focus:border-blue-500" 
+                    placeholder="คำอธิบายสั้นๆ..." 
+                  />
                 </div>
               </div>
-              <div className="flex justify-end gap-2 mt-4">
-                <button onClick={() => setIsAddingCategory(false)} className="px-4 py-2 text-sm text-muted-foreground font-bold hover:text-white">ยกเลิก</button>
-                <button onClick={handleSaveCategory} className="bg-primary text-primary-foreground hover:bg-blue-600 text-white px-6 py-2 text-sm font-bold flex items-center gap-2 rounded-xl"><Check className="w-4 h-4"/> บันทึก</button>
+              
+              <div className="flex flex-wrap items-center gap-6 p-3 rounded-xl bg-[#151926]/50 border border-white/[0.06] mb-4">
+                <label className="flex items-center gap-2 text-xs font-semibold text-amber-400 cursor-pointer">
+                  <input 
+                    type="checkbox" 
+                    checked={catIsVip} 
+                    onChange={e => setCatIsVip(e.target.checked)} 
+                    className="w-4 h-4 rounded bg-black/40 border-white/20 text-amber-500" 
+                  />
+                  <span>สิทธิ์เฉพาะ VIP (VIP Only)</span>
+                </label>
+                <label className="flex items-center gap-2 text-xs font-semibold text-emerald-400 cursor-pointer">
+                  <input 
+                    type="checkbox" 
+                    checked={catIsVisible} 
+                    onChange={e => setCatIsVisible(e.target.checked)} 
+                    className="w-4 h-4 rounded bg-black/40 border-white/20 text-emerald-500" 
+                  />
+                  <span>เปิดให้แสดงบนหน้าเว็บ (Visible)</span>
+                </label>
+              </div>
+
+              <div className="flex justify-end gap-2.5">
+                <button 
+                  onClick={() => setIsAddingCategory(false)} 
+                  className="px-4 py-2 text-xs font-semibold text-zinc-400 hover:text-white"
+                >
+                  ยกเลิก
+                </button>
+                <button 
+                  onClick={handleSaveCategory} 
+                  className="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition-all shadow-md shadow-blue-500/20 flex items-center gap-1.5"
+                >
+                  <Check className="w-4 h-4"/> บันทึกหมวดหมู่
+                </button>
               </div>
             </div>
           )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {categories.map((c) => (
-              <div key={c.id} className="bg-card border border-border border-2 p-5 relative brut-card rounded-xl">
-                <div className="flex justify-between items-start mb-3">
-                  <h3 className="text-lg font-black text-white">{c.name}</h3>
+              <div key={c.id} className="bg-[#0f121a] border border-white/[0.08] rounded-2xl p-5 relative hover:border-white/[0.12] transition-colors">
+                <div className="flex justify-between items-start mb-2">
                   <div className="flex items-center gap-2">
-                      <button onClick={() => toggleCategoryVisibility(c.id)} className={`px-2 py-1 flex items-center text-xs font-bold ${c.isVisible ? 'bg-blue-600/20 text-blue-600' : 'bg-[#121212] text-muted-foreground'}`}>
-                      {c.isVisible ? 'ON' : 'OFF'}
+                    <h3 className="text-sm font-bold text-white">{c.name}</h3>
+                    {c.isVip && (
+                      <span className="text-[10px] font-bold bg-amber-500/15 text-amber-400 border border-amber-500/25 px-2 py-0.5 rounded-full uppercase">
+                        VIP
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <button 
+                      onClick={() => toggleCategoryVisibility(c.id)} 
+                      className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border transition-colors ${
+                        c.isVisible 
+                          ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/25' 
+                          : 'bg-white/[0.04] text-zinc-500 border-white/[0.06]'
+                      }`}
+                    >
+                      {c.isVisible ? 'เปิดใช้งาน' : 'ซ่อนไว้'}
                     </button>
-                    <button onClick={() => handleDeleteCategory(c.id)} className="text-red-500 hover:text-red-400 bg-red-500/10 p-1.5"><Trash2 className="w-4 h-4"/></button>
+                    <button 
+                      onClick={() => handleDeleteCategory(c.id)} 
+                      className="text-zinc-500 hover:text-rose-400 p-1 rounded-lg hover:bg-rose-500/10 transition-colors"
+                    >
+                      <Trash2 className="w-3.5 h-3.5"/>
+                    </button>
                   </div>
                 </div>
-                <p className="text-sm text-muted-foreground">{c.subtitle}</p>
-                {c.isVip && <span className="inline-block mt-2 text-[10px] font-bold bg-amber-500/20 text-amber-400 px-2 py-0.5 uppercase">VIP</span>}
+                <p className="text-xs text-zinc-400 mt-1">{c.subtitle || 'ไม่มีรายละเอียด'}</p>
               </div>
             ))}
           </div>
@@ -202,70 +294,136 @@ export const AdminToolsManagement = () => {
 
       {activeTab === 'items' && (
         <div className="space-y-4">
-          <div className="flex justify-end">
-            {!isAddingItem && <button onClick={() => setIsAddingItem(true)} className="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 text-sm font-bold flex items-center gap-2"><Plus className="w-4 h-4"/> เพิ่มเนื้อหา</button>}
+          <div className="flex justify-between items-center">
+            <p className="text-xs text-zinc-400">เนื้อหาหรือไฟล์ทั้งหมดที่เปิดให้สมาชิกดาวน์โหลด</p>
+            {!isAddingItem && (
+              <button 
+                onClick={() => setIsAddingItem(true)} 
+                className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition-all shadow-md shadow-blue-500/20 flex items-center gap-1.5"
+              >
+                <Plus className="w-4 h-4"/> เพิ่มเนื้อหาใหม่
+              </button>
+            )}
           </div>
 
           {isAddingItem && (
-            <div className="bg-card border border-border border-2 p-6 brut-card rounded-2xl">
-              <h3 className="text-lg font-bold text-white mb-4">สร้างเนื้อหาใหม่</h3>
+            <div className="bg-[#0f121a] border border-white/[0.08] rounded-2xl p-6">
+              <h3 className="text-sm font-bold text-white mb-4 flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-blue-400" /> สร้างรายการเนื้อหาใหม่
+              </h3>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div>
-                  <label className="block text-xs font-bold text-muted-foreground mb-1">หัวข้อ</label>
-                  <input value={title} onChange={e=>setTitle(e.target.value)} className="w-full bg-card border border-border border-2 px-4 py-2 text-white brut-card rounded-xl" placeholder="อักษรสวยๆ..." />
+                  <label className="block text-xs font-semibold text-zinc-300 mb-1.5">หัวข้อเนื้อหา</label>
+                  <input 
+                    value={title} 
+                    onChange={e => setTitle(e.target.value)} 
+                    className="w-full bg-[#151926] border border-white/[0.08] rounded-xl px-4 py-2.5 text-xs text-white placeholder:text-zinc-600 focus:outline-none focus:border-blue-500" 
+                    placeholder="เช่น แจกสกินปืน, สคริปต์ฟาร์ม..." 
+                  />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-muted-foreground mb-1">หมวดหมู่</label>
-                  <select value={itemCategoryId} onChange={e=>setItemCategoryId(e.target.value)} className="w-full bg-card border border-border border-2 px-4 py-2 text-white brut-card rounded-xl">
+                  <label className="block text-xs font-semibold text-zinc-300 mb-1.5">หมวดหมู่</label>
+                  <select 
+                    value={itemCategoryId} 
+                    onChange={e => setItemCategoryId(e.target.value)} 
+                    className="w-full bg-[#151926] border border-white/[0.08] rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-blue-500"
+                  >
                     <option value="">-- เลือกหมวดหมู่ --</option>
                     {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-muted-foreground mb-1">สิทธิ์การโหลด (ฟรี / พรีเมียม)</label>
-                  <select value={itemType} onChange={e=>setItemType(e.target.value as any)} className="w-full bg-card border border-border border-2 px-4 py-2 text-white brut-card rounded-xl">
-                    <option value="free">ของฟรี (ทุกคนโหลดได้)</option>
-                    <option value="premium">พรีเมียม (เฉพาะวีไอพีโหลดได้)</option>
+                  <label className="block text-xs font-semibold text-zinc-300 mb-1.5">สิทธิ์การเข้าถึง</label>
+                  <select 
+                    value={itemType} 
+                    onChange={e => setItemType(e.target.value as any)} 
+                    className="w-full bg-[#151926] border border-white/[0.08] rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-blue-500"
+                  >
+                    <option value="free">ฟรี (ทุกคนดาวน์โหลดได้)</option>
+                    <option value="premium">พรีเมียม (เฉพาะสมาชิก Premium / VIP)</option>
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-muted-foreground mb-1">Keyword (ป้ายกำกับ)</label>
-                  <input value={keyword} onChange={e=>setKeyword(e.target.value)} className="w-full bg-card border border-border border-2 px-4 py-2 text-white brut-card rounded-xl" placeholder="เช่น ฟ้อนต์, รูปภาพ" />
+                  <label className="block text-xs font-semibold text-zinc-300 mb-1.5">Keyword (ป้ายกำกับ)</label>
+                  <input 
+                    value={keyword} 
+                    onChange={e => setKeyword(e.target.value)} 
+                    className="w-full bg-[#151926] border border-white/[0.08] rounded-xl px-4 py-2.5 text-xs text-white placeholder:text-zinc-600 focus:outline-none focus:border-blue-500" 
+                    placeholder="เช่น Font, Script, Mod" 
+                  />
                 </div>
               </div>
 
-              <div className="bg-card border border-border border-2 p-4 mb-4 brut-card rounded-xl">
-                <h4 className="text-sm font-bold text-white mb-3 flex items-center gap-2">ไฟล์แนบ / เนื้อหา</h4>
+              {/* Attachments Section */}
+              <div className="bg-[#121622]/60 border border-white/[0.08] rounded-2xl p-4 mb-4">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-400 mb-3">
+                  ไฟล์แนบ / เนื้อหาดาวน์โหลด
+                </h4>
                 {attachments.length > 0 && (
-                  <div className="space-y-2 mb-4">
+                  <div className="space-y-2 mb-3">
                     {attachments.map((a, i) => (
-                      <div key={i} className="flex items-center justify-between bg-card border border-border border-2 p-2 px-3 brut-card rounded-lg">
-                        <div className="flex items-center gap-3 truncate text-sm text-muted-foreground">
-                          {a.type === 'text' && <FileText className="w-4 h-4 text-blue-600"/>}
-                          {a.type === 'image' && <ImageIcon className="w-4 h-4 text-sky-400"/>}
-                          {a.type === 'file' && <Download className="w-4 h-4 text-amber-400"/>}
-                          <span className="truncate max-w-[200px]">{a.data}</span>
+                      <div key={i} className="flex items-center justify-between bg-[#151926] border border-white/[0.06] p-2.5 px-3 rounded-xl text-xs text-zinc-300">
+                        <div className="flex items-center gap-2.5 truncate">
+                          {a.type === 'text' && <FileText className="w-4 h-4 text-blue-400 shrink-0"/>}
+                          {a.type === 'image' && <ImageIcon className="w-4 h-4 text-indigo-400 shrink-0"/>}
+                          {a.type === 'file' && <Download className="w-4 h-4 text-amber-400 shrink-0"/>}
+                          <span className="truncate max-w-sm">{a.data}</span>
                         </div>
-                        <button onClick={() => setAttachments(attachments.filter((_, idx)=>idx!==i))} className="text-red-500 hover:text-red-400"><Trash2 className="w-4 h-4"/></button>
+                        <button 
+                          onClick={() => setAttachments(attachments.filter((_, idx) => idx !== i))} 
+                          className="text-zinc-500 hover:text-rose-400 p-1"
+                        >
+                          <Trash2 className="w-3.5 h-3.5"/>
+                        </button>
                       </div>
                     ))}
                   </div>
                 )}
                 <div className="flex flex-col sm:flex-row gap-2">
-                  <select value={attType} onChange={e=>setAttType(e.target.value as any)} className="bg-card border border-border border-2 px-3 py-2 text-white text-sm brut-card rounded-lg">
+                  <select 
+                    value={attType} 
+                    onChange={e => setAttType(e.target.value as any)} 
+                    className="bg-[#151926] border border-white/[0.08] rounded-xl px-3 py-2 text-xs text-white focus:outline-none"
+                  >
                     <option value="text">ข้อความ/สคริปต์</option>
                     <option value="image">รูปภาพ (URL)</option>
-                    <option value="file">ลิ้งค์ดาวน์โหลด</option>
+                    <option value="file">ลิงก์ดาวน์โหลด</option>
                   </select>
-                  <input value={attData} onChange={e=>setAttData(e.target.value)} className="flex-1 bg-card border border-border border-2 px-3 py-2 text-white sm:text-sm brut-card rounded-lg" placeholder={attType === 'text' ? "วางข้อความที่นี่..." : "วางลิ้งค์ URL"} />
-                  <button onClick={() => { if(attData) { setAttachments([...attachments, {type: attType, data: attData}]); setAttData(''); } }} className="bg-card hover:bg-[#1e1e1e] text-white px-4 py-2 text-sm font-bold flex items-center gap-1 brut-card rounded-xl"><Plus className="w-4 h-4"/> แอดไฟล์</button>
+                  <input 
+                    value={attData} 
+                    onChange={e => setAttData(e.target.value)} 
+                    className="flex-1 bg-[#151926] border border-white/[0.08] rounded-xl px-3 py-2 text-xs text-white placeholder:text-zinc-600 focus:outline-none" 
+                    placeholder={attType === 'text' ? "กรอกข้อความที่นี่..." : "วาง URL ลิงก์ดาวน์โหลด..."} 
+                  />
+                  <button 
+                    type="button"
+                    onClick={() => { 
+                      if(attData.trim()) { 
+                        setAttachments([...attachments, { type: attType, data: attData.trim() }]); 
+                        setAttData(''); 
+                      } 
+                    }} 
+                    className="px-4 py-2 rounded-xl bg-white/[0.06] hover:bg-white/[0.1] text-white text-xs font-semibold transition-colors flex items-center justify-center gap-1 shrink-0"
+                  >
+                    <Plus className="w-3.5 h-3.5"/> เพิ่มไฟล์
+                  </button>
                 </div>
               </div>
 
-              <div className="flex justify-end gap-2 mt-4">
-                <button onClick={() => setIsAddingItem(false)} className="px-4 py-2 text-sm text-muted-foreground font-bold hover:text-white">ยกเลิก</button>
-                <button onClick={handleSaveItem} className="bg-primary text-primary-foreground hover:bg-blue-600 text-white px-6 py-2 text-sm font-bold flex items-center gap-2 rounded-xl"><Check className="w-4 h-4"/> บันทึกเนื้อหา</button>
+              <div className="flex justify-end gap-2.5">
+                <button 
+                  onClick={() => setIsAddingItem(false)} 
+                  className="px-4 py-2 text-xs font-semibold text-zinc-400 hover:text-white"
+                >
+                  ยกเลิก
+                </button>
+                <button 
+                  onClick={handleSaveItem} 
+                  className="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition-all shadow-md shadow-blue-500/20 flex items-center gap-1.5"
+                >
+                  <Check className="w-4 h-4"/> บันทึกเนื้อหา
+                </button>
               </div>
             </div>
           )}
@@ -274,31 +432,48 @@ export const AdminToolsManagement = () => {
             {items.map((item) => {
               const cat = categories.find(c => c.id === item.categoryId);
               return (
-              <div key={item.id} className="bg-card border border-border border-2 p-5 relative overflow-hidden group brut-card rounded-xl">
-                <div className="flex justify-between items-start mb-3">
-                  <div className="flex gap-2">
-                    <span className="text-[10px] font-bold bg-card text-[#2563EB] px-2 py-0.5 uppercase brut-card rounded-md">{cat?.name || 'ไม่ระบุ'}</span>
-                    <span className={`text-[10px] font-bold px-2 py-0.5 uppercase ${item.type === 'premium' ? 'bg-amber-500/20 text-amber-400' : 'bg-blue-600/20 text-blue-600'}`}>
-                      {item.type === 'premium' ? 'Premium' : 'Free'}
-                    </span>
-                  </div>
-                  <button onClick={() => handleDeleteItem(item.id)} className="text-red-500 hover:text-red-400 bg-red-500/10 p-1.5 opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 className="w-4 h-4"/></button>
-                </div>
-                <h3 className="text-lg font-bold text-white mb-2">{item.title}</h3>
-                <div className="bg-card border border-border border-2 p-3 space-y-2 max-h-32 overflow-y-auto mt-2 brut-card rounded-xl">
-                  {(item.attachments || [(item as any)]).map((att: any, i: number) => (
-                    <div key={i} className="text-xs text-muted-foreground truncate border-b border-border border-2 pb-2 last:border-0 last:pb-0">
-                      <span className="font-bold text-muted-foreground mr-2 uppercase">{att.type}:</span>{att.data}
+                <div key={item.id} className="bg-[#0f121a] border border-white/[0.08] rounded-2xl p-5 relative overflow-hidden group hover:border-white/[0.12] transition-colors">
+                  <div className="flex justify-between items-start mb-3">
+                    <div className="flex gap-2">
+                      <span className="text-[10px] font-bold bg-white/[0.04] text-zinc-300 border border-white/[0.06] px-2.5 py-0.5 rounded-full">
+                        {cat?.name || 'ไม่มีหมวดหมู่'}
+                      </span>
+                      <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border ${
+                        item.type === 'premium' 
+                          ? 'bg-amber-500/15 text-amber-400 border-amber-500/25' 
+                          : 'bg-emerald-500/15 text-emerald-400 border-emerald-500/25'
+                      }`}>
+                        {item.type === 'premium' ? 'VIP Only' : 'Free'}
+                      </span>
                     </div>
-                  ))}
+                    <button 
+                      onClick={() => handleDeleteItem(item.id)} 
+                      className="text-zinc-500 hover:text-rose-400 p-1 rounded-lg hover:bg-rose-500/10 transition-colors"
+                      title="ลบรายการนี้"
+                    >
+                      <Trash2 className="w-4 h-4"/>
+                    </button>
+                  </div>
+                  <h3 className="text-sm font-bold text-white mb-2">{item.title}</h3>
+                  <div className="bg-[#121622]/60 border border-white/[0.06] rounded-xl p-3 space-y-1.5 max-h-32 overflow-y-auto">
+                    {(item.attachments || []).map((att: any, i: number) => (
+                      <div key={i} className="text-[11px] text-zinc-400 truncate flex items-center gap-1.5">
+                        <span className="font-semibold text-zinc-500 uppercase text-[10px]">{att.type}:</span>
+                        <span className="truncate select-all">{att.data}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
+              );
+            })}
+            {items.length === 0 && (
+              <div className="col-span-full py-16 text-center text-xs text-zinc-500 bg-[#0f121a] border border-white/[0.08] rounded-2xl">
+                ยังไม่มีรายการเนื้อหาในระบบ
               </div>
-            )})}
-            {items.length === 0 && <div className="col-span-full py-12 text-center text-muted-foreground border-2 border-dashed border-border">ยังไม่มีเนื้อหา</div>}
+            )}
           </div>
         </div>
       )}
     </div>
   );
 };
-
