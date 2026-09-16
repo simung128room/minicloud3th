@@ -62,6 +62,7 @@ export interface UserPlan {
   isPremium: boolean;
   premiumExpireDate: string | null;
   registeredAt?: string;
+  avatarUrl?: string;
 }
 
 export interface Category {

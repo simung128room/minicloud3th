@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Shield, Key, Trash2, Lock, ShieldAlert, Settings, ShieldCheck } from 'lucide-react';
+import { Shield, Key, Trash2, Lock, ShieldAlert, Settings, ShieldCheck, Sparkles, UserCheck, Eye, EyeOff } from 'lucide-react';
 import Swal from 'sweetalert2';
 import axios from 'axios';
 import { AnimatedScroll } from './AnimatedScroll';
-import { Skeleton } from './ui/Skeleton';
+import { motion, AnimatePresence } from 'motion/react';
 
 interface SettingsViewProps {
   user?: any;
@@ -19,6 +19,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ setActiveView, user,
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     setIsLoading(true);
@@ -28,20 +29,19 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ setActiveView, user,
 
   const handleChangePassword = async () => {
     if (!oldPassword) {
-      return Swal.fire({ icon: 'error', title: 'ข้อผิดพลาด', text: 'กรุณากรอกรหัสผ่านเดิม', background: '#09090b', color: '#fff' });
+      return Swal.fire({ icon: 'error', title: 'ข้อผิดพลาด', text: 'กรุณากรอกรหัสผ่านเดิม', background: '#0c0c12', color: '#fff' });
     }
     if (!newPassword || !confirmPassword) {
-      return Swal.fire({ icon: 'error', title: 'ข้อผิดพลาด', text: 'กรุณากรอกข้อมูลให้ครบถ้วน', background: '#09090b', color: '#fff' });
+      return Swal.fire({ icon: 'error', title: 'ข้อผิดพลาด', text: 'กรุณากรอกข้อมูลให้ครบถ้วน', background: '#0c0c12', color: '#fff' });
     }
     if (newPassword !== confirmPassword) {
-      return Swal.fire({ icon: 'error', title: 'ข้อผิดพลาด', text: 'รหัสผ่านใหม่และยืนยันรหัสผ่านไม่ตรงกัน', background: '#09090b', color: '#fff' });
+      return Swal.fire({ icon: 'error', title: 'ข้อผิดพลาด', text: 'รหัสผ่านใหม่และยืนยันรหัสผ่านไม่ตรงกัน', background: '#0c0c12', color: '#fff' });
     }
 
     try {
       setIsLoading(true);
       const { supabase } = await import('../lib/supabase');
       
-      // Re-authenticate user with old password
       const { error: signInError } = await supabase.auth.signInWithPassword({
         email: user?.email || '',
         password: oldPassword,
@@ -51,7 +51,6 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ setActiveView, user,
         throw new Error('รหัสผ่านเดิมไม่ถูกต้อง');
       }
 
-      // Update to new password
       const { error } = await supabase.auth.updateUser({ password: newPassword });
       
       if (error) throw error;
@@ -60,8 +59,9 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ setActiveView, user,
         title: 'เปลี่ยนรหัสผ่านสำเร็จ',
         text: 'รหัสผ่านของคุณถูกอัปเดตเรียบร้อยแล้ว',
         icon: 'success',
-        background: '#09090b',
-        color: '#fff'
+        background: '#0c0c12',
+        color: '#fff',
+        confirmButtonColor: '#2563eb'
       });
       setOldPassword('');
       setNewPassword('');
@@ -71,8 +71,9 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ setActiveView, user,
          title: 'เกิดข้อผิดพลาด',
          text: error.message || 'ไม่สามารถเปลี่ยนรหัสผ่านได้',
          icon: 'error',
-         background: '#09090b',
-         color: '#fff'
+         background: '#0c0c12',
+         color: '#fff',
+         confirmButtonColor: '#2563eb'
       });
     } finally {
       setIsLoading(false);
@@ -91,10 +92,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ setActiveView, user,
       cancelButtonColor: '#18181b',
       confirmButtonText: 'ลบบัญชีถาวร',
       cancelButtonText: 'ยกเลิก',
-      background: '#09090b',
+      background: '#0c0c12',
       color: '#fff',
       customClass: {
-        input: 'bg-[#0a0a0a] border-white/10 text-white rounded-xl'
+        input: 'bg-[#181820] border-white/10 text-white rounded-xl'
       }
     });
 
@@ -103,7 +104,6 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ setActiveView, user,
         setIsLoading(true);
         const { supabase } = await import('../lib/supabase');
         
-        // Re-authenticate user to confirm password
         const { error: signInError } = await supabase.auth.signInWithPassword({
           email: user?.email || '',
           password: password,
@@ -113,20 +113,16 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ setActiveView, user,
           throw new Error('รหัสผ่านไม่ถูกต้อง');
         }
 
-        // Call API to delete user data
-        if (user?.id || user?.uid) {
-           await axios.delete(`/api/users/${user.id || user.uid}`);
-        }
-        
-        // Sign out
+        await axios.delete(`/api/users/${user.id}`);
         await supabase.auth.signOut();
-
+        
         Swal.fire({
           title: 'ลบบัญชีสำเร็จ',
-          text: 'บัญชีของคุณถูกลบออกจากระบบแล้ว',
+          text: 'บัญชีของคุณถูกลบออกจากระบบเรียบร้อยแล้ว',
           icon: 'success',
-          background: '#09090b',
-          color: '#fff'
+          background: '#0c0c12',
+          color: '#fff',
+          confirmButtonColor: '#2563eb'
         }).then(() => {
           window.location.reload();
         });
@@ -135,8 +131,9 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ setActiveView, user,
           title: 'เกิดข้อผิดพลาด',
           text: error.message || 'ไม่สามารถลบบัญชีได้',
           icon: 'error',
-          background: '#09090b',
-          color: '#fff'
+          background: '#0c0c12',
+          color: '#fff',
+          confirmButtonColor: '#2563eb'
         });
       } finally {
         setIsLoading(false);
@@ -145,160 +142,150 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ setActiveView, user,
   };
 
   return (
-    <AnimatedScroll direction="up">
-      <div className="font-sans px-4 pb-12">
-        <div className="max-w-4xl mx-auto mt-6">
-          <div className="bg-[#070708] border border-zinc-800 overflow-hidden flex flex-col md:flex-row rounded-2xl shadow-xl">
-            
-            {/* Sidebar Tabs */}
-            <div className="md:w-1/3 bg-[#09090a] border-b md:border-b-0 md:border-r border-zinc-800 p-6 flex flex-col justify-start">
-              <h2 className="text-lg font-bold text-white mb-6 flex items-center gap-2.5">
-                <ShieldCheck className="w-5 h-5 text-neon-green" /> ตั้งค่าผู้ใช้
-              </h2>
-              
-              <div className="space-y-1.5">
-                <button 
-                  onClick={() => setCurrentTab('password')}
-                  className={`w-full flex items-center gap-3.5 px-4 py-3.5 text-sm font-semibold rounded-xl transition-all cursor-pointer ${currentTab === 'password' ? 'bg-white/[0.04] text-white border-l-2 border-neon-green pl-[14px]' : 'text-zinc-400 hover:text-white hover:bg-white/[0.02] hover:pl-[18px]'}`}
-                >
-                  <Key className={`w-4.5 h-4.5 ${currentTab === 'password' ? 'text-neon-green' : 'text-zinc-500'}`} />
-                  <span className="text-sm font-semibold">เปลี่ยนรหัสผ่าน</span>
-                </button>
-                <button 
-                  onClick={() => setCurrentTab('preferences')}
-                  className={`w-full flex items-center gap-3.5 px-4 py-3.5 text-sm font-semibold rounded-xl transition-all cursor-pointer ${currentTab === 'preferences' ? 'bg-white/[0.04] text-white border-l-2 border-neon-green pl-[14px]' : 'text-zinc-400 hover:text-white hover:bg-white/[0.02] hover:pl-[18px]'}`}
-                >
-                  <Settings className={`w-4.5 h-4.5 ${currentTab === 'preferences' ? 'text-neon-green' : 'text-zinc-500'}`} />
-                  <span className="text-sm font-semibold">การตั้งค่าแสดงผล</span>
-                </button>
-                <button 
-                  onClick={() => setCurrentTab('delete')}
-                  className={`w-full flex items-center gap-3.5 px-4 py-3.5 text-sm font-semibold rounded-xl transition-all cursor-pointer ${currentTab === 'delete' ? 'bg-red-500/10 text-red-400 border-l-2 border-red-500 pl-[14px]' : 'text-red-400/85 hover:text-red-400 hover:bg-red-500/10 hover:pl-[18px]'}`}
-                >
-                  <Trash2 className="w-4.5 h-4.5 text-red-500/85" />
-                  <span className="text-sm font-semibold">ลบบัญชี</span>
-                </button>
-              </div>
-            </div>
-
-            {/* Content Area */}
-            <div className="md:w-2/3 p-6 sm:p-8">
-              {isLoading ? (
-                <div className="space-y-6 animate-in fade-in duration-300">
-                  <Skeleton className="h-8 w-1/3 mb-6" />
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                        <Skeleton className="h-3 w-20" />
-                        <Skeleton className="h-12 w-full animate-pulse" />
-                    </div>
-                    <div className="space-y-2">
-                        <Skeleton className="h-3 w-20" />
-                        <Skeleton className="h-12 w-full animate-pulse" />
-                    </div>
-                    <Skeleton className="h-14 w-full mt-4" />
-                  </div>
-                </div>
-              ) : (
-                <>
-                  {currentTab === 'password' && (
-                    <div className="animate-in fade-in duration-300">
-                      <h3 className="text-base font-bold text-white mb-6">เปลี่ยนรหัสผ่านใหม่</h3>
-                      <div className="space-y-4">
-                        <div>
-                          <label className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider mb-2 block">รหัสผ่านเดิม</label>
-                          <div className="relative">
-                            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-zinc-500" />
-                            <input 
-                              type="password" 
-                              placeholder="••••••••" 
-                              value={oldPassword} 
-                              onChange={e => setOldPassword(e.target.value)} 
-                              className="w-full bg-[#0a0a0b] border border-zinc-800 rounded-xl py-3 pl-11 pr-4 text-sm text-white focus:border-neon-green/50 focus:ring-1 focus:ring-neon-green/10 outline-none transition-all placeholder:text-zinc-650"
-                            />
-                          </div>
-                        </div>
-                        <div>
-                          <label className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider mb-2 block">รหัสผ่านใหม่</label>
-                          <div className="relative">
-                            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-zinc-500" />
-                            <input 
-                              type="password" 
-                              placeholder="••••••••" 
-                              value={newPassword} 
-                              onChange={e => setNewPassword(e.target.value)} 
-                              className="w-full bg-[#0a0a0b] border border-zinc-800 rounded-xl py-3 pl-11 pr-4 text-sm text-white focus:border-neon-green/50 focus:ring-1 focus:ring-neon-green/10 outline-none transition-all placeholder:text-zinc-650"
-                            />
-                          </div>
-                        </div>
-                        <div>
-                          <label className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider mb-2 block">ยืนยันรหัสผ่านใหม่</label>
-                          <div className="relative">
-                            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-zinc-500" />
-                            <input 
-                              type="password" 
-                              placeholder="••••••••" 
-                              value={confirmPassword} 
-                              onChange={e => setConfirmPassword(e.target.value)} 
-                              className="w-full bg-[#0a0a0b] border border-zinc-800 rounded-xl py-3 pl-11 pr-4 text-sm text-white focus:border-neon-green/50 focus:ring-1 focus:ring-neon-green/10 outline-none transition-all placeholder:text-zinc-650"
-                            />
-                          </div>
-                        </div>
-                        <button 
-                          onClick={handleChangePassword} 
-                          className="w-full bg-neon-green hover:bg-neon-green/95 text-black font-extrabold py-3.5 transition-all text-sm rounded-lg uppercase tracking-wider cursor-pointer"
-                        >
-                          ยืนยันการเปลี่ยนรหัสผ่าน
-                        </button>
-                      </div>
-                    </div>
-                  )}
-
-                  {currentTab === 'delete' && (
-                    <div className="animate-in fade-in duration-300">
-                      <div className="bg-red-500/10 border border-red-500/20 p-6 text-center rounded-xl">
-                        <ShieldAlert className="w-12 h-12 text-red-550 mx-auto mb-4" />
-                        <h3 className="text-base font-bold text-white mb-2">ลบบัญชีผู้ใช้งาน</h3>
-                        <p className="text-xs text-zinc-400 mb-6 leading-relaxed">
-                          คำเตือน: หากคุณลบบัญชี ข้อมูลประวัติการสั่งซื้อ ยอดเงินคงเหลือ และข้อมูลส่วนตัวทั้งหมดจะถูกลบออกถาวรและไม่สามารถกู้คืนได้
-                        </p>
-                        <button 
-                          onClick={handleDeleteAccount}
-                          className="w-full bg-red-500 hover:bg-red-600 text-white font-extrabold py-3.5 transition-all text-sm rounded-lg uppercase tracking-wider cursor-pointer"
-                        >
-                          ลบบัญชีถาวร
-                        </button>
-                      </div>
-                    </div>
-                  )}
-
-                  {currentTab === 'preferences' && (
-                    <div className="animate-in fade-in duration-300">
-                      <h3 className="text-base font-bold text-white mb-6">ตั้งค่าการแสดงผลทั่วไป</h3>
-                      <div className="space-y-4">
-                        <div className="flex items-center justify-between p-4 bg-[#0a0a0b] border border-zinc-800 rounded-xl">
-                          <div className="pr-4">
-                            <div className="text-sm font-semibold text-white mb-1">Custom Cursor</div>
-                            <div className="text-xs text-zinc-400 leading-normal">เปิด/ปิด เอฟเฟกต์เคอร์เซอร์ของเว็บไซต์ เพื่อลดการกระตุกบนเครื่องสเปกต่ำ</div>
-                          </div>
-                          <div className="flex items-center shrink-0">
-                            <label className="relative inline-flex items-center cursor-pointer">
-                              <input 
-                                type="checkbox" 
-                                className="sr-only peer rounded-xl" 
-                                checked={useCustomCursor ?? true} 
-                                onChange={toggleCustomCursor}
-                              />
-                              <div className="w-11 h-6 bg-zinc-900 border border-zinc-850 rounded-full peer-focus:outline-none peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-zinc-300 after:border-zinc-300 after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-neon-green"></div>
-                            </label>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
+    <AnimatedScroll direction="up" hideOnScroll={true}>
+      <div className="w-full max-w-4xl mx-auto p-4 sm:p-6 lg:p-8 font-sans text-white min-h-[85vh]">
+        {/* Header */}
+        <div className="mb-8">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-bold uppercase tracking-wider mb-2">
+            <Settings className="w-3.5 h-3.5" />
+            <span>Account Settings</span>
           </div>
+          <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+            การตั้งค่าบัญชี
+          </h1>
+          <p className="text-white/50 text-xs sm:text-sm font-medium mt-1">
+            จัดการรหัสผ่าน ความปลอดภัย และการตั้งค่าความเป็นส่วนตัวของคุณ
+          </p>
+        </div>
+
+        {/* Tab Controls */}
+        <div className="flex gap-2 p-1.5 bg-[#0c0c12]/85 border border-white/[0.08] rounded-2xl mb-8 backdrop-blur-xl w-fit">
+          <button
+            onClick={() => setCurrentTab('password')}
+            className={`px-5 py-2.5 rounded-xl text-xs font-bold tracking-wider uppercase transition-all cursor-pointer ${
+              currentTab === 'password'
+                ? 'bg-gradient-to-r from-blue-600 to-cyan-500 text-white shadow-lg shadow-blue-500/20'
+                : 'text-white/50 hover:text-white hover:bg-white/[0.04]'
+            }`}
+          >
+            เปลี่ยนรหัสผ่าน
+          </button>
+          <button
+            onClick={() => setCurrentTab('delete')}
+            className={`px-5 py-2.5 rounded-xl text-xs font-bold tracking-wider uppercase transition-all cursor-pointer ${
+              currentTab === 'delete'
+                ? 'bg-rose-500 text-white shadow-lg shadow-rose-500/20'
+                : 'text-white/50 hover:text-rose-400 hover:bg-white/[0.04]'
+            }`}
+          >
+            ลบบัญชี
+          </button>
+        </div>
+
+        {/* Tab Content */}
+        <div className="bg-[#0c0c12]/85 backdrop-blur-2xl border border-white/[0.1] rounded-[32px] p-6 sm:p-10 shadow-2xl glass-card glass-reflection relative overflow-hidden">
+          <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none" />
+
+          {currentTab === 'password' && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="max-w-xl"
+            >
+              <div className="flex items-center gap-3 mb-6">
+                <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-2xl text-blue-400">
+                  <Lock className="w-6 h-6" />
+                </div>
+                <div>
+                  <h2 className="text-lg sm:text-xl font-black text-white">เปลี่ยนรหัสผ่านใหม่</h2>
+                  <p className="text-white/40 text-xs font-medium">กรุณาตั้งรหัสผ่านที่มีความยาวอย่างน้อย 6 ตัวอักษร</p>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-xs font-bold text-white/50 uppercase tracking-wider mb-2 ml-1">
+                    รหัสผ่านเดิม
+                  </label>
+                  <input
+                    type="password"
+                    value={oldPassword}
+                    onChange={(e) => setOldPassword(e.target.value)}
+                    placeholder="กรอกรหัสผ่านปัจจุบันของคุณ"
+                    className="w-full bg-white/[0.03] border border-white/[0.1] focus:border-blue-500 rounded-2xl p-4 text-white text-sm outline-none transition-all placeholder:text-white/20"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-white/50 uppercase tracking-wider mb-2 ml-1">
+                    รหัสผ่านใหม่
+                  </label>
+                  <input
+                    type="password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="กรอกรหัสผ่านใหม่"
+                    className="w-full bg-white/[0.03] border border-white/[0.1] focus:border-blue-500 rounded-2xl p-4 text-white text-sm outline-none transition-all placeholder:text-white/20"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-white/50 uppercase tracking-wider mb-2 ml-1">
+                    ยืนยันรหัสผ่านใหม่
+                  </label>
+                  <input
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="กรอกรหัสผ่านใหม่อีกครั้ง"
+                    className="w-full bg-white/[0.03] border border-white/[0.1] focus:border-blue-500 rounded-2xl p-4 text-white text-sm outline-none transition-all placeholder:text-white/20"
+                  />
+                </div>
+
+                <div className="pt-4">
+                  <button
+                    onClick={handleChangePassword}
+                    disabled={isLoading}
+                    className="w-full py-4 rounded-full bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white font-black text-xs sm:text-sm tracking-wider uppercase transition-all shadow-lg shadow-blue-500/25 active:scale-[0.98] cursor-pointer disabled:opacity-50"
+                  >
+                    {isLoading ? 'กำลังบันทึก...' : 'อัปเดตรหัสผ่าน'}
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {currentTab === 'delete' && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="max-w-xl"
+            >
+              <div className="flex items-center gap-3 mb-6">
+                <div className="p-3 bg-rose-500/10 border border-rose-500/20 rounded-2xl text-rose-400">
+                  <ShieldAlert className="w-6 h-6" />
+                </div>
+                <div>
+                  <h2 className="text-lg sm:text-xl font-black text-white">ลบบัญชีผู้ใช้งานถาวร</h2>
+                  <p className="text-white/40 text-xs font-medium">การดำเนินการนี้จะไม่สามารถย้อนกลับได้</p>
+                </div>
+              </div>
+
+              <div className="bg-rose-500/[0.05] border border-rose-500/20 p-5 rounded-2xl mb-6">
+                <p className="text-xs sm:text-sm text-rose-300 leading-relaxed font-medium">
+                  เมื่อคุณลบบัญชี ข้อมูลทั้งหมดรวมถึงยอดเงินคงเหลือ ประวัติการสั่งซื้อ และประวัติการ Redeem คีย์ จะถูกลบทิ้งอย่างถาวร
+                </p>
+              </div>
+
+              <button
+                onClick={handleDeleteAccount}
+                disabled={isLoading}
+                className="w-full py-4 rounded-full bg-rose-500 hover:bg-rose-600 text-white font-black text-xs sm:text-sm tracking-wider uppercase transition-all shadow-lg shadow-rose-500/25 active:scale-[0.98] cursor-pointer disabled:opacity-50"
+              >
+                {isLoading ? 'กำลังลบบัญชี...' : 'ยืนยันการลบบัญชีถาวร'}
+              </button>
+            </motion.div>
+          )}
         </div>
       </div>
     </AnimatedScroll>

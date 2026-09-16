@@ -97,12 +97,16 @@ function StatCard({
 }) {
   return (
     <motion.div 
-      initial={{ opacity: 0, y: 30 }}
+      initial={{ opacity: 0, y: 25 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-20px" }}
-      transition={{ duration: 0.5, delay }}
-      className="relative bg-[#0d0d10]/90 backdrop-blur-md border border-white/[0.08] rounded-[24px] p-5 sm:p-6 overflow-hidden group hover:border-white/[0.18] transition-all duration-300 shadow-xl shadow-black/40 hover:-translate-y-1"
+      viewport={{ once: true, margin: "-15px" }}
+      transition={{ duration: 0.45, delay, ease: [0.16, 1, 0.3, 1] }}
+      whileHover={{ y: -4, transition: { duration: 0.2 } }}
+      className="relative bg-[#0c0c12]/85 backdrop-blur-xl border border-white/[0.08] rounded-[24px] p-5 sm:p-6 overflow-hidden group hover:border-white/20 transition-all duration-300 shadow-xl shadow-black/40 glass-card glass-reflection"
     >
+      {/* Prismatic Top Edge */}
+      <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none" />
+
       {/* Subtle glow */}
       <div
         className="absolute -top-8 -right-8 w-28 h-28 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-2xl pointer-events-none"
@@ -110,8 +114,8 @@ function StatCard({
       />
       <div className="flex items-center justify-between mb-3">
         <p className="text-xs text-white/50 font-semibold tracking-wide uppercase">{label}</p>
-        <div className="w-8 h-8 rounded-full bg-white/[0.04] border border-white/[0.06] flex items-center justify-center shrink-0">
-          <Icon className="w-4 h-4 text-white/60" />
+        <div className="w-8 h-8 rounded-full bg-white/[0.04] border border-white/[0.08] flex items-center justify-center shrink-0 group-hover:scale-105 group-hover:border-white/20 transition-all">
+          <Icon className="w-4 h-4 text-white/70" />
         </div>
       </div>
       <p className="text-3xl sm:text-4xl font-black text-white tracking-tight leading-none mb-1">
@@ -149,15 +153,18 @@ function ShortcutBtn({
 }: ShortcutBtnProps) {
   return (
     <motion.button
-      initial={{ opacity: 0, scale: 0.95 }}
+      initial={{ opacity: 0, scale: 0.96 }}
       whileInView={{ opacity: 1, scale: 1 }}
-      viewport={{ once: true, margin: "-20px" }}
-      transition={{ duration: 0.3, delay }}
-      whileHover={{ y: -3, transition: { duration: 0.2 } }}
+      viewport={{ once: true, margin: "-15px" }}
+      transition={{ duration: 0.35, delay, ease: [0.16, 1, 0.3, 1] }}
+      whileHover={{ y: -4, transition: { duration: 0.2 } }}
       whileTap={{ scale: 0.96 }}
       onClick={onClick}
-      className="relative overflow-hidden text-left bg-[#0d0d10]/90 backdrop-blur-md border border-white/[0.08] hover:border-white/[0.18] rounded-[24px] p-4 sm:p-5 flex items-center gap-4 transition-all duration-300 w-full group cursor-pointer shadow-lg hover:shadow-xl"
+      className="relative overflow-hidden text-left bg-[#0c0c12]/85 backdrop-blur-xl border border-white/[0.08] hover:border-white/20 rounded-[24px] p-4 sm:p-5 flex items-center gap-4 transition-all duration-300 w-full group cursor-pointer shadow-lg hover:shadow-2xl shadow-black/40 glass-card glass-reflection"
     >
+      {/* Prismatic Top Edge */}
+      <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none" />
+
       {/* Dynamic Glow */}
       <div
         className="absolute -top-12 -right-12 w-28 h-28 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-2xl pointer-events-none"
@@ -165,13 +172,13 @@ function ShortcutBtn({
       />
       
       {/* Icon Frame */}
-      <div className={`p-3.5 rounded-2xl bg-white/[0.04] border border-white/[0.08] group-hover:border-transparent group-hover:scale-105 duration-300 ${colorClass} shrink-0 shadow-inner`}>
+      <div className={`p-3.5 rounded-2xl bg-white/[0.04] border border-white/[0.08] group-hover:border-transparent group-hover:scale-108 duration-300 ${colorClass} shrink-0 shadow-inner`}>
         <Icon className="w-5 h-5 font-bold" />
       </div>
 
       <div className="flex flex-col min-w-0">
-        <span className="text-xs sm:text-sm font-black text-white tracking-wider uppercase">{label}</span>
-        <span className="text-[10px] text-white/40 group-hover:text-white/60 duration-300 tracking-normal truncate mt-0.5 font-bold font-mono">{subLabel}</span>
+        <span className="text-xs sm:text-sm font-black text-white tracking-wider uppercase group-hover:text-blue-400 transition-colors">{label}</span>
+        <span className="text-[10px] text-white/40 group-hover:text-white/70 duration-300 tracking-normal truncate mt-0.5 font-bold font-mono">{subLabel}</span>
       </div>
 
       {/* Decorative arrow */}
@@ -212,20 +219,25 @@ function CategoryChip({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 30 }}
+      initial={{ opacity: 0, y: 25 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-20px" }}
-      transition={{ duration: 0.5, delay }}
+      viewport={{ once: true, margin: "-15px" }}
+      transition={{ duration: 0.45, delay, ease: [0.16, 1, 0.3, 1] }}
+      whileHover={{ y: -5, transition: { duration: 0.25 } }}
+      whileTap={{ scale: 0.98 }}
       onClick={onClick}
-      className="relative group overflow-hidden rounded-[26px] border border-white/[0.08] bg-[#0c0c0e] hover:border-white/20 transition-all duration-300 flex flex-col cursor-pointer hover:-translate-y-1.5 shadow-xl shadow-black/40"
+      className="relative group overflow-hidden rounded-[26px] border border-white/[0.08] bg-[#0c0c12]/85 backdrop-blur-xl hover:border-white/25 transition-all duration-300 flex flex-col cursor-pointer shadow-xl shadow-black/40 glass-card glass-reflection"
     >
+      {/* Prismatic Top Edge Highlight */}
+      <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent z-20 pointer-events-none" />
+
       {/* Banner Area */}
-      <div className="relative aspect-[21/6] w-full overflow-hidden shrink-0 bg-[#141416]">
+      <div className="relative aspect-[21/6] w-full overflow-hidden shrink-0 bg-[#121218]">
         {cat.bannerUrl ? (
           <img
             src={cat.bannerUrl}
             alt={cat.name || cat.title}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-60 group-hover:opacity-85"
+            className="w-full h-full object-cover group-hover:scale-108 transition-transform duration-700 opacity-65 group-hover:opacity-90"
             referrerPolicy="no-referrer"
           />
         ) : (
@@ -235,25 +247,25 @@ function CategoryChip({
         )}
         
         {/* Gradients */}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#0c0c0e] via-transparent to-transparent opacity-90" />
-        <div className="absolute inset-0 bg-gradient-to-r from-[#0c0c0e]/40 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0c0c12] via-transparent to-transparent opacity-95" />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#0c0c12]/40 to-transparent" />
       </div>
 
       {/* Content Area */}
-      <div className="p-4 sm:p-5 flex flex-col justify-between flex-1 bg-[#0c0c0e]">
-        <h3 className="text-base sm:text-lg font-black text-white px-0.5 tracking-wide uppercase truncate mb-1">
+      <div className="p-4 sm:p-5 flex flex-col justify-between flex-1 bg-[#0c0c12]/60">
+        <h3 className="text-base sm:text-lg font-black text-white px-0.5 tracking-wide uppercase truncate mb-1 group-hover:text-blue-400 transition-colors">
           {cat.name || cat.title}
         </h3>
         
-        <div className="flex items-center justify-between text-xs font-semibold mt-3 pt-3 border-t border-white/[0.05]">
+        <div className="flex items-center justify-between text-xs font-semibold mt-3 pt-3 border-t border-white/[0.06]">
           {/* Item Count */}
           <span className="text-white/50 flex items-center gap-1.5 uppercase font-bold tracking-wider">
             <Package className="w-3.5 h-3.5 text-white/40 shrink-0" />
-            <span>มีสินค้าทั้งหมด <span className="text-neon-green font-black">{productCount}</span> รายการ</span>
+            <span>มีสินค้าทั้งหมด <span className="text-emerald-400 font-black">{productCount}</span> รายการ</span>
           </span>
           
           {/* Price Range */}
-          <span className="text-white font-mono font-black tracking-wider text-xs bg-white/[0.04] px-3 py-1.5 rounded-full border border-white/[0.08] shadow-sm">
+          <span className="text-white font-mono font-black tracking-wider text-xs bg-white/[0.06] px-3 py-1.5 rounded-full border border-white/[0.1] shadow-sm group-hover:border-blue-500/30 group-hover:bg-blue-500/10 transition-all">
             ฿{priceRangeStr}
           </span>
         </div>
@@ -285,19 +297,23 @@ function ProductCard({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 30 }}
+      initial={{ opacity: 0, y: 25 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-20px" }}
-      transition={{ duration: 0.5, delay }}
-      className="group relative bg-[#0c0c0e] border border-white/[0.08] rounded-[26px] overflow-hidden hover:border-white/20 transition-all duration-300 flex flex-col hover:-translate-y-1.5 shadow-xl shadow-black/40"
+      viewport={{ once: true, margin: "-15px" }}
+      transition={{ duration: 0.45, delay, ease: [0.16, 1, 0.3, 1] }}
+      whileHover={{ y: -5, transition: { duration: 0.25 } }}
+      className="group relative bg-[#0c0c12]/85 backdrop-blur-xl border border-white/[0.08] rounded-[26px] overflow-hidden hover:border-white/25 transition-all duration-300 flex flex-col shadow-xl shadow-black/40 glass-card glass-reflection"
     >
+      {/* Prismatic Top Edge Highlight */}
+      <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent z-20 pointer-events-none" />
+
       {/* Image area with corner ribbon */}
-      <div className="relative aspect-square w-full bg-[#141416] overflow-hidden shrink-0">
+      <div className="relative aspect-square w-full bg-[#121218] overflow-hidden shrink-0">
         {hasImage ? (
           <img
             src={product.imageUrl}
             alt={product.name}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            className="w-full h-full object-cover group-hover:scale-108 transition-transform duration-700"
             onError={() => setImgError(true)}
             referrerPolicy="no-referrer"
           />
@@ -320,7 +336,7 @@ function ProductCard({
         )}
 
         {/* Overlay gradient */}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#0c0c0e] via-transparent to-transparent opacity-80" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0c0c12] via-transparent to-transparent opacity-85" />
 
         {/* Discount Badge on left */}
         {discount !== null && (
@@ -331,7 +347,7 @@ function ProductCard({
       </div>
 
       {/* Content */}
-      <div className="p-4 sm:p-5 flex flex-col flex-1">
+      <div className="p-4 sm:p-5 flex flex-col flex-1 bg-[#0c0c12]/60">
         <h3 className="text-sm font-black text-white leading-snug line-clamp-1 mb-3 group-hover:text-blue-400 transition-colors">
           {product.name}
         </h3>
@@ -370,7 +386,7 @@ function ProductCard({
         </button>
 
         {/* Stock Row Box */}
-        <div className="mt-3.5 py-2 rounded-full bg-white/[0.02] border border-white/[0.05] flex items-center justify-center gap-2 text-[10px] text-white/40 font-black uppercase tracking-widest leading-none">
+        <div className="mt-3.5 py-2 rounded-full bg-white/[0.03] border border-white/[0.06] flex items-center justify-center gap-2 text-[10px] text-white/40 font-black uppercase tracking-widest leading-none">
           <Package className="w-3.5 h-3.5 text-white/20 shrink-0" />
           <span>คงเหลือ <span className="text-white/80 font-mono font-bold">{product.stock.toLocaleString()}</span> ชิ้น</span>
         </div>

@@ -8,8 +8,6 @@ import { useState, useRef, useEffect } from 'react';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { supabase } from '../lib/supabase';
 import { AdminApiKeys } from './AdminApiKeys';
-import { AdminBotManagement } from './AdminBotManagement';
-import { ProxyFreeTool } from './ProxyFreeTool';
 import { DevLogo } from './DevLogo';
 
 interface AdminDashboardProps {
@@ -883,8 +881,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           </div>
 
           <div className="space-y-1">
-            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-3 px-4">เครื่องมือเสริม</p>
-            <NavItem id="bot" label="ระบบบอท" icon={Terminal} />
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-3 px-4">ระบบเสริม</p>
             <NavItem id="tools" label="ตัวช่วยแจกของ" icon={Gift} />
             <NavItem id="api_keys" label="ระบบ API" icon={Key} />
           </div>
@@ -1729,28 +1726,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               exit={{ opacity: 0, x: -20 }}
             >
               <AdminToolsManagement />
-            </motion.div>
-          )}
-
-          {adminTab === 'bot' && (
-            <motion.div 
-              key="bot"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-            >
-              <AdminBotManagement />
-            </motion.div>
-          )}
-
-          {adminTab === 'proxy' && (
-            <motion.div 
-              key="proxy"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-            >
-              <ProxyFreeTool />
             </motion.div>
           )}
 

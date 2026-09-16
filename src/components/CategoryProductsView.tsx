@@ -1,8 +1,7 @@
 import React, { useState } from "react";
 import { motion } from "motion/react";
-import { Package, ArrowLeft, Star, ShoppingCart } from "lucide-react";
+import { Package, ArrowLeft, Star, ShoppingCart, Sparkles } from "lucide-react";
 import { Product, Category } from "../types";
-import { AnimatedScroll } from "./AnimatedScroll";
 import { generateGradient } from "../utils";
 
 interface CategoryProductsViewProps {
@@ -39,52 +38,44 @@ export const CategoryProductsView: React.FC<CategoryProductsViewProps> = ({
   const visibleProducts = filteredProducts.slice(0, renderLimit);
 
   return (
-    <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 pt-24 font-sans text-white">
-      <div className="flex flex-col md:flex-row md:items-center justify-between mb-10 gap-6">
+    <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 font-sans text-white min-h-[85vh]">
+      <motion.div 
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4"
+      >
         <div className="flex items-center gap-4">
           <button
             onClick={onBack}
-            className="p-3 bg-card hover:bg-[#121212] border border-border border-2 transition-colors group shrink-0 brut-card rounded-xl"
+            className="p-3 bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] rounded-2xl transition-all group shrink-0 active:scale-95 cursor-pointer"
           >
-            <ArrowLeft className="w-5 h-5 text-muted-foreground group-hover:text-white" />
+            <ArrowLeft className="w-5 h-5 text-white/60 group-hover:text-white" />
           </button>
           <div>
-            <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight flex items-center gap-3">
-              {category === "all" ? (
-                <div className="flex items-center gap-3 uppercase">
-                  <div className="w-12 h-12 bg-primary text-primary-foreground flex items-center justify-center">
-                    <Package className="w-7 h-7 text-white" />
-                  </div>
-                  สินค้าทั้งหมด
-                </div>
-              ) : (
-                <div className="flex items-center gap-3 uppercase">
-                  <div className="w-12 h-12 bg-card flex items-center justify-center brut-card rounded-xl">
-                    <ShoppingCart className="w-7 h-7 text-white" />
-                  </div>
-                  {categoryInfo?.title || category}
-                </div>
-              )}
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-bold uppercase tracking-wider mb-1">
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>Category Filter</span>
+            </div>
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-white tracking-tight flex items-center gap-3">
+              {category === "all" ? "สินค้าทั้งหมด" : (categoryInfo?.title || category)}
             </h1>
-            <p className="text-sm font-medium text-muted-foreground mt-3 flex items-center gap-2">
-              <Star className="w-4 h-4 text-amber-500" />{" "}
-              {categoryInfo?.subtitle ||
-                `พบสินค้าทั้งหมด ${filteredProducts.length} รายการ`}
+            <p className="text-xs sm:text-sm font-medium text-white/50 mt-0.5">
+              {categoryInfo?.subtitle || `พบสินค้าทั้งหมด ${filteredProducts.length} รายการ`}
             </p>
           </div>
         </div>
-      </div>
+      </motion.div>
 
       {!filteredProducts || filteredProducts.length === 0 ? (
-        <div className="border-2 border-dashed border-border bg-card p-16 text-center brut-card rounded-xl">
-          <div className="animate-pulse mb-6 flex justify-center">
-            <Package className="w-16 h-16 text-muted-foreground" />
+        <div className="bg-[#0c0c12]/85 border border-white/[0.08] rounded-[32px] p-16 text-center glass-card glass-reflection">
+          <div className="mb-4 flex justify-center">
+            <Package className="w-14 h-14 text-white/20" />
           </div>
-          <h3 className="text-xl font-bold text-muted-foreground">
-            ยังไม่มีสินค้าในขณะนี้
+          <h3 className="text-lg font-black text-white">
+            ยังไม่มีสินค้าในหมวดหมู่นี้
           </h3>
-          <p className="text-muted-foreground text-sm mt-2 font-medium">
-            โปรดรอการอัพเดทจากผู้ดูแลระบบ
+          <p className="text-white/40 text-xs sm:text-sm mt-1 font-medium">
+            โปรดรอการอัปเดตสต๊อกสินค้าจากทางร้าน
           </p>
         </div>
       ) : (
@@ -99,23 +90,25 @@ export const CategoryProductsView: React.FC<CategoryProductsViewProps> = ({
               return (
                 <motion.div
                   key={product.id}
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.2, delay: Math.min(i, 10) * 0.03 }}
-                  className="group relative bg-[#0c0c0e] border border-white/[0.08] rounded-2xl overflow-hidden hover:border-white/20 transition-all duration-300 flex flex-col hover:-translate-y-1 shadow-lg"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.35, delay: Math.min(i, 10) * 0.04, ease: [0.16, 1, 0.3, 1] }}
+                  whileHover={{ y: -5, transition: { duration: 0.2 } }}
+                  className="group relative bg-[#0c0c12]/85 backdrop-blur-xl border border-white/[0.08] rounded-[24px] overflow-hidden hover:border-white/25 transition-all duration-300 flex flex-col shadow-xl shadow-black/40 glass-card glass-reflection"
                 >
+                  {/* Prismatic Top Edge Highlight */}
+                  <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent z-20 pointer-events-none" />
+
                   {/* Image area with corner ribbon */}
-                  <div className="relative aspect-square w-full bg-[#141416] overflow-hidden shrink-0">
+                  <div className="relative aspect-square w-full bg-[#121218] overflow-hidden shrink-0">
                     {product.imageUrl && product.imageUrl.trim() !== "" ? (
-                      <img loading="lazy"
+                      <img 
+                        loading="lazy"
                         src={product.imageUrl}
                         alt={product.name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        className="w-full h-full object-cover group-hover:scale-108 transition-transform duration-700"
                         onError={(e) => {
                           e.currentTarget.style.display = 'none';
-                          if (e.currentTarget.nextElementSibling) {
-                            (e.currentTarget.nextElementSibling as HTMLElement).style.display = 'flex';
-                          }
                         }}
                         referrerPolicy="no-referrer"
                       />
@@ -133,7 +126,6 @@ export const CategoryProductsView: React.FC<CategoryProductsViewProps> = ({
                       <span className="text-[10px] font-bold text-white/50 uppercase tracking-widest mt-1">{product.category || "DEV"}</span>
                     </div>
 
-                    {/* Diagonal "Best Seller" ribbon in image corner */}
                     {isHot && (
                       <div className="absolute top-0 right-0 overflow-hidden w-20 h-20 pointer-events-none z-10">
                         <div className="absolute top-3 -right-6 bg-gradient-to-r from-red-600 to-orange-500 text-white text-[9px] font-black uppercase py-1 w-24 text-center transform rotate-45 shadow-md border-b border-white/10">
@@ -142,27 +134,23 @@ export const CategoryProductsView: React.FC<CategoryProductsViewProps> = ({
                       </div>
                     )}
 
-                    {/* Overlay gradient */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#0c0c0e] via-transparent to-transparent opacity-80" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#0c0c12] via-transparent to-transparent opacity-85" />
 
-                    {/* Discount Badge on left */}
                     {discount !== null && (
-                      <div className="absolute top-3 left-3 bg-red-600 text-white text-[9px] font-black px-2 py-0.5 rounded-md shadow-md z-10">
+                      <div className="absolute top-3 left-3 bg-red-600 text-white text-[10px] font-black px-2.5 py-1 rounded-full shadow-lg z-10 border border-red-500/30">
                         -{discount}%
                       </div>
                     )}
                   </div>
 
                   {/* Content */}
-                  <div className="p-4 sm:p-5 flex flex-col flex-1 bg-[#0c0c0e]">
+                  <div className="p-4 sm:p-5 flex flex-col flex-1 bg-[#0c0c12]/60">
                     <h3 className="text-sm font-black text-white leading-snug line-clamp-1 mb-3 group-hover:text-blue-400 transition-colors">
                       {product.name}
                     </h3>
 
-                    {/* "ราคาสินค้า" subtle label */}
-                    <span className="text-[10px] font-bold text-white/30 uppercase tracking-wider block mb-1">ราคาสินค้า</span>
+                    <span className="text-[10px] font-bold text-white/35 uppercase tracking-wider block mb-1">ราคาสินค้า</span>
 
-                    {/* Price row */}
                     <div className="flex flex-wrap items-center gap-2 mb-4">
                       {product.originalPrice && product.price < product.originalPrice ? (
                         <span className="text-xs text-red-500/80 line-through font-mono font-bold">฿{product.originalPrice.toLocaleString()}</span>
@@ -173,35 +161,33 @@ export const CategoryProductsView: React.FC<CategoryProductsViewProps> = ({
                       </span>
 
                       {product.stock > 0 ? (
-                        <span className="ml-auto bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[9px] font-black px-1.5 py-0.5 rounded-md leading-none select-none">
+                        <span className="ml-auto bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px] font-black px-2.5 py-1 rounded-full leading-none select-none">
                           พร้อมจำหน่าย
                         </span>
                       ) : (
-                        <span className="ml-auto bg-red-500/10 text-red-400 border border-red-500/20 text-[9px] font-black px-1.5 py-0.5 rounded-md leading-none select-none">
+                        <span className="ml-auto bg-red-500/10 text-red-400 border border-red-500/20 text-[10px] font-black px-2.5 py-1 rounded-full leading-none select-none">
                           สินค้าหมด
                         </span>
                       )}
                     </div>
 
-                    {/* Buy Button */}
                     {product.stock <= 0 ? (
-                      <button className="w-full bg-red-600/10 text-red-400 border border-red-500/20 py-2.5 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 cursor-default mt-auto">
+                      <button className="w-full bg-red-600/10 text-red-400 border border-red-500/20 py-2.5 rounded-full text-xs font-black flex items-center justify-center gap-1.5 cursor-default mt-auto">
                         <Package className="w-3.5 h-3.5" /> สินค้าหมด
                       </button>
                     ) : (
                       <button
                         onClick={() => onProductClick(product.id)}
-                        className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white py-2.5 rounded-xl text-xs font-black transition-all duration-200 mt-auto shadow-md"
+                        className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white py-2.5 rounded-full text-xs font-black transition-all duration-200 mt-auto shadow-lg shadow-blue-600/25 hover:shadow-blue-500/40 active:scale-95 cursor-pointer"
                       >
                         <ShoppingCart className="w-3.5 h-3.5" />
                         สั่งซื้อสินค้า
                       </button>
                     )}
 
-                    {/* Stock Row Box */}
-                    <div className="mt-3.5 py-1.5 rounded-xl bg-white/[0.02] border border-white/[0.04] flex items-center justify-center gap-2 text-[10px] text-white/40 font-black uppercase tracking-widest leading-none">
+                    <div className="mt-3.5 py-1.5 rounded-full bg-white/[0.03] border border-white/[0.06] flex items-center justify-center gap-2 text-[10px] text-white/40 font-black uppercase tracking-widest leading-none">
                       <Package className="w-3.5 h-3.5 text-white/20 shrink-0" />
-                      <span>คงเหลือ <span className="text-white/70 font-mono">{product.stock >= 999999 ? "ไม่จำกัด" : product.stock.toLocaleString()}</span> ชิ้น</span>
+                      <span>คงเหลือ <span className="text-white/80 font-mono font-bold">{product.stock >= 999999 ? "ไม่จำกัด" : product.stock.toLocaleString()}</span> ชิ้น</span>
                     </div>
                   </div>
                 </motion.div>
@@ -213,7 +199,7 @@ export const CategoryProductsView: React.FC<CategoryProductsViewProps> = ({
             <div className="mt-12 flex justify-center">
               <button
                 onClick={() => setRenderLimit(prev => prev + 20)}
-                className="px-8 py-3 bg-card border border-border border-2 hover:border-white/20 text-white font-bold transition-all active:scale-95 brut-card rounded-xl"
+                className="px-8 py-3 bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.1] text-white font-bold rounded-full transition-all active:scale-95 cursor-pointer text-xs uppercase tracking-wider"
               >
                 โหลดเพิ่มเติม ({filteredProducts.length - visibleProducts.length} รายการ)
               </button>
