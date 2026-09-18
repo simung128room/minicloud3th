@@ -1,10 +1,27 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
-import axios from "axios";
 import { Product, SiteStats, Category } from "../types";
-import { ShoppingCart, Package, Users, ChevronRight, Zap, Star, Clock, LayoutGrid, History, MessageSquare, Coins, Megaphone } from "lucide-react";
+import {
+  Wallet,
+  ShoppingCart,
+  Gift,
+  History,
+  Users,
+  Package,
+  CheckCircle2,
+  Zap,
+  ChevronLeft,
+  ChevronRight,
+  Sparkles,
+  Flame,
+  Search,
+  Activity,
+  ArrowRight,
+  Megaphone,
+} from "lucide-react";
 import { motion } from "motion/react";
-
-// ─── Types ───────────────────────────────────────────────────────────────────
+import { CategoryCard } from "./CategoryCard";
+import { Marquee } from "./Marquee";
+import { generateGradient } from "../utils";
 
 interface HomeViewProps {
   products: Product[];
@@ -18,417 +35,70 @@ interface HomeViewProps {
   onSelectCategory: (categoryId: string) => void;
 }
 
-// ─── Animated Number Generator ───────────────────────────────────────────────
-
-interface AnimatedNumberProps {
-  value: number;
-  accent: string;
-}
-
-function AnimatedNumber({ value, accent }: AnimatedNumberProps) {
-  const [displayValue, setDisplayValue] = useState(0);
-  const [isAnimating, setIsAnimating] = useState(false);
-  const prevValueRef = useRef(0);
-
-  useEffect(() => {
-    let startTimestamp: number | null = null;
-    const startValue = displayValue === 0 && prevValueRef.current === 0 ? 0 : prevValueRef.current;
-    const endValue = value;
-    const duration = 1500; // Duration in ms
-
-    setIsAnimating(true);
-    prevValueRef.current = value;
-
-    const step = (timestamp: number) => {
-      if (!startTimestamp) startTimestamp = timestamp;
-      const elapsed = timestamp - startTimestamp;
-      const progress = Math.min(elapsed / duration, 1);
-      
-      // Easing function: easeOutExpo for extremely smooth progression
-      const easeProgress = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
-      const current = Math.floor(startValue + (endValue - startValue) * easeProgress);
-      
-      setDisplayValue(current);
-
-      if (progress < 1) {
-        window.requestAnimationFrame(step);
-      } else {
-        setDisplayValue(endValue);
-        setIsAnimating(false);
-      }
-    };
-
-    const animFrame = window.requestAnimationFrame(step);
-    return () => window.cancelAnimationFrame(animFrame);
-  }, [value]);
-
-  return (
-    <span 
-      className={`inline-block font-mono tracking-tight transition-all duration-300 ${
-        isAnimating ? "scale-105" : "scale-100"
-      }`}
-      style={{ 
-        color: isAnimating ? "#ffffff" : "inherit",
-        textShadow: isAnimating ? `0 0 16px ${accent}, 0 0 4px ${accent}` : "none",
-        transitionTimingFunction: "cubic-bezier(0.16, 1, 0.3, 1)"
-      }}
-    >
-      {displayValue.toLocaleString()}
-    </span>
-  );
-}
-
-// ─── Stat Card ────────────────────────────────────────────────────────────────
-
-function StatCard({
-  label,
-  value,
-  unit,
-  icon: Icon,
-  accent,
-  delay = 0,
-}: {
-  label: string;
-  value: string | number;
-  unit: string;
-  icon: React.ElementType;
-  accent: string;
-  delay?: number;
-}) {
-  return (
-    <motion.div 
-      initial={{ opacity: 0, y: 25 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-15px" }}
-      transition={{ duration: 0.45, delay, ease: [0.16, 1, 0.3, 1] }}
-      whileHover={{ y: -4, transition: { duration: 0.2 } }}
-      className="relative bg-[#0c0c12]/85 backdrop-blur-xl border border-white/[0.08] rounded-[28px] p-5 sm:p-6 overflow-hidden group hover:border-white/20 transition-all duration-300 shadow-xl shadow-black/40 glass-card glass-reflection"
-    >
-      {/* Prismatic Top Edge */}
-      <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none" />
-
-      {/* Subtle glow */}
-      <div
-        className="absolute -top-8 -right-8 w-28 h-28 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-2xl pointer-events-none"
-        style={{ background: accent }}
-      />
-      <div className="flex items-center justify-between mb-3">
-        <p className="text-xs text-white/50 font-semibold tracking-wide uppercase">{label}</p>
-        <div className="w-8 h-8 rounded-full bg-white/[0.04] border border-white/[0.08] flex items-center justify-center shrink-0 group-hover:scale-105 group-hover:border-white/20 transition-all">
-          <Icon className="w-4 h-4 text-white/70" />
-        </div>
-      </div>
-      <p className="text-3xl sm:text-4xl font-black text-white tracking-tight leading-none mb-1">
-        {typeof value === "number" ? (
-          <AnimatedNumber value={value} accent={accent} />
-        ) : (
-          value
-        )}
-      </p>
-      <p className="text-xs text-white/40 font-medium">{unit}</p>
-    </motion.div>
-  );
-}
-
-// ─── Shortcut Button ──────────────────────────────────────────────────────────
-
-interface ShortcutBtnProps {
-  label: string;
-  subLabel: string;
-  icon: React.ElementType;
-  colorClass: string;
-  glowColor: string;
-  onClick: () => void;
-  delay?: number;
-}
-
-function ShortcutBtn({
-  label,
-  subLabel,
-  icon: Icon,
-  colorClass,
-  glowColor,
-  onClick,
-  delay = 0,
-}: ShortcutBtnProps) {
-  return (
-    <motion.button
-      initial={{ opacity: 0, scale: 0.96 }}
-      whileInView={{ opacity: 1, scale: 1 }}
-      viewport={{ once: true, margin: "-15px" }}
-      transition={{ duration: 0.35, delay, ease: [0.16, 1, 0.3, 1] }}
-      whileHover={{ y: -4, transition: { duration: 0.2 } }}
-      whileTap={{ scale: 0.96 }}
-      onClick={onClick}
-      className="relative overflow-hidden text-left bg-[#0c0c12]/85 backdrop-blur-xl border border-white/[0.08] hover:border-white/20 rounded-[28px] p-4 sm:p-5 flex items-center gap-4 transition-all duration-300 w-full group cursor-pointer shadow-lg hover:shadow-2xl shadow-black/40 glass-card glass-reflection"
-    >
-      {/* Prismatic Top Edge */}
-      <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none" />
-
-      {/* Dynamic Glow */}
-      <div
-        className="absolute -top-12 -right-12 w-28 h-28 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-2xl pointer-events-none"
-        style={{ background: glowColor }}
-      />
-      
-      {/* Icon Frame */}
-      <div className={`p-3.5 rounded-2xl bg-white/[0.04] border border-white/[0.08] group-hover:border-transparent group-hover:scale-108 duration-300 ${colorClass} shrink-0 shadow-inner`}>
-        <Icon className="w-5 h-5 font-bold" />
-      </div>
-
-      <div className="flex flex-col min-w-0">
-        <span className="text-xs sm:text-sm font-black text-white tracking-wider uppercase group-hover:text-blue-400 transition-colors">{label}</span>
-        <span className="text-[10px] text-white/40 group-hover:text-white/70 duration-300 tracking-normal truncate mt-0.5 font-bold font-mono">{subLabel}</span>
-      </div>
-
-      {/* Decorative arrow */}
-      <div className="ml-auto opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-300 text-white/50 shrink-0">
-        <ChevronRight className="w-4 h-4" />
-      </div>
-    </motion.button>
-  );
-}
-
-// ─── Category Chip ────────────────────────────────────────────────────────────
-
-function CategoryChip({
-  cat,
-  products,
-  onClick,
-  delay = 0,
-}: {
-  cat: Category;
-  products: Product[];
-  onClick: () => void;
-  delay?: number;
-}) {
-  const catProducts = products.filter(
-    (p) => p.category === cat.id || p.category === cat.name || p.category === cat.title
-  );
-  const productCount = catProducts.length;
-
-  const prices = catProducts.map(p => p.price);
-  const minPrice = prices.length > 0 ? Math.min(...prices) : 0;
-  const maxPrice = prices.length > 0 ? Math.max(...prices) : 0;
-
-  const priceRangeStr = prices.length > 0
-    ? (minPrice === maxPrice 
-        ? `${minPrice.toFixed(2)}` 
-        : `${minPrice.toFixed(2)} - ${maxPrice.toFixed(2)}`)
-    : "0.00";
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 25 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-15px" }}
-      transition={{ duration: 0.45, delay, ease: [0.16, 1, 0.3, 1] }}
-      whileHover={{ y: -5, transition: { duration: 0.25 } }}
-      whileTap={{ scale: 0.98 }}
-      onClick={onClick}
-      className="relative group overflow-hidden rounded-[32px] border border-white/[0.08] bg-[#0c0c12]/85 backdrop-blur-xl hover:border-white/25 transition-all duration-300 flex flex-col cursor-pointer shadow-xl shadow-black/40 glass-card glass-reflection"
-    >
-      {/* Prismatic Top Edge Highlight */}
-      <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent z-20 pointer-events-none" />
-
-      {/* Banner Area */}
-      <div className="relative aspect-[21/6] w-full overflow-hidden shrink-0 bg-[#121218]">
-        {cat.bannerUrl ? (
-          <img
-            src={cat.bannerUrl}
-            alt={cat.name || cat.title}
-            className="w-full h-full object-cover group-hover:scale-108 transition-transform duration-700 opacity-65 group-hover:opacity-90"
-            referrerPolicy="no-referrer"
-          />
-        ) : (
-          <div className="w-full h-full bg-gradient-to-br from-zinc-900 to-black flex items-center justify-center">
-            <Package className="w-8 h-8 text-white/10" />
-          </div>
-        )}
-        
-        {/* Gradients */}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#0c0c12] via-transparent to-transparent opacity-95" />
-        <div className="absolute inset-0 bg-gradient-to-r from-[#0c0c12]/40 to-transparent" />
-      </div>
-
-      {/* Content Area */}
-      <div className="p-4 sm:p-5 flex flex-col justify-between flex-1 bg-[#0c0c12]/60">
-        <h3 className="text-base sm:text-lg font-black text-white px-0.5 tracking-wide uppercase truncate mb-1 group-hover:text-blue-400 transition-colors">
-          {cat.name || cat.title}
-        </h3>
-        
-        <div className="flex items-center justify-between text-xs font-semibold mt-3 pt-3 border-t border-white/[0.06]">
-          {/* Item Count */}
-          <span className="text-white/50 flex items-center gap-1.5 uppercase font-bold tracking-wider">
-            <Package className="w-3.5 h-3.5 text-white/40 shrink-0" />
-            <span>มีสินค้าทั้งหมด <span className="text-emerald-400 font-black">{productCount}</span> รายการ</span>
-          </span>
-          
-          {/* Price Range */}
-          <span className="text-white font-mono font-black tracking-wider text-xs bg-white/[0.06] px-3 py-1.5 rounded-full border border-white/[0.1] shadow-sm group-hover:border-blue-500/30 group-hover:bg-blue-500/10 transition-all">
-            ฿{priceRangeStr}
-          </span>
-        </div>
-      </div>
-    </motion.div>
-  );
-}
-
-// ─── Product Card ─────────────────────────────────────────────────────────────
-
-function ProductCard({
-  product,
-  onClick,
-  delay = 0,
-}: {
-  product: Product;
-  onClick: () => void;
-  delay?: number;
-}) {
-  const [imgError, setImgError] = useState(false);
-  const hasImage = product.imageUrl && product.imageUrl.trim() !== "" && !imgError;
-
-  const discount =
-    product.originalPrice && product.price < product.originalPrice
-      ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
-      : null;
-
-  const isHot = product.price > 100 || (discount !== null && discount >= 20) || product.stock > 0;
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 25 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-15px" }}
-      transition={{ duration: 0.45, delay, ease: [0.16, 1, 0.3, 1] }}
-      whileHover={{ y: -5, transition: { duration: 0.25 } }}
-      className="group relative bg-[#0c0c12]/85 backdrop-blur-xl border border-white/[0.08] rounded-[30px] overflow-hidden hover:border-white/25 transition-all duration-300 flex flex-col shadow-xl shadow-black/40 glass-card glass-reflection"
-    >
-      {/* Prismatic Top Edge Highlight */}
-      <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent z-20 pointer-events-none" />
-
-      {/* Image area with corner ribbon */}
-      <div className="relative aspect-square w-full bg-[#121218] overflow-hidden shrink-0">
-        {hasImage ? (
-          <img
-            src={product.imageUrl}
-            alt={product.name}
-            className="w-full h-full object-cover group-hover:scale-108 transition-transform duration-700"
-            onError={() => setImgError(true)}
-            referrerPolicy="no-referrer"
-          />
-        ) : (
-          <div className="absolute inset-0 flex items-center justify-center select-none">
-            <div className="text-center">
-              <Package className="w-8 h-8 text-white/10 mx-auto mb-1" />
-              <p className="text-[10px] text-white/20 font-medium px-3 line-clamp-2">{product.name}</p>
-            </div>
-          </div>
-        )}
-
-        {/* Diagonal "Best Seller" ribbon in image corner */}
-        {isHot && (
-          <div className="absolute top-0 right-0 overflow-hidden w-20 h-20 pointer-events-none z-10">
-            <div className="absolute top-3 -right-6 bg-gradient-to-r from-red-600 to-orange-500 text-white text-[9px] font-black uppercase py-1 w-24 text-center transform rotate-45 shadow-md border-b border-white/10">
-              Best Seller
-            </div>
-          </div>
-        )}
-
-        {/* Overlay gradient */}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#0c0c12] via-transparent to-transparent opacity-85" />
-
-        {/* Discount Badge on left */}
-        {discount !== null && (
-          <div className="absolute top-3.5 left-3.5 bg-red-600 text-white text-[10px] font-black px-2.5 py-1 rounded-full shadow-lg border border-red-500/30">
-            -{discount}%
-          </div>
-        )}
-      </div>
-
-      {/* Content */}
-      <div className="p-4 sm:p-5 flex flex-col flex-1 bg-[#0c0c12]/60">
-        <h3 className="text-sm font-black text-white leading-snug line-clamp-1 mb-3 group-hover:text-blue-400 transition-colors">
-          {product.name}
-        </h3>
-
-        {/* "ราคาสินค้า" subtle label */}
-        <span className="text-[10px] font-bold text-white/35 uppercase tracking-wider block mb-1">ราคาสินค้า</span>
-
-        {/* Price row */}
-        <div className="flex flex-wrap items-center gap-2 mb-4">
-          {product.originalPrice && product.price < product.originalPrice ? (
-            <span className="text-xs text-red-500/80 line-through font-mono font-bold">฿{product.originalPrice.toLocaleString()}</span>
-          ) : null}
-          
-          <span className="text-lg font-black text-amber-400 tracking-tight font-mono">
-            ฿{product.price.toLocaleString()}
-          </span>
-
-          {product.stock > 0 ? (
-            <span className="ml-auto bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px] font-black px-2.5 py-1 rounded-full leading-none select-none">
-              พร้อมจำหน่าย
-            </span>
-          ) : (
-            <span className="ml-auto bg-red-500/10 text-red-400 border border-red-500/20 text-[10px] font-black px-2.5 py-1 rounded-full leading-none select-none">
-              สินค้าหมด
-            </span>
-          )}
-        </div>
-
-        {/* Buy Button */}
-        <button
-          onClick={onClick}
-          className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white py-3 rounded-full text-xs font-black transition-all duration-200 mt-auto shadow-lg shadow-blue-600/25 hover:shadow-blue-500/40 active:scale-95 cursor-pointer"
-        >
-          <ShoppingCart className="w-3.5 h-3.5" />
-          สั่งซื้อสินค้า
-        </button>
-
-        {/* Stock Row Box */}
-        <div className="mt-3.5 py-2 rounded-full bg-white/[0.03] border border-white/[0.06] flex items-center justify-center gap-2 text-[10px] text-white/40 font-black uppercase tracking-widest leading-none">
-          <Package className="w-3.5 h-3.5 text-white/20 shrink-0" />
-          <span>คงเหลือ <span className="text-white/80 font-mono font-bold">{product.stock.toLocaleString()}</span> ชิ้น</span>
-        </div>
-      </div>
-    </motion.div>
-  );
-}
-
-// ─── Main Component ───────────────────────────────────────────────────────────
-
 export const HomeView: React.FC<HomeViewProps> = ({
-  products,
-  categories,
+  products = [],
+  categories = [],
   stats,
-  user,
   siteSettings,
+  purchaseHistory = [],
   setActiveView,
   onProductClick,
   onSelectCategory,
 }) => {
-  const [latestPurchases, setLatestPurchases] = useState<any[]>([]);
+  const [currentBanner, setCurrentBanner] = useState<number>(0);
+  const [selectedCategoryTab, setSelectedCategoryTab] = useState<string>("all");
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const bannerTimerRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Safe products
+  const safeProducts = useMemo(
+    () => (Array.isArray(products) ? products : []),
+    [products]
+  );
+
+  // Safe categories
+  const safeCategories = useMemo(
+    () => (Array.isArray(categories) ? categories : []),
+    [categories]
+  );
+
+  // Banners
+  const banners = useMemo(() => {
+    if (
+      siteSettings?.banners &&
+      Array.isArray(siteSettings.banners) &&
+      siteSettings.banners.length > 0
+    ) {
+      return siteSettings.banners.filter((b: any) => typeof b === "string" && b.trim() !== "");
+    }
+    return [
+      "https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=1600&q=80",
+      "https://images.unsplash.com/photo-1538481199705-c710c4e965fc?auto=format&fit=crop&w=1600&q=80",
+    ];
+  }, [siteSettings]);
+
+  // Auto banner carousel
   useEffect(() => {
-    const fetchPurchases = async () => {
-      try {
-        const res = await axios.get("/api/latest-purchases");
-        if (res.data) {
-          setLatestPurchases(res.data);
-        }
-      } catch (e) {
-        // silently fail or log
-      }
+    if (banners.length <= 1) return;
+    bannerTimerRef.current = setInterval(() => {
+      setCurrentBanner((prev) => (prev + 1) % banners.length);
+    }, 5500);
+    return () => {
+      if (bannerTimerRef.current) clearInterval(bannerTimerRef.current);
     };
-    fetchPurchases();
-    
-    // Refresh every 30s
-    const intv = setInterval(fetchPurchases, 30000);
-    return () => clearInterval(intv);
-  }, []);
+  }, [banners.length]);
 
-  const safeProducts = useMemo(() => (Array.isArray(products) ? products : []), [products]);
+  const handlePrevBanner = () => {
+    if (bannerTimerRef.current) clearInterval(bannerTimerRef.current);
+    setCurrentBanner((prev) => (prev - 1 + banners.length) % banners.length);
+  };
 
+  const handleNextBanner = () => {
+    if (bannerTimerRef.current) clearInterval(bannerTimerRef.current);
+    setCurrentBanner((prev) => (prev + 1) % banners.length);
+  };
+
+  // Stats
   const totalSales =
     siteSettings?.stats_sales_override != null
       ? Number(siteSettings.stats_sales_override)
@@ -444,263 +114,659 @@ export const HomeView: React.FC<HomeViewProps> = ({
     [safeProducts]
   );
 
+  // Helper for category price info
+  const getCategoryPriceInfo = (cat: any) => {
+    const catProducts =
+      cat === "all"
+        ? safeProducts
+        : safeProducts.filter(
+            (p) =>
+              p.category === cat.id ||
+              p.category === cat.name ||
+              p.category === cat.title
+          );
+    if (catProducts.length === 0) return null;
+    const prices = catProducts.map((p) => p.price);
+    const minPrice = Math.min(...prices);
+    const maxPrice = Math.max(...prices);
+    if (minPrice === maxPrice) {
+      return `฿${minPrice.toLocaleString()}`;
+    }
+    return `฿${minPrice.toLocaleString()} - ฿${maxPrice.toLocaleString()}`;
+  };
+
+  const getProductCountText = (cat: any) => {
+    const catProducts =
+      cat === "all"
+        ? safeProducts
+        : safeProducts.filter(
+            (p) =>
+              p.category === cat.id ||
+              p.category === cat.name ||
+              p.category === cat.title
+          );
+    return `${catProducts.length} สินค้า`;
+  };
+
+  // Filtered products
+  const filteredProducts = useMemo(() => {
+    let result = safeProducts;
+
+    if (selectedCategoryTab !== "all") {
+      result = result.filter((p) => {
+        const catInfo = safeCategories.find(
+          (c) =>
+            c.id === selectedCategoryTab ||
+            c.name === selectedCategoryTab ||
+            c.title === selectedCategoryTab
+        );
+        return (
+          p.category === selectedCategoryTab ||
+          p.category === catInfo?.title ||
+          p.category === catInfo?.name ||
+          p.category === catInfo?.id
+        );
+      });
+    }
+
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim();
+      result = result.filter(
+        (p) =>
+          p.name.toLowerCase().includes(q) ||
+          (p.category && p.category.toLowerCase().includes(q)) ||
+          (p.description && p.description.toLowerCase().includes(q))
+      );
+    }
+
+    return result;
+  }, [safeProducts, safeCategories, selectedCategoryTab, searchQuery]);
+
+  const announcement =
+    siteSettings?.announcement_text ||
+    "ยินดีต้อนรับสู่ระบบ Apex Store ศูนย์รวมไอดีเกมและบริการดิจิทัลชั้นนำ ระบบอัตโนมัติ 24 ชั่วโมง จัดส่งทันที ปลอดภัย เชื่อถือได้ 100%";
+
   return (
-    <div className="w-full min-h-screen bg-[#070707] text-white font-sans antialiased">
-      <div className="max-w-4xl mx-auto px-4 md:px-6 pb-24 pt-6">
+    <div className="w-full min-h-screen text-white font-sans antialiased relative selection:bg-white selection:text-black">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-3 sm:py-6 space-y-6 sm:space-y-8 lg:space-y-10 relative z-10">
 
-        {/* ── Hero Banner ── */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.96 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.6, ease: "easeOut" }}
-          className="relative overflow-hidden rounded-[36px] border border-white/[0.08] mb-8 aspect-[21/6] bg-[#0d0d10] shadow-2xl shadow-red-500/10 group"
-        >
-          <img
-            src="https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=2070&auto=format&fit=crop"
-            alt="APEX STORE"
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out opacity-85"
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/40 to-transparent flex flex-col justify-center px-8 md:px-12 pointer-events-none">
-            <h1 className="text-3xl md:text-5xl font-black text-white tracking-tight mb-2 drop-shadow-xl">
-              APEX<span className="text-red-500">STORE</span>
-            </h1>
-            <p className="text-white/70 text-sm md:text-lg max-w-sm drop-shadow-md font-medium">
-              ศูนย์รวมเกมและไอเท็มคุณภาพสูง บริการตลอด 24 ชั่วโมง
-            </p>
-          </div>
-        </motion.div>
+        {/* ── 1. Hero Banner Carousel (Responsive Aspect Ratio) ── */}
+        <section className="relative w-full rounded-2xl sm:rounded-[32px] overflow-hidden border border-white/[0.1] bg-[#0c0c12]/80 backdrop-blur-xl shadow-2xl shadow-black/80 glass-card">
+          <div className="relative aspect-[16/9] sm:aspect-[21/9] md:aspect-[21/8] lg:aspect-[21/7] w-full overflow-hidden">
+            {banners.map((bannerUrl, idx) => (
+              <motion.div
+                key={bannerUrl + idx}
+                initial={false}
+                animate={{
+                  opacity: idx === currentBanner ? 1 : 0,
+                  scale: idx === currentBanner ? 1 : 1.05,
+                }}
+                transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+                className="absolute inset-0 w-full h-full"
+                style={{ pointerEvents: idx === currentBanner ? "auto" : "none" }}
+              >
+                <img
+                  src={bannerUrl}
+                  alt={`Banner ${idx + 1}`}
+                  className="w-full h-full object-cover"
+                  referrerPolicy="no-referrer"
+                />
+                {/* Vignette gradients */}
+                <div className="absolute inset-0 bg-gradient-to-t from-[#0c0c12] via-[#0c0c12]/30 to-transparent opacity-90" />
+                <div className="absolute inset-0 bg-gradient-to-r from-[#0c0c12]/80 via-transparent to-[#0c0c12]/40" />
+              </motion.div>
+            ))}
 
-        {/* ── Announcement Bar ── */}
-        {false && ((siteSettings?.announcement_text ?? "ยินดีต้อนรับทุกท่านเข้าสู่ APEX STORE จำหน่ายไอดีราคาถูก | มีปัญหาติดต่อดิสอคร์ดเร็วที่สุด").trim() !== '') && (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="mb-8 flex items-center bg-zinc-900/50 border border-white/[0.06] rounded-full px-4 py-2.5 overflow-hidden"
-          >
-            <div className="flex items-center justify-center bg-red-500/10 px-3 py-1.5 rounded-full border border-red-500/20 text-red-400 shrink-0 mr-3 shadow-[0_0_15px_rgba(239,68,68,0.1)] gap-1.5 font-black text-xs select-none">
-              <Megaphone className="w-3.5 h-3.5 animate-bounce" />
-              <span>ประกาศ</span>
-            </div>
-            <div className="flex-1 overflow-hidden relative" style={{ minWidth: 0 }}>
-              <div className="text-sm font-semibold text-white/90 tracking-wide pt-0.5 animate-marquee-css inline-block whitespace-nowrap">
-                {siteSettings?.announcement_text ?? "ยินดีต้อนรับทุกท่านเข้าสู่ APEX STORE จำหน่ายไอดีราคาถูก | มีปัญหาติดต่อดิสอคร์ดเร็วที่สุด"}
-              </div>
-            </div>
-          </motion.div>
-        )}
+            {/* Banner navigation buttons */}
+            {banners.length > 1 && (
+              <>
+                <button
+                  onClick={handlePrevBanner}
+                  className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 p-2 sm:p-2.5 rounded-full bg-black/60 hover:bg-black/90 border border-white/15 hover:border-white/30 text-white/90 hover:text-white backdrop-blur-md transition-all active:scale-90 z-20 cursor-pointer shadow-lg"
+                  aria-label="Previous Banner"
+                >
+                  <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+                </button>
+                <button
+                  onClick={handleNextBanner}
+                  className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 p-2 sm:p-2.5 rounded-full bg-black/60 hover:bg-black/90 border border-white/15 hover:border-white/30 text-white/90 hover:text-white backdrop-blur-md transition-all active:scale-90 z-20 cursor-pointer shadow-lg"
+                  aria-label="Next Banner"
+                >
+                  <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
+                </button>
 
-        {/* ── Stats Row ── */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-8">
-          <StatCard
-            label="สมาชิกทั้งหมด"
-            value={totalMembers}
-            unit="คน"
-            icon={Users}
-            accent="rgba(99,102,241,0.4)"
-            delay={0.1}
-          />
-          <StatCard
-            label="พร้อมจำหน่าย"
-            value={totalStock}
-            unit="ชิ้น"
-            icon={Package}
-            accent="rgba(245,158,11,0.4)"
-            delay={0.2}
-          />
-          <StatCard
-            label="หมวดหมู่ทั้งหมด"
-            value={categories.length}
-            unit="หมวดหมู่"
-            icon={LayoutGrid}
-            accent="rgba(16,185,129,0.4)"
-            delay={0.3}
-          />
-          <StatCard
-            label="ยอดขาย"
-            value={totalSales}
-            unit="ครั้ง"
-            icon={ShoppingCart}
-            accent="rgba(239,68,68,0.4)"
-            delay={0.4}
-          />
-        </div>
-
-        {/* ── Quick Shortcut Buttons ── */}
-        <section className="mb-8">
-          <div className="grid grid-cols-2 gap-3 sm:gap-4">
-            <ShortcutBtn
-              label="สั่งซื้อสินค้า"
-              subLabel="GO SHOPPING"
-              icon={ShoppingCart}
-              colorClass="text-emerald-400 group-hover:bg-emerald-500/10 group-hover:text-emerald-300"
-              glowColor="rgba(16,185,129,0.15)"
-              onClick={() => setActiveView("categories")}
-              delay={0.1}
-            />
-            <ShortcutBtn
-              label="ประวัติสั่งซื้อ"
-              subLabel="ORDER HISTORY"
-              icon={History}
-              colorClass="text-indigo-400 group-hover:bg-indigo-500/10 group-hover:text-indigo-300"
-              glowColor="rgba(99,102,241,0.15)"
-              onClick={() => setActiveView("order_history")}
-              delay={0.2}
-            />
-            <ShortcutBtn
-              label="ติดต่อ ADMIN"
-              subLabel="CONTACT ADMIN"
-              icon={MessageSquare}
-              colorClass="text-rose-450 group-hover:bg-rose-500/10 group-hover:text-rose-350"
-              glowColor="rgba(244,63,94,0.15)"
-              onClick={() => setActiveView("contact")}
-              delay={0.3}
-            />
-            <ShortcutBtn
-              label="เติมเงิน TOPUP"
-              subLabel="TOPUP WALLET"
-              icon={Coins}
-              colorClass="text-amber-400 group-hover:bg-amber-500/10 group-hover:text-amber-300"
-              glowColor="rgba(245,158,11,0.15)"
-              onClick={() => setActiveView("wallet")}
-              delay={0.4}
-            />
+                {/* Banner Pagination Dots */}
+                <div className="absolute bottom-2.5 sm:bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-1.5 sm:gap-2 z-20 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-full bg-black/60 backdrop-blur-md border border-white/10">
+                  {banners.map((_, dotIdx) => (
+                    <button
+                      key={dotIdx}
+                      onClick={() => {
+                        if (bannerTimerRef.current) clearInterval(bannerTimerRef.current);
+                        setCurrentBanner(dotIdx);
+                      }}
+                      className={`h-1.5 sm:h-2 rounded-full transition-all duration-300 ${
+                        dotIdx === currentBanner
+                          ? "w-4 sm:w-6 bg-white shadow-sm shadow-white"
+                          : "w-1.5 sm:w-2 bg-white/30 hover:bg-white/60"
+                      }`}
+                      aria-label={`Slide to ${dotIdx + 1}`}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
           </div>
         </section>
 
-        {/* ── Categories ── */}
-        {categories.length > 0 && (
-          <section className="mb-10">
-            <motion.div
-              initial={{ opacity: 0, x: -30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true, margin: "-20px" }}
-              transition={{ duration: 0.5 }}
-              className="flex items-center justify-between mb-4"
-            >
-              <div className="flex items-center gap-2">
-                <LayoutGrid className="w-5 h-5 text-neon-green" />
-                <h2 className="text-base font-black text-white tracking-tight uppercase">หมวดหมู่แนะนำ</h2>
+        {/* ── 2. Announcement Marquee Bar ── */}
+        <section className="flex items-center gap-2.5 sm:gap-3 px-3.5 sm:px-5 py-2.5 sm:py-3 rounded-xl sm:rounded-2xl bg-[#0c0c12]/80 border border-white/[0.08] backdrop-blur-xl shadow-lg shadow-black/40">
+          <div className="flex items-center gap-1.5 sm:gap-2 text-blue-400 font-bold text-[11px] sm:text-xs uppercase tracking-wider shrink-0">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500" />
+            </span>
+            <Megaphone className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-400" />
+            <span className="hidden xs:inline sm:inline">ประกาศ</span>
+          </div>
+          <div className="h-3.5 w-px bg-white/10 shrink-0" />
+          <div className="flex-1 overflow-hidden">
+            <Marquee text={announcement} speed={25} className="text-xs sm:text-sm text-white/80 font-medium" />
+          </div>
+        </section>
+
+        {/* ── 3. Quick Access Shortcuts (4 Action Cards) ── */}
+        <section className="grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-4 lg:gap-5">
+          {/* Wallet */}
+          <div
+            onClick={() => {
+              setActiveView("wallet");
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
+            className="group relative bg-[#0c0c12]/85 backdrop-blur-xl border border-white/[0.08] hover:border-blue-500/40 rounded-2xl sm:rounded-[24px] p-3.5 sm:p-5 flex flex-col justify-between transition-all duration-300 hover:-translate-y-1 active:scale-[0.98] shadow-xl shadow-black/40 cursor-pointer glass-card glass-reflection"
+          >
+            <div className="flex items-start justify-between mb-3 sm:mb-4">
+              <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 group-hover:scale-110 group-hover:bg-blue-500/20 transition-all duration-300 shadow-lg shadow-blue-500/10">
+                <Wallet className="w-4 h-4 sm:w-5 sm:h-5" />
               </div>
+              <span className="text-[9px] sm:text-[10px] font-bold text-blue-400/90 bg-blue-500/10 px-2 py-0.5 rounded-full border border-blue-500/20 uppercase tracking-wider">
+                Wallet
+              </span>
+            </div>
+            <div>
+              <h3 className="text-xs sm:text-sm md:text-base font-black text-white group-hover:text-blue-400 transition-colors truncate">
+                เติมเงินกระเป๋า
+              </h3>
+              <p className="text-[10px] sm:text-[11px] text-white/40 font-medium mt-0.5 truncate">
+                PromptPay / ทรูมันนี่
+              </p>
+            </div>
+          </div>
+
+          {/* Categories / All Products */}
+          <div
+            onClick={() => {
+              setActiveView("categories");
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
+            className="group relative bg-[#0c0c12]/85 backdrop-blur-xl border border-white/[0.08] hover:border-emerald-500/40 rounded-2xl sm:rounded-[24px] p-3.5 sm:p-5 flex flex-col justify-between transition-all duration-300 hover:-translate-y-1 active:scale-[0.98] shadow-xl shadow-black/40 cursor-pointer glass-card glass-reflection"
+          >
+            <div className="flex items-start justify-between mb-3 sm:mb-4">
+              <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 group-hover:scale-110 group-hover:bg-emerald-500/20 transition-all duration-300 shadow-lg shadow-emerald-500/10">
+                <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5" />
+              </div>
+              <span className="text-[9px] sm:text-[10px] font-bold text-emerald-400/90 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20 uppercase tracking-wider">
+                Store
+              </span>
+            </div>
+            <div>
+              <h3 className="text-xs sm:text-sm md:text-base font-black text-white group-hover:text-emerald-400 transition-colors truncate">
+                หมวดหมู่สินค้า
+              </h3>
+              <p className="text-[10px] sm:text-[11px] text-white/40 font-medium mt-0.5 truncate">
+                เลือกตามประเภทเกม
+              </p>
+            </div>
+          </div>
+
+          {/* Redeem Code */}
+          <div
+            onClick={() => {
+              setActiveView("redeem");
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
+            className="group relative bg-[#0c0c12]/85 backdrop-blur-xl border border-white/[0.08] hover:border-purple-500/40 rounded-2xl sm:rounded-[24px] p-3.5 sm:p-5 flex flex-col justify-between transition-all duration-300 hover:-translate-y-1 active:scale-[0.98] shadow-xl shadow-black/40 cursor-pointer glass-card glass-reflection"
+          >
+            <div className="flex items-start justify-between mb-3 sm:mb-4">
+              <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 group-hover:scale-110 group-hover:bg-purple-500/20 transition-all duration-300 shadow-lg shadow-purple-500/10">
+                <Gift className="w-4 h-4 sm:w-5 sm:h-5" />
+              </div>
+              <span className="text-[9px] sm:text-[10px] font-bold text-purple-400/90 bg-purple-500/10 px-2 py-0.5 rounded-full border border-purple-500/20 uppercase tracking-wider">
+                Reward
+              </span>
+            </div>
+            <div>
+              <h3 className="text-xs sm:text-sm md:text-base font-black text-white group-hover:text-purple-400 transition-colors truncate">
+                กล่องสุ่ม & โค้ด
+              </h3>
+              <p className="text-[10px] sm:text-[11px] text-white/40 font-medium mt-0.5 truncate">
+                แลกรับไอเทม & ส่วนลด
+              </p>
+            </div>
+          </div>
+
+          {/* History */}
+          <div
+            onClick={() => {
+              setActiveView("history");
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
+            className="group relative bg-[#0c0c12]/85 backdrop-blur-xl border border-white/[0.08] hover:border-amber-500/40 rounded-2xl sm:rounded-[24px] p-3.5 sm:p-5 flex flex-col justify-between transition-all duration-300 hover:-translate-y-1 active:scale-[0.98] shadow-xl shadow-black/40 cursor-pointer glass-card glass-reflection"
+          >
+            <div className="flex items-start justify-between mb-3 sm:mb-4">
+              <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 group-hover:scale-110 group-hover:bg-amber-500/20 transition-all duration-300 shadow-lg shadow-amber-500/10">
+                <History className="w-4 h-4 sm:w-5 sm:h-5" />
+              </div>
+              <span className="text-[9px] sm:text-[10px] font-bold text-amber-400/90 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20 uppercase tracking-wider">
+                Orders
+              </span>
+            </div>
+            <div>
+              <h3 className="text-xs sm:text-sm md:text-base font-black text-white group-hover:text-amber-400 transition-colors truncate">
+                ประวัติการสั่งซื้อ
+              </h3>
+              <p className="text-[10px] sm:text-[11px] text-white/40 font-medium mt-0.5 truncate">
+                เช็คย้อนหลังและรับรหัส
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* ── 4. Live Site Statistics (4 Cards) ── */}
+        <section className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4 lg:gap-5">
+          <div className="bg-[#0c0c12]/85 backdrop-blur-xl border border-white/[0.08] rounded-2xl sm:rounded-[24px] p-3.5 sm:p-5 flex items-center gap-3 sm:gap-4 glass-card">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 shrink-0">
+              <Users className="w-5 h-5 sm:w-6 sm:h-6" />
+            </div>
+            <div className="min-w-0">
+              <div className="text-base sm:text-xl lg:text-2xl font-black text-white font-mono tracking-tight truncate">
+                {totalMembers.toLocaleString()}+
+              </div>
+              <div className="text-[10px] sm:text-xs text-white/50 font-medium leading-tight truncate">สมาชิกในระบบ</div>
+            </div>
+          </div>
+
+          <div className="bg-[#0c0c12]/85 backdrop-blur-xl border border-white/[0.08] rounded-2xl sm:rounded-[24px] p-3.5 sm:p-5 flex items-center gap-3 sm:gap-4 glass-card">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 shrink-0">
+              <Package className="w-5 h-5 sm:w-6 sm:h-6" />
+            </div>
+            <div className="min-w-0">
+              <div className="text-base sm:text-xl lg:text-2xl font-black text-white font-mono tracking-tight truncate">
+                {totalStock.toLocaleString()}+
+              </div>
+              <div className="text-[10px] sm:text-xs text-white/50 font-medium leading-tight truncate">สินค้าพร้อมส่ง</div>
+            </div>
+          </div>
+
+          <div className="bg-[#0c0c12]/85 backdrop-blur-xl border border-white/[0.08] rounded-2xl sm:rounded-[24px] p-3.5 sm:p-5 flex items-center gap-3 sm:gap-4 glass-card">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 shrink-0">
+              <CheckCircle2 className="w-5 h-5 sm:w-6 sm:h-6" />
+            </div>
+            <div className="min-w-0">
+              <div className="text-base sm:text-xl lg:text-2xl font-black text-white font-mono tracking-tight truncate">
+                {totalSales.toLocaleString()}+
+              </div>
+              <div className="text-[10px] sm:text-xs text-white/50 font-medium leading-tight truncate">จัดส่งสำเร็จแล้ว</div>
+            </div>
+          </div>
+
+          <div className="bg-[#0c0c12]/85 backdrop-blur-xl border border-white/[0.08] rounded-2xl sm:rounded-[24px] p-3.5 sm:p-5 flex items-center gap-3 sm:gap-4 glass-card">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 shrink-0">
+              <Zap className="w-5 h-5 sm:w-6 sm:h-6" />
+            </div>
+            <div className="min-w-0">
+              <div className="text-base sm:text-xl lg:text-2xl font-black text-white font-mono tracking-tight">
+                24 / 7
+              </div>
+              <div className="text-[10px] sm:text-xs text-white/50 font-medium leading-tight truncate">บริการตลอดวัน</div>
+            </div>
+          </div>
+        </section>
+
+        {/* ── 5. Recommended Categories Showcase ── */}
+        <section className="space-y-4 sm:space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 sm:gap-4">
+            <div>
+              <div className="inline-flex items-center gap-1.5 sm:gap-2 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-1.5 sm:mb-2">
+                <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                <span>Store Categories</span>
+              </div>
+              <h2 className="text-lg sm:text-2xl lg:text-3xl font-black text-white tracking-tight">
+                หมวดหมู่สินค้าแนะนำ
+              </h2>
+              <p className="text-[11px] sm:text-xs md:text-sm text-white/50 font-medium mt-0.5">
+                เลือกชมสินค้าตามหมวดหมู่เกมที่คุณต้องการ
+              </p>
+            </div>
+
+            <button
+              onClick={() => {
+                setActiveView("categories");
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }}
+              className="inline-flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm font-bold text-white/70 hover:text-white bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.1] px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-full transition-all active:scale-95 cursor-pointer self-start sm:self-auto shrink-0"
+            >
+              <span>ดูหมวดหมู่ทั้งหมด</span>
+              <ChevronRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-5 lg:gap-6">
+            {/* View all categories card */}
+            <CategoryCard
+              title="ดูสินค้าทั้งหมด"
+              label="ทุกหมวดหมู่"
+              itemCountDesc={`ทั้งหมด ${getProductCountText("all")}`}
+              priceRangeStr={getCategoryPriceInfo("all") || undefined}
+              bgImage={banners[0]}
+              index={0}
+              onClick={() => onSelectCategory("all")}
+              accentColor="#3b82f6"
+              glowColor="rgba(59,130,246,0.15)"
+              gradientFrom="#0c0c12"
+            />
+
+            {/* Top categories */}
+            {safeCategories.slice(0, 5).map((c, i) => (
+              <CategoryCard
+                key={c.id || c.name || `category-${i}`}
+                title={c.title}
+                label={c.subtitle || "หมวดหมู่"}
+                itemCountDesc={`${getProductCountText(c)}`}
+                priceRangeStr={getCategoryPriceInfo(c) || undefined}
+                bgImage={c.bannerUrl || undefined}
+                index={i + 1}
+                onClick={() => onSelectCategory(c.id || c.name || c.title)}
+                accentColor="#3b82f6"
+                glowColor="rgba(59,130,246,0.15)"
+                gradientFrom="#0c0c12"
+              />
+            ))}
+          </div>
+        </section>
+
+        {/* ── 6. Products Catalog & Live Filter Section ── */}
+        <section className="space-y-4 sm:space-y-6 pt-2">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 sm:gap-4">
+            <div>
+              <div className="inline-flex items-center gap-1.5 sm:gap-2 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full bg-orange-500/10 border border-orange-500/20 text-orange-400 text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-1.5 sm:mb-2">
+                <Flame className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                <span>In Stock & Ready</span>
+              </div>
+              <h2 className="text-lg sm:text-2xl lg:text-3xl font-black text-white tracking-tight">
+                สินค้าพร้อมจัดส่งทันที
+              </h2>
+              <p className="text-[11px] sm:text-xs md:text-sm text-white/50 font-medium mt-0.5">
+                ระบบส่งมอบรหัสอัตโนมัติ 24 ชม. รวดเร็วและปลอดภัย 100%
+              </p>
+            </div>
+
+            {/* Quick search input */}
+            <div className="relative w-full sm:w-64 md:w-72 shrink-0">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="ค้นหาชื่อสินค้า..."
+                className="w-full bg-[#0c0c12]/80 border border-white/[0.08] focus:border-blue-500/50 rounded-full pl-9 sm:pl-10 pr-4 py-1.5 sm:py-2 text-xs sm:text-sm text-white placeholder:text-white/30 focus:outline-none transition-all"
+              />
+            </div>
+          </div>
+
+          {/* Category Filter Pills */}
+          <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-1 scrollbar-none no-scrollbar touch-pan-x -mx-1 px-1">
+            <button
+              onClick={() => setSelectedCategoryTab("all")}
+              className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs font-bold transition-all whitespace-nowrap cursor-pointer shrink-0 ${
+                selectedCategoryTab === "all"
+                  ? "bg-white text-black shadow-lg shadow-white/20"
+                  : "bg-white/[0.04] text-white/70 hover:text-white hover:bg-white/[0.08] border border-white/[0.08]"
+              }`}
+            >
+              ทั้งหมด ({safeProducts.length})
+            </button>
+
+            {safeCategories.map((cat) => {
+              const catCount = safeProducts.filter(
+                (p) =>
+                  p.category === cat.id ||
+                  p.category === cat.name ||
+                  p.category === cat.title
+              ).length;
+              return (
+                <button
+                  key={cat.id}
+                  onClick={() => setSelectedCategoryTab(cat.id || cat.name || cat.title)}
+                  className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs font-bold transition-all whitespace-nowrap cursor-pointer shrink-0 ${
+                    selectedCategoryTab === cat.id ||
+                    selectedCategoryTab === cat.name ||
+                    selectedCategoryTab === cat.title
+                      ? "bg-white text-black shadow-lg shadow-white/20"
+                      : "bg-white/[0.04] text-white/70 hover:text-white hover:bg-white/[0.08] border border-white/[0.08]"
+                  }`}
+                >
+                  {cat.title} ({catCount})
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Product Grid */}
+          {filteredProducts.length === 0 ? (
+            <div className="bg-[#0c0c12]/85 border border-white/[0.08] rounded-2xl sm:rounded-[32px] p-10 sm:p-16 text-center glass-card">
+              <div className="mb-3 sm:mb-4 flex justify-center">
+                <Package className="w-10 h-10 sm:w-14 sm:h-14 text-white/20" />
+              </div>
+              <h3 className="text-base sm:text-lg font-black text-white">ไม่พบสินค้าที่คุณค้นหา</h3>
+              <p className="text-white/40 text-xs sm:text-sm mt-1 font-medium">
+                ลองค้นหาด้วยคำอื่น หรือเลือกหมวดหมู่อื่นเพื่อดูสินค้า
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-4 lg:gap-5">
+              {filteredProducts.slice(0, 16).map((product, i) => {
+                const discount =
+                  product.originalPrice && product.price < product.originalPrice
+                    ? Math.round(
+                        ((product.originalPrice - product.price) / product.originalPrice) * 100
+                      )
+                    : null;
+                const isHot =
+                  product.price > 100 || (discount !== null && discount >= 20) || product.stock > 0;
+
+                return (
+                  <motion.div
+                    key={product.id}
+                    initial={{ opacity: 0, y: 15 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{
+                      duration: 0.35,
+                      delay: Math.min(i, 8) * 0.04,
+                      ease: [0.16, 1, 0.3, 1],
+                    }}
+                    whileHover={{ y: -4, transition: { duration: 0.2 } }}
+                    className="group relative bg-[#0c0c12]/85 backdrop-blur-xl border border-white/[0.08] rounded-2xl sm:rounded-[24px] overflow-hidden hover:border-white/25 transition-all duration-300 flex flex-col shadow-xl shadow-black/40 glass-card glass-reflection"
+                  >
+                    {/* Prismatic Top Edge Highlight */}
+                    <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent z-20 pointer-events-none" />
+
+                    {/* Image Area */}
+                    <div className="relative aspect-square w-full bg-[#121218] overflow-hidden shrink-0">
+                      {product.imageUrl && product.imageUrl.trim() !== "" ? (
+                        <img
+                          loading="lazy"
+                          src={product.imageUrl}
+                          alt={product.name}
+                          className="w-full h-full object-cover group-hover:scale-108 transition-transform duration-700"
+                          onError={(e) => {
+                            e.currentTarget.style.display = "none";
+                          }}
+                          referrerPolicy="no-referrer"
+                        />
+                      ) : null}
+                      <div
+                        className="w-full h-full flex flex-col items-center justify-center opacity-85"
+                        style={{
+                          display:
+                            product.imageUrl && product.imageUrl.trim() !== "" ? "none" : "flex",
+                          background: generateGradient(product.name || product.id),
+                        }}
+                      >
+                        <span className="text-3xl sm:text-4xl font-black text-white mix-blend-overlay opacity-65">
+                          {(product.name || "P")[0].toUpperCase()}
+                        </span>
+                        <span className="text-[9px] sm:text-[10px] font-bold text-white/50 uppercase tracking-widest mt-1">
+                          {product.category || "DEV"}
+                        </span>
+                      </div>
+
+                      {isHot && (
+                        <div className="absolute top-0 right-0 overflow-hidden w-16 h-16 sm:w-20 sm:h-20 pointer-events-none z-10">
+                          <div className="absolute top-2.5 sm:top-3 -right-6 bg-gradient-to-r from-red-600 to-orange-500 text-white text-[8px] sm:text-[9px] font-black uppercase py-0.5 sm:py-1 w-20 sm:w-24 text-center transform rotate-45 shadow-md border-b border-white/10">
+                            Best Seller
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="absolute inset-0 bg-gradient-to-t from-[#0c0c12] via-transparent to-transparent opacity-85" />
+
+                      {discount !== null && (
+                        <div className="absolute top-2 left-2 sm:top-3 sm:left-3 bg-red-600 text-white text-[9px] sm:text-[10px] font-black px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full shadow-lg z-10 border border-red-500/30">
+                          -{discount}%
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Content Area */}
+                    <div className="p-3 sm:p-4.5 flex flex-col flex-1 bg-[#0c0c12]/60">
+                      <h3 className="text-xs sm:text-sm font-black text-white leading-snug line-clamp-1 mb-1.5 sm:mb-2 group-hover:text-blue-400 transition-colors">
+                        {product.name}
+                      </h3>
+
+                      <span className="text-[9px] sm:text-[10px] font-bold text-white/35 uppercase tracking-wider block mb-1">
+                        ราคาสินค้า
+                      </span>
+
+                      <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-2.5 sm:mb-3.5">
+                        {product.originalPrice && product.price < product.originalPrice ? (
+                          <span className="text-[10px] sm:text-xs text-red-500/80 line-through font-mono font-bold">
+                            ฿{product.originalPrice.toLocaleString()}
+                          </span>
+                        ) : null}
+
+                        <span className="text-xs sm:text-base font-black text-amber-400 tracking-tight font-mono">
+                          ฿{(product.price || 0).toLocaleString()}
+                        </span>
+
+                        {product.stock > 0 ? (
+                          <span className="ml-auto bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[8px] sm:text-[10px] font-black px-1.5 py-0.5 sm:px-2.5 sm:py-1 rounded-full leading-none select-none">
+                            พร้อมส่ง
+                          </span>
+                        ) : (
+                          <span className="ml-auto bg-red-500/10 text-red-400 border border-red-500/20 text-[8px] sm:text-[10px] font-black px-1.5 py-0.5 sm:px-2.5 sm:py-1 rounded-full leading-none select-none">
+                            หมด
+                          </span>
+                        )}
+                      </div>
+
+                      {product.stock <= 0 ? (
+                        <button className="w-full bg-red-600/10 text-red-400 border border-red-500/20 py-2 sm:py-2.5 rounded-full text-[11px] sm:text-xs font-black flex items-center justify-center gap-1.5 cursor-default mt-auto">
+                          <Package className="w-3.5 h-3.5" /> สินค้าหมด
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => onProductClick(product.id)}
+                          className="w-full flex items-center justify-center gap-1.5 sm:gap-2 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white py-2 sm:py-2.5 rounded-full text-[11px] sm:text-xs font-black transition-all duration-200 mt-auto shadow-lg shadow-blue-600/25 hover:shadow-blue-500/40 active:scale-95 cursor-pointer"
+                        >
+                          <ShoppingCart className="w-3.5 h-3.5" />
+                          สั่งซื้อสินค้า
+                        </button>
+                      )}
+
+                      <div className="mt-2 sm:mt-3 py-1 rounded-full bg-white/[0.03] border border-white/[0.06] flex items-center justify-center gap-1.5 text-[8px] sm:text-[10px] text-white/40 font-black uppercase tracking-widest leading-none">
+                        <Package className="w-3 h-3 text-white/20 shrink-0" />
+                        <span className="truncate">
+                          คงเหลือ{" "}
+                          <span className="text-white/80 font-mono font-bold">
+                            {product.stock >= 999999
+                              ? "ไม่จำกัด"
+                              : product.stock.toLocaleString()}
+                          </span>{" "}
+                          ชิ้น
+                        </span>
+                      </div>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* View all products button */}
+          {filteredProducts.length > 16 && (
+            <div className="pt-4 sm:pt-6 flex justify-center">
               <button
-                className="text-xs text-white/60 hover:text-white transition-all flex items-center gap-1.5 font-semibold rounded-full px-3.5 py-1.5 bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08]"
-                onClick={() => setActiveView("categories")}
+                onClick={() => {
+                  setActiveView("categories");
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }}
+                className="px-6 sm:px-8 py-3 sm:py-3.5 bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.1] text-white font-bold rounded-full transition-all active:scale-95 cursor-pointer text-[11px] sm:text-xs uppercase tracking-wider flex items-center gap-2 shadow-lg shadow-black/50"
               >
-                ดูทั้งหมด <ChevronRight className="w-3.5 h-3.5" />
+                <span>ดูสินค้าทั้งหมดในร้าน ({safeProducts.length} รายการ)</span>
+                <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               </button>
-            </motion.div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {categories.slice(0, 4).map((cat, idx) => (
-                <CategoryChip key={cat.id} cat={cat} products={products} onClick={() => onSelectCategory(cat.id)} delay={idx * 0.1} />
+            </div>
+          )}
+        </section>
+
+        {/* ── 7. Recent Orders Social Proof Feed (if available) ── */}
+        {purchaseHistory && purchaseHistory.length > 0 && (
+          <section className="p-3.5 sm:p-6 rounded-2xl sm:rounded-[28px] bg-[#0c0c12]/80 border border-white/[0.08] backdrop-blur-xl space-y-3 glass-card">
+            <div className="flex items-center gap-2 text-[11px] sm:text-xs font-bold uppercase tracking-wider text-emerald-400">
+              <Activity className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-400 animate-pulse" />
+              <span>รายการสั่งซื้อล่าสุดในระบบ</span>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-3">
+              {purchaseHistory.slice(0, 3).map((item, idx) => (
+                <div
+                  key={item.id || idx}
+                  className="flex items-center justify-between p-2.5 sm:p-3 rounded-xl sm:rounded-2xl bg-white/[0.02] border border-white/[0.05] text-xs"
+                >
+                  <div className="flex items-center gap-2 sm:gap-2.5 overflow-hidden">
+                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 shrink-0">
+                      <CheckCircle2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                    </div>
+                    <div className="overflow-hidden min-w-0">
+                      <div className="text-white font-bold truncate text-[11px] sm:text-xs">
+                        {item.productName || item.title || "ไอดีเกมพรีเมียม"}
+                      </div>
+                      <div className="text-white/40 text-[9px] sm:text-[10px] truncate">
+                        {item.date || item.createdAt || "เมื่อสักครู่"}
+                      </div>
+                    </div>
+                  </div>
+                  <span className="font-mono font-bold text-amber-400 shrink-0 ml-2 text-xs">
+                    ฿{Number(item.price || item.total || 0).toLocaleString()}
+                  </span>
+                </div>
               ))}
             </div>
           </section>
         )}
 
-        {/* ── Divider Strip ── */}
-        <motion.div
-          initial={{ opacity: 0, scaleX: 0 }}
-          whileInView={{ opacity: 1, scaleX: 1 }}
-          viewport={{ once: true, margin: "-20px" }}
-          transition={{ duration: 0.7 }}
-          className="w-full h-2 rounded-full bg-gradient-to-r from-emerald-500/0 via-emerald-500/20 to-indigo-500/0 mb-10"
-        />
-
-        {/* ── Latest Purchases ── */}
-        <section className="mb-10">
-          <motion.div
-            initial={{ opacity: 0, x: -30 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true, margin: "-20px" }}
-            transition={{ duration: 0.5 }}
-            className="flex items-center gap-2 mb-4"
-          >
-             <History className="w-5 h-5 text-indigo-400" />
-             <h2 className="text-base font-black text-white tracking-tight uppercase">รายการสั่งซื้อล่าสุด 10 รายการ</h2>
-          </motion.div>
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-20px" }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-            className="bg-[#0c0c0e]/90 backdrop-blur-md border border-white/[0.08] rounded-[32px] overflow-hidden p-2 sm:p-3 shadow-xl shadow-black/50"
-          >
-             <div className="max-h-64 overflow-y-auto no-scrollbar flex flex-col gap-1.5 p-1">
-               {latestPurchases.length === 0 ? (
-                 <div className="p-6 text-center text-white/40 text-sm font-medium flex flex-col items-center gap-2">
-                   <Package className="w-6 h-6 text-white/20" />
-                   ยังไม่มีรายการสั่งซื้อ
-                 </div>
-               ) : (
-                 latestPurchases.map((p, idx) => (
-                    <div key={p.dbId || idx} className="flex items-center justify-between p-3 rounded-2xl hover:bg-white/[0.04] transition-all">
-                      <div className="flex items-center gap-3 overflow-hidden pr-2">
-                        <div className="w-10 h-10 rounded-2xl shrink-0 bg-white/[0.04] border border-white/[0.06] flex items-center justify-center">
-                          <Package className="w-4 h-4 text-white/60" />
-                        </div>
-                        <div className="flex flex-col overflow-hidden">
-                          <span className="text-sm font-bold text-white truncate">{p.product_name}</span>
-                          <span className="text-xs text-white/40">{new Date(p.date).toLocaleString('th-TH')}</span>
-                        </div>
-                      </div>
-                      <div className="flex flex-col items-end shrink-0 gap-1">
-                        <span className="text-xs font-black text-neon-green px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">+{p.quantity} ชิ้น</span>
-                        <span className="text-[10px] text-white/40 uppercase font-mono font-bold tracking-widest">{p.price} THB</span>
-                      </div>
-                    </div>
-                 ))
-               )}
-             </div>
-          </motion.div>
-        </section>
-
-        {/* ── Divider Strip ── */}
-        <motion.div
-          initial={{ opacity: 0, scaleX: 0 }}
-          whileInView={{ opacity: 1, scaleX: 1 }}
-          viewport={{ once: true, margin: "-20px" }}
-          transition={{ duration: 0.7 }}
-          className="w-full h-2 rounded-full bg-gradient-to-r from-blue-500/0 via-blue-500/20 to-purple-500/0 mb-10"
-        />
-
-        {/* ── Products ── */}
-        <section>
-          <motion.div
-            initial={{ opacity: 0, x: -30 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true, margin: "-20px" }}
-            transition={{ duration: 0.5 }}
-            className="flex items-center justify-between mb-5"
-          >
-            <div className="flex items-center gap-2">
-              <Star className="w-5 h-5 text-neon-yellow fill-neon-yellow animate-pulse" />
-              <div>
-                <h2 className="text-base font-black text-white tracking-tight uppercase">สินค้าแนะนำ</h2>
-                <p className="text-xs text-white/30 mt-0.5">ของดี มีจำกัด รีบเป็นเจ้าของ</p>
-              </div>
-            </div>
-            <button
-              className="text-xs text-white/60 hover:text-white transition-all flex items-center gap-1.5 font-semibold rounded-full px-3.5 py-1.5 bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08]"
-              onClick={() => setActiveView("categories")}
-            >
-              ดูทั้งหมด <ChevronRight className="w-3.5 h-3.5" />
-            </button>
-          </motion.div>
-
-          {safeProducts.length === 0 ? (
-            <div className="text-center py-20 text-white/30 text-sm">
-              ยังไม่มีสินค้าในขณะนี้
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
-              {safeProducts.map((p, idx) => (
-                <ProductCard key={p.id} product={p} onClick={() => onProductClick(p.id)} delay={idx * 0.05} />
-              ))}
-            </div>
-          )}
-        </section>
-
       </div>
     </div>
   );
 };
+
+export default HomeView;

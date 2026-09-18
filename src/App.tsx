@@ -143,6 +143,9 @@ import { SearchView } from "./components/SearchView";
 import { UserNavMenu } from "./components/UserNavMenu";
 import { HeaderNavbar } from "./components/HeaderNavbar";
 import { MobileDrawer } from "./components/MobileDrawer";
+import { Aurora } from "./components/design/Aurora";
+import { GlassmorphismNav } from "./components/design/GlassmorphismNav";
+import { Footer as DesignFooter } from "./components/design/Footer";
 
 const AdminDashboard = lazy(() =>
   import("./components/AdminDashboard").then((module) => ({
@@ -918,8 +921,11 @@ function AppContent() {
           if (currentRequestId !== fetchRequestId.current) return { data: null, error: 'stale' };
           const status = e.response?.status;
           const errorMsg = e.response?.data?.error || e.message;
-          if (status !== 401 && status !== 403 && status !== 404) {
+          if (status !== 401 && status !== 403 && status !== 404 && url !== "/api/logs-system") {
              console.error(`Fetch ERROR for ${url}:`, errorMsg);
+          } else if (url === "/api/logs-system") {
+             console.warn(`Non-critical fallback for ${url}`);
+             return { data: { categories: [], items: [], isVip: false }, error: null };
           }
           return { data: null, error: errorMsg };
         }
@@ -2155,42 +2161,26 @@ function AppContent() {
         </div>
       </aside>
 
-      {/* Top Header */}
-      <HeaderNavbar
-        activeView={activeView}
-        setActiveView={setActiveView}
-        user={user}
-        userPlan={userPlan}
-        isAdmin={isAdmin}
-        onLogout={handleLogout}
-        onOpenSearch={() => setActiveView("search")}
-        onOpenContact={() => setShowContactUs(true)}
-        isMobileMenuOpen={isMobileMenuOpen}
-        setIsMobileMenuOpen={setIsMobileMenuOpen}
-        isDesktopUserMenuOpen={isDesktopUserMenuOpen}
-        setIsDesktopUserMenuOpen={setIsDesktopUserMenuOpen}
-        isUserMenuOpen={isUserMenuOpen}
-        setIsUserMenuOpen={setIsUserMenuOpen}
-        settingsImport={settingsImport}
-        historyImport={historyImport}
-      />
+      {/* Target Design Aurora Ambient Glow */}
+      <div className="fixed inset-0 w-full h-full pointer-events-none z-0 overflow-hidden">
+        <Aurora
+          colorStops={["#334155", "#475569", "#1e293b"]}
+          amplitude={1.2}
+          blend={0.6}
+          speed={0.7}
+        />
+      </div>
 
-      {/* Mobile Menu Dropdown Drawer */}
-      <MobileDrawer
-        isOpen={isMobileMenuOpen}
-        onClose={() => setIsMobileMenuOpen(false)}
+      {/* Floating Glassmorphism Navbar (Target Design) */}
+      <GlassmorphismNav
         activeView={activeView}
         setActiveView={setActiveView}
         user={user}
         userPlan={userPlan}
         isAdmin={isAdmin}
         onLogout={handleLogout}
-        onOpenContact={() => setShowContactUs(true)}
-        isUserMenuOpen={isUserMenuOpen}
-        setIsUserMenuOpen={setIsUserMenuOpen}
-        settingsImport={settingsImport}
-        historyImport={historyImport}
         onOpenSearch={() => setActiveView("search")}
+        onOpenContact={() => setShowContactUs(true)}
       />
 
       {/* Main Content Area */}
@@ -2217,7 +2207,7 @@ function AppContent() {
           </div>
         )}
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-0 sm:pt-2 pb-6 lg:pb-0 w-full flex-1 flex flex-col">
+        <div className="w-full flex-1 flex flex-col pt-20 sm:pt-24 lg:pt-28 pb-6">
           <Suspense
             fallback={
               <div className="flex-1 w-full flex items-center justify-center min-h-[50vh]">
@@ -2495,21 +2485,8 @@ function AppContent() {
           </Suspense>
         </div>
 
-        {/* Footer */}
-        <footer className="mt-auto pt-16 pb-8 border-t border-[#3B82F6]/10 relative overflow-hidden bg-card brut-card rounded-xl">
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-px from-transparent via-[#3B82F6]/50 to-transparent"></div>
-
-          <div className="max-w-7xl mx-auto px-6 md:px-12 w-full">
-            <div className="flex flex-col sm:flex-row justify-between items-center gap-4 text-xs text-muted-foreground">
-              <div className="flex items-center gap-2.5">
-                <DevLogo className="h-6 w-auto text-white/80" />
-                <span className="text-white/20">|</span>
-                <span className="text-zinc-400">ระบบร้านค้าดิจิทัลอัตโนมัติ 24 ชั่วโมง</span>
-              </div>
-              <p>© {new Date().getFullYear()} DEV — สงวนลิขสิทธิ์</p>
-            </div>
-          </div>
-        </footer>
+        {/* Footer (Target Design) */}
+        <DesignFooter setActiveView={setActiveView} siteSettings={siteSettings} />
 
         {/* Modals */}
         <AnimatePresence>

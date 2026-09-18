@@ -3053,59 +3053,74 @@ const diskUpload = multer({ dest: uploadDir });
   // --- Log Categories System Endpoints (Stored as JSON in settings for dynamic schema) ---
   let memoryLogSystemData = { categories: [], items: [] };
 
-  app.get('/api/logs-system', injectUser, async (req: any, res: any) => {
+  app.get('/api/logs-system', async (req: any, res: any) => {
     try {
-      let dbData;
+      let dbData: any = null;
       try {
-        const doc = await admin.firestore().collection('settings').doc('log_system_data').get();
-        if (doc.exists) {
-           const d = doc.data();
-           dbData = d?.data; 
+        if (admin && typeof admin.firestore === 'function') {
+          const doc = await admin.firestore().collection('settings').doc('log_system_data').get();
+          if (doc && doc.exists) {
+            const d = typeof doc.data === 'function' ? doc.data() : doc.data;
+            dbData = d?.data;
+            if (typeof dbData === 'string') {
+              try { dbData = JSON.parse(dbData); } catch (e) {}
+            }
+          }
         }
-      } catch (e) {}
+      } catch (e) {
+        // Fallback silently if DB read fails
+      }
 
-      let payload = dbData || memoryLogSystemData;
-      if (!payload || !payload.categories) payload = { categories: [], items: [] };
+      let rawPayload = dbData || memoryLogSystemData || { categories: [], items: [] };
+      if (typeof rawPayload === 'string') {
+        try { rawPayload = JSON.parse(rawPayload); } catch (e) { rawPayload = { categories: [], items: [] }; }
+      }
       
+      const safeCategories = Array.isArray(rawPayload?.categories) ? [...rawPayload.categories] : [];
+      const rawItems = Array.isArray(rawPayload?.items) ? [...rawPayload.items] : [];
+
       // Auto-filter based on user VIP status
       let isVip = false;
       if (req.isAdmin) {
-         isVip = true;
+        isVip = true;
       } else if (req.user) {
-         try {
-           const userDoc = await admin.firestore().collection('users').doc(req.user.uid).get();
-           if (userDoc.exists) {
-              const u = userDoc.data();
-              if (u && u.isPremium === true) isVip = true;
-              if (u && (u.role === 'admin' || u.role === 'Admin')) isVip = true;
-           }
-         } catch(e) {}
+        try {
+          const userId = req.user.uid || req.user.id;
+          if (userId && admin && typeof admin.firestore === 'function') {
+            const userDoc = await admin.firestore().collection('users').doc(userId).get();
+            if (userDoc && userDoc.exists) {
+              const u = typeof userDoc.data === 'function' ? userDoc.data() : userDoc.data;
+              if (u && (u.isPremium === true || u.isVip === true)) isVip = true;
+              if (u && typeof u.role === 'string' && (u.role.toLowerCase() === 'admin' || u.role.toLowerCase() === 'owner')) isVip = true;
+            }
+          }
+        } catch (e) {}
       }
 
-      // Hide content if user is not VIP and item type is premium or belongs to a premium category maybe?
-      if (!isVip) {
-         if (Array.isArray(payload.items)) {
-             payload.items = payload.items.map((item: any) => {
-                 if (item.type === 'premium') {
-                    return { ...item, attachments: [] }; // strip files
-                 }
-                 return item;
-             });
-         }
-      }
+      // Hide content if user is not VIP and item type is premium
+      const safeItems = rawItems
+        .map((item: any) => {
+          if (!item || typeof item !== 'object') return null;
+          if (!isVip && (item.type === 'premium' || item.isPremium)) {
+            return { ...item, attachments: [] }; // strip files for non-VIP
+          }
+          return { ...item };
+        })
+        .filter(Boolean);
 
-      res.json({ ...payload, isVip });
+      return res.json({ categories: safeCategories, items: safeItems, isVip });
     } catch (err: any) {
-      res.status(500).json({ error: String(err && err.message ? err.message : err) });
+      console.warn('Error in /api/logs-system endpoint:', err?.message || err);
+      return res.json({ categories: [], items: [], isVip: false });
     }
   });
 
   app.post('/api/logs-system', requireAdmin, async (req, res) => {
     try {
-      const data = req.body;
+      const data = req.body || { categories: [], items: [] };
       memoryLogSystemData = data;
       try {
-        if (admin.firestore()) {
+        if (admin && typeof admin.firestore === 'function') {
           await admin.firestore().collection('settings').doc('log_system_data').set({ data }, { merge: false });
         }
       } catch (e: any) {
