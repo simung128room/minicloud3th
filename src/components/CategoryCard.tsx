@@ -34,7 +34,7 @@ export const CategoryCard: React.FC<CategoryCardProps> = ({
       whileHover={{ y: -5, transition: { duration: 0.25 } }}
       whileTap={{ scale: 0.98 }}
       onClick={onClick}
-      className="relative group overflow-hidden rounded-[26px] border border-white/[0.08] bg-[#0c0c12]/85 backdrop-blur-xl hover:border-white/25 transition-all duration-300 flex flex-col cursor-pointer shadow-xl shadow-black/50 glass-card glass-reflection"
+      className="relative group overflow-hidden rounded-[32px] border border-white/[0.08] bg-[#0c0c12]/85 backdrop-blur-xl hover:border-white/25 transition-all duration-300 flex flex-col cursor-pointer shadow-xl shadow-black/50 glass-card glass-reflection"
     >
       {/* Prismatic Top Edge Highlight */}
       <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent z-20 pointer-events-none" />

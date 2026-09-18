@@ -119,13 +119,13 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({ selectedItem, setSel
               {!showSecret ? (
                 <button 
                   onClick={() => setShowSecret(true)}
-                  className="w-full py-3 bg-gradient-to-r from-blue-600/20 to-cyan-500/20 hover:from-blue-600/30 hover:to-cyan-500/30 text-blue-400 border border-blue-500/30 text-xs font-bold rounded-xl flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-98"
+                  className="w-full py-3.5 bg-gradient-to-r from-blue-600/20 to-cyan-500/20 hover:from-blue-600/30 hover:to-cyan-500/30 text-blue-400 border border-blue-500/30 text-xs font-bold rounded-full flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-98"
                 >
                   <Eye className="w-4 h-4" />
                   <span>คลิกเพื่อดูข้อมูลสินค้า / รหัสคีย์</span>
                 </button>
               ) : (
-                <div className="bg-[#08080c] border border-white/[0.08] p-4 text-xs sm:text-sm font-mono text-cyan-300 whitespace-pre-wrap max-h-48 overflow-y-auto w-full break-all rounded-xl select-all">
+                <div className="bg-[#08080c] border border-white/[0.08] p-4 text-xs sm:text-sm font-mono text-cyan-300 whitespace-pre-wrap max-h-48 overflow-y-auto w-full break-all rounded-2xl select-all">
                   {selectedItem.secretData}
                 </div>
               )}

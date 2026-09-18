@@ -2,11 +2,16 @@ import React, { useState, useEffect, useRef } from "react";
 import {
   Eye,
   EyeOff,
-  ArrowLeft,
   ChevronRight,
-  Check,
+  ShieldCheck,
+  X,
+  Lock,
+  User,
+  Mail,
+  Sparkles,
+  ArrowLeft,
 } from "lucide-react";
-import { motion, AnimatePresence } from "motion/react";
+import { motion, AnimatePresence, type Variants } from "motion/react";
 import Swal from "sweetalert2";
 import axios from "axios";
 import { supabase as auth } from "../lib/supabase";
@@ -21,6 +26,39 @@ interface AuthViewProps {
   setActiveView: (view: any) => void;
   siteSettings?: any;
 }
+
+const containerVariants: Variants = {
+  hidden: { opacity: 0, y: 15, scale: 0.98 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: {
+      duration: 0.35,
+      ease: [0.16, 1, 0.3, 1] as [number, number, number, number],
+      staggerChildren: 0.07,
+      delayChildren: 0.05,
+    },
+  },
+  exit: {
+    opacity: 0,
+    y: -10,
+    scale: 0.98,
+    transition: { duration: 0.2, ease: "easeInOut" },
+  },
+};
+
+const itemVariants: Variants = {
+  hidden: { opacity: 0, y: 12 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.3,
+      ease: [0.16, 1, 0.3, 1] as [number, number, number, number],
+    },
+  },
+};
 
 export const AuthView: React.FC<AuthViewProps> = React.memo(
   ({ initialMode, setActiveView, siteSettings }) => {
@@ -40,6 +78,7 @@ export const AuthView: React.FC<AuthViewProps> = React.memo(
     const [authLoading, setAuthLoading] = useState(false);
     const [rememberMe, setRememberMe] = useState(true);
     const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+    const [showTurnstileModal, setShowTurnstileModal] = useState(false);
 
     const usernameInputRef = useRef<HTMLInputElement>(null);
     const passwordInputRef = useRef<HTMLInputElement>(null);
@@ -79,15 +118,23 @@ export const AuthView: React.FC<AuthViewProps> = React.memo(
 
     const handleAuth = async (e: React.FormEvent) => {
       e.preventDefault();
-      if (TURNSTILE_SITE_KEY && !turnstileToken) {
+      if (
+        (authMode === "signup" || authMode === "forgot") &&
+        authPassword !== authConfirmPassword
+      ) {
         Swal.fire({
-          icon: "warning",
-          title: "โปรดยืนยันตัวตน",
-          text: "กรุณายืนยันการตรวจสอบระบบความปลอดภัย",
+          icon: "error",
+          title: "เกิดข้อผิดพลาด",
+          text: "รหัสผ่านและยืนยันรหัสผ่านไม่ตรงกัน",
           background: "#0c0d12",
           color: "#fff",
           confirmButtonColor: "#3b82f6",
         });
+        return;
+      }
+
+      if (TURNSTILE_SITE_KEY && !turnstileToken) {
+        setShowTurnstileModal(true);
         return;
       }
       await executeAuth(turnstileToken || "bypass");
@@ -225,7 +272,38 @@ export const AuthView: React.FC<AuthViewProps> = React.memo(
     };
 
     return (
-      <div className="min-h-[calc(100vh-64px)] w-full flex flex-col items-center justify-center p-4 sm:p-6 relative bg-[#09090b] text-zinc-100">
+      <div className="min-h-[calc(100vh-64px)] w-full flex flex-col items-center justify-center p-4 sm:p-8 relative text-zinc-100 overflow-hidden">
+        {/* Animated Background Ambience */}
+        <motion.div
+          animate={{
+            scale: [1, 1.15, 1],
+            opacity: [0.15, 0.25, 0.15],
+            x: [0, 15, 0],
+            y: [0, -20, 0],
+          }}
+          transition={{
+            duration: 12,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+          className="absolute -top-32 -left-32 w-96 h-96 bg-blue-600/20 rounded-full blur-3xl pointer-events-none"
+        />
+        <motion.div
+          animate={{
+            scale: [1, 1.2, 1],
+            opacity: [0.12, 0.22, 0.12],
+            x: [0, -20, 0],
+            y: [0, 25, 0],
+          }}
+          transition={{
+            duration: 14,
+            repeat: Infinity,
+            ease: "easeInOut",
+            delay: 1,
+          }}
+          className="absolute -bottom-32 -right-32 w-96 h-96 bg-indigo-600/20 rounded-full blur-3xl pointer-events-none"
+        />
+
         {/* Subtle geometric dot grid pattern */}
         <div
           className="absolute inset-0 opacity-[0.03] pointer-events-none"
@@ -235,45 +313,29 @@ export const AuthView: React.FC<AuthViewProps> = React.memo(
           }}
         />
 
-        {/* Top return bar */}
-        <div className="w-full max-w-[420px] mb-3 flex items-center justify-between z-10">
-          <button
-            type="button"
-            onClick={() => setActiveView("home")}
-            className="flex items-center gap-1.5 text-xs text-zinc-400 hover:text-white transition-colors cursor-pointer px-2 py-1 rounded-xl hover:bg-white/[0.04]"
-          >
-            <ArrowLeft className="w-3.5 h-3.5" />
-            <span>กลับสู่หน้าแรก</span>
-          </button>
-        </div>
-
-        {/* Auth Main Card */}
+        {/* Auth Main Area with Glass Card Glow */}
         <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.25, ease: "easeOut" }}
-          className="w-full max-w-[420px] bg-[#0c0d12]/95 border border-white/[0.08] relative z-10 rounded-[28px] p-7 sm:p-9 shadow-2xl shadow-black/80 backdrop-blur-xl"
+          initial={{ opacity: 0, y: 20, scale: 0.96 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+          className="w-full max-w-[440px] relative z-10 px-4 py-8 sm:p-9 bg-zinc-950/70 border border-white/[0.08] rounded-3xl backdrop-blur-xl shadow-2xl shadow-black/60"
         >
-          {/* Brand Header: Circular Emblem + Brand Name */}
-          <div
-            onClick={() => setActiveView("home")}
-            className="flex items-center gap-2.5 justify-center mb-6 cursor-pointer select-none group"
+          {/* Animated Brand Badge */}
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.4, delay: 0.1 }}
+            className="flex items-center justify-center mb-6"
           >
-            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-black via-zinc-950 to-blue-950/50 border border-white/20 flex items-center justify-center shadow-lg relative overflow-hidden group-hover:scale-105 transition-transform">
-              <div className="absolute inset-0 bg-blue-500/15 blur-sm rounded-full" />
-              {/* Modern 4-point star / diamond icon matching screenshot */}
-              <svg
-                className="w-4 h-4 text-blue-400 relative z-10 drop-shadow-[0_0_8px_rgba(96,165,250,0.6)]"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-              >
-                <path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2Z" />
-              </svg>
-            </div>
-            <span className="text-xl font-black tracking-widest text-white uppercase">
-              {siteName}
-            </span>
-          </div>
+            <motion.div
+              whileHover={{ scale: 1.05, rotate: 2 }}
+              whileTap={{ scale: 0.95 }}
+              className="px-3.5 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/25 text-blue-400 text-xs font-semibold tracking-wider uppercase flex items-center gap-1.5 shadow-sm"
+            >
+              <Sparkles className="w-3.5 h-3.5 animate-pulse" />
+              <span>{siteName} SECURE ACCESS</span>
+            </motion.div>
+          </motion.div>
 
           <AnimatePresence mode="wait">
             {/* ========================================================= */}
@@ -281,123 +343,152 @@ export const AuthView: React.FC<AuthViewProps> = React.memo(
             {/* ========================================================= */}
             {authMode === "login" && (
               <motion.div
-                key="login-mode"
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -6 }}
-                transition={{ duration: 0.18 }}
+                key={`login-mode-step-${loginStep}`}
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
               >
                 {/* Title & Subtitle */}
-                <div className="text-center mb-7">
-                  <h1 className="text-2xl sm:text-[26px] font-extrabold text-white tracking-tight mb-1">
-                    เพื่อใช้งาน
+                <motion.div variants={itemVariants} className="text-center mb-7">
+                  <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight mb-2">
+                    {loginStep === 1 ? "ยินดีต้อนรับกลับมา" : "ป้อนรหัสผ่านของคุณ"}
                   </h1>
-                  <p className="text-sm font-medium text-zinc-300">
-                    ลงชื่อเข้าใช้ {siteName}
+                  <p className="text-xs sm:text-sm font-medium text-zinc-400">
+                    {loginStep === 1
+                      ? `ลงชื่อเข้าใช้ระบบ ${siteName} เพื่อดำเนินการต่อ`
+                      : `ยืนยันการเข้าใช้งานบัญชี ${authUsername}`}
                   </p>
-                </div>
+                </motion.div>
 
                 {/* STEP 1: Enter Username */}
                 {loginStep === 1 && (
                   <form onSubmit={handleStep1Next} className="space-y-4">
-                    {/* Username Input with right arrow inside */}
-                    <div className="relative">
-                      <input
-                        ref={usernameInputRef}
-                        type="text"
-                        value={authUsername}
-                        onChange={(e) => setAuthUsername(e.target.value)}
-                        placeholder="ชื่อผู้ใช้"
-                        className="w-full h-13 pl-4 pr-13 bg-[#11131a] border border-white/[0.14] focus:border-white/40 focus:bg-[#141722] rounded-2xl text-sm text-white placeholder:text-zinc-500 outline-none transition-all duration-200"
-                        autoComplete="username"
-                        required
-                      />
-                      <button
-                        type="submit"
-                        title="ถัดไป"
-                        className="absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/[0.08] hover:bg-white/[0.16] active:scale-95 text-zinc-300 hover:text-white flex items-center justify-center transition-all duration-150 cursor-pointer"
-                      >
-                        <ChevronRight className="w-5 h-5" />
-                      </button>
-                    </div>
+                    {/* Username Input with Animated Glow */}
+                    <motion.div variants={itemVariants} className="space-y-1.5">
+                      <label className="block text-xs font-medium text-zinc-300 ml-1">
+                        ชื่อผู้ใช้ (Username)
+                      </label>
+                      <div className="relative group">
+                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 group-focus-within:text-blue-400 transition-colors pointer-events-none">
+                          <User className="w-4 h-4" />
+                        </div>
+                        <input
+                          ref={usernameInputRef}
+                          type="text"
+                          value={authUsername}
+                          onChange={(e) => setAuthUsername(e.target.value)}
+                          placeholder="กรอกชื่อผู้ใช้ของคุณ"
+                          className="w-full h-13 pl-11 pr-13 bg-[#11131a] border border-white/[0.14] focus:border-blue-500/80 focus:bg-[#141722] focus:ring-2 focus:ring-blue-500/20 rounded-2xl text-sm text-white placeholder:text-zinc-500 outline-none transition-all duration-200"
+                          autoComplete="username"
+                          required
+                        />
+                        <motion.button
+                          type="submit"
+                          title="ถัดไป"
+                          whileHover={{ scale: 1.08, x: 2 }}
+                          whileTap={{ scale: 0.92 }}
+                          className="absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-xl bg-blue-600 hover:bg-blue-500 text-white flex items-center justify-center transition-all duration-150 cursor-pointer shadow-md shadow-blue-500/30"
+                        >
+                          <ChevronRight className="w-4 h-4" />
+                        </motion.button>
+                      </div>
+                    </motion.div>
 
                     {/* Navigation Links below */}
-                    <div className="pt-2 space-y-2 text-left">
-                      <button
+                    <motion.div variants={itemVariants} className="pt-3 space-y-2 text-left border-t border-white/[0.06]">
+                      <motion.button
                         type="button"
+                        whileHover={{ x: 3 }}
                         onClick={() => setAuthMode("forgot")}
-                        className="text-[13px] text-[#6B94FA] hover:text-[#8cb0ff] transition-colors flex items-center gap-1 cursor-pointer"
+                        className="text-xs text-[#6B94FA] hover:text-[#8cb0ff] font-medium transition-all flex items-center gap-1 cursor-pointer"
                       >
                         <span>ลืมรหัสผ่านหรือไม่?</span>
                         <ChevronRight className="w-3.5 h-3.5" />
-                      </button>
-                      <button
+                      </motion.button>
+                      <motion.button
                         type="button"
+                        whileHover={{ x: 3 }}
                         onClick={() => {
                           setAuthMode("signup");
                           setLoginStep(1);
                         }}
-                        className="text-[13px] text-[#6B94FA] hover:text-[#8cb0ff] transition-colors flex items-center gap-1 cursor-pointer"
+                        className="text-xs text-[#6B94FA] hover:text-[#8cb0ff] font-medium transition-all flex items-center gap-1 cursor-pointer"
                       >
-                        <span>ไม่มีบัญชี {siteName} ใช่ไหม? สร้างบัญชี {siteName} ของคุณ</span>
+                        <span>ยังไม่มีบัญชี {siteName}? สร้างบัญชีใหม่</span>
                         <ChevronRight className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
+                      </motion.button>
+                    </motion.div>
                   </form>
                 )}
 
                 {/* STEP 2: Enter Password */}
                 {loginStep === 2 && (
-                  <form onSubmit={handleAuth} className="space-y-3.5">
+                  <form onSubmit={handleAuth} className="space-y-4">
                     {/* Username Display Row with 'แก้ไข' Button */}
-                    <div className="flex items-end justify-between px-1">
-                      <div>
-                        <div className="text-xs text-zinc-400 mb-0.5">
-                          ชื่อผู้ใช้
+                    <motion.div
+                      variants={itemVariants}
+                      className="flex items-center justify-between px-3 py-2 rounded-xl bg-white/[0.04] border border-white/[0.08]"
+                    >
+                      <div className="flex items-center gap-2">
+                        <div className="w-7 h-7 rounded-lg bg-blue-500/10 text-blue-400 flex items-center justify-center font-bold text-xs">
+                          {authUsername.charAt(0).toUpperCase()}
                         </div>
-                        <div className="text-sm font-semibold text-white tracking-wide">
-                          '{authUsername}'
+                        <div>
+                          <div className="text-[10px] text-zinc-400 leading-none">
+                            ผู้ใช้งาน
+                          </div>
+                          <div className="text-xs font-semibold text-white tracking-wide mt-0.5">
+                            {authUsername}
+                          </div>
                         </div>
                       </div>
                       <button
                         type="button"
-                        onClick={() => {
-                          setLoginStep(1);
-                        }}
-                        className="text-xs text-[#6B94FA] hover:text-[#8cb0ff] font-medium cursor-pointer transition-colors"
+                        onClick={() => setLoginStep(1)}
+                        className="text-xs text-blue-400 hover:text-blue-300 font-medium cursor-pointer transition-colors flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-white/[0.05]"
                       >
-                        แก้ไข
+                        <ArrowLeft className="w-3 h-3" />
+                        <span>แก้ไข</span>
                       </button>
-                    </div>
+                    </motion.div>
 
                     {/* Password Input */}
-                    <div className="relative">
-                      <input
-                        ref={passwordInputRef}
-                        type={showPassword ? "text" : "password"}
-                        value={authPassword}
-                        onChange={(e) => setAuthPassword(e.target.value)}
-                        placeholder="รหัสผ่าน"
-                        className="w-full h-13 pl-4 pr-12 bg-[#11131a] border border-white/[0.14] focus:border-white/40 focus:bg-[#141722] rounded-2xl text-sm text-white placeholder:text-zinc-500 outline-none transition-all duration-200"
-                        autoComplete="current-password"
-                        required
-                        minLength={6}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-200 transition-colors p-1"
-                      >
-                        {showPassword ? (
-                          <EyeOff className="w-4 h-4" />
-                        ) : (
-                          <Eye className="w-4 h-4" />
-                        )}
-                      </button>
-                    </div>
+                    <motion.div variants={itemVariants} className="space-y-1.5">
+                      <label className="block text-xs font-medium text-zinc-300 ml-1">
+                        รหัสผ่าน (Password)
+                      </label>
+                      <div className="relative group">
+                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 group-focus-within:text-blue-400 transition-colors pointer-events-none">
+                          <Lock className="w-4 h-4" />
+                        </div>
+                        <input
+                          ref={passwordInputRef}
+                          type={showPassword ? "text" : "password"}
+                          value={authPassword}
+                          onChange={(e) => setAuthPassword(e.target.value)}
+                          placeholder="กรอกรหัสผ่านของคุณ"
+                          className="w-full h-13 pl-11 pr-12 bg-[#11131a] border border-white/[0.14] focus:border-blue-500/80 focus:bg-[#141722] focus:ring-2 focus:ring-blue-500/20 rounded-2xl text-sm text-white placeholder:text-zinc-500 outline-none transition-all duration-200"
+                          autoComplete="current-password"
+                          required
+                          minLength={6}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-200 transition-colors p-1 cursor-pointer"
+                        >
+                          {showPassword ? (
+                            <EyeOff className="w-4 h-4" />
+                          ) : (
+                            <Eye className="w-4 h-4" />
+                          )}
+                        </button>
+                      </div>
+                    </motion.div>
 
                     {/* Remember me checkbox */}
-                    <div className="flex items-center gap-2 pt-0.5 px-0.5">
+                    <motion.div variants={itemVariants} className="flex items-center gap-2 pt-0.5 px-1">
                       <label className="flex items-center gap-2 cursor-pointer select-none text-xs text-zinc-300 hover:text-white">
                         <input
                           type="checkbox"
@@ -405,62 +496,54 @@ export const AuthView: React.FC<AuthViewProps> = React.memo(
                           onChange={(e) => setRememberMe(e.target.checked)}
                           className="w-4 h-4 rounded border-white/20 bg-[#11131a] text-blue-500 focus:ring-0 cursor-pointer accent-[#6B94FA]"
                         />
-                        <span>จดจำฉัน</span>
+                        <span>จดจำการเข้าสู่ระบบ</span>
                       </label>
-                    </div>
+                    </motion.div>
 
-                    {/* Turnstile Widget */}
-                    {TURNSTILE_SITE_KEY && (
-                      <div className="w-full flex items-center justify-center py-1">
-                        <div className="rounded-2xl overflow-hidden flex items-center justify-center transform scale-[0.85] origin-center">
-                          <Turnstile
-                            siteKey={TURNSTILE_SITE_KEY}
-                            options={{ theme: "dark", size: "normal" }}
-                            onSuccess={(token) => setTurnstileToken(token)}
-                            onExpire={() => setTurnstileToken(null)}
-                          />
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Soft Blue Submit Button */}
-                    <button
-                      type="submit"
-                      disabled={authLoading}
-                      className="w-full h-12 mt-2 rounded-2xl bg-[#6B94FA] hover:bg-[#5a86f5] active:scale-[0.99] text-white font-medium text-sm transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 shadow-md shadow-blue-500/20"
-                    >
-                      {authLoading ? (
-                        <>
-                          <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                          <span>กำลังตรวจสอบ...</span>
-                        </>
-                      ) : (
-                        <span>ลงชื่อเข้าใช้</span>
-                      )}
-                    </button>
+                    {/* Submit Button */}
+                    <motion.div variants={itemVariants}>
+                      <motion.button
+                        type="submit"
+                        disabled={authLoading}
+                        whileHover={{ scale: 1.015 }}
+                        whileTap={{ scale: 0.985 }}
+                        className="w-full h-12 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-medium text-sm transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 shadow-lg shadow-blue-500/25"
+                      >
+                        {authLoading ? (
+                          <>
+                            <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                            <span>กำลังตรวจสอบข้อมูล...</span>
+                          </>
+                        ) : (
+                          <span>เข้าสู่ระบบ</span>
+                        )}
+                      </motion.button>
+                    </motion.div>
 
                     {/* Navigation Links below */}
-                    <div className="pt-2 space-y-2 text-left">
-                      <button
+                    <motion.div variants={itemVariants} className="pt-3 space-y-2 text-left border-t border-white/[0.06]">
+                      <motion.button
                         type="button"
+                        whileHover={{ x: 3 }}
                         onClick={() => setAuthMode("forgot")}
-                        className="text-[13px] text-[#6B94FA] hover:text-[#8cb0ff] transition-colors flex items-center gap-1 cursor-pointer"
+                        className="text-xs text-[#6B94FA] hover:text-[#8cb0ff] transition-all flex items-center gap-1 cursor-pointer"
                       >
                         <span>ลืมรหัสผ่านหรือไม่?</span>
                         <ChevronRight className="w-3.5 h-3.5" />
-                      </button>
-                      <button
+                      </motion.button>
+                      <motion.button
                         type="button"
+                        whileHover={{ x: 3 }}
                         onClick={() => {
                           setAuthMode("signup");
                           setLoginStep(1);
                         }}
-                        className="text-[13px] text-[#6B94FA] hover:text-[#8cb0ff] transition-colors flex items-center gap-1 cursor-pointer"
+                        className="text-xs text-[#6B94FA] hover:text-[#8cb0ff] transition-all flex items-center gap-1 cursor-pointer"
                       >
-                        <span>ไม่มีบัญชี {siteName} ใช่ไหม? สร้างบัญชี {siteName} ของคุณ</span>
+                        <span>ยังไม่มีบัญชี {siteName}? สร้างบัญชีใหม่</span>
                         <ChevronRight className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
+                      </motion.button>
+                    </motion.div>
                   </form>
                 )}
               </motion.div>
@@ -472,142 +555,165 @@ export const AuthView: React.FC<AuthViewProps> = React.memo(
             {authMode === "signup" && (
               <motion.div
                 key="signup-mode"
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -6 }}
-                transition={{ duration: 0.18 }}
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
               >
                 {/* Title & Subtitle */}
-                <div className="text-center mb-6">
-                  <h1 className="text-2xl sm:text-[26px] font-extrabold text-white tracking-tight mb-1">
-                    สร้างบัญชี {siteName} ของคุณ
+                <motion.div variants={itemVariants} className="text-center mb-6">
+                  <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight mb-2">
+                    สร้างบัญชี {siteName}
                   </h1>
-                  <p className="text-sm font-medium text-zinc-300">
-                    สมัครสมาชิกเพื่อเริ่มใช้งาน
+                  <p className="text-xs sm:text-sm font-medium text-zinc-400">
+                    กรอกข้อมูลด้านล่างเพื่อเริ่มใช้งานระบบ
                   </p>
-                </div>
+                </motion.div>
 
                 <form onSubmit={handleAuth} className="space-y-3.5">
                   {/* Field 1: ชื่อผู้ใช้ */}
-                  <div>
-                    <input
-                      type="text"
-                      value={authUsername}
-                      onChange={(e) => setAuthUsername(e.target.value)}
-                      placeholder="ชื่อผู้ใช้"
-                      className="w-full h-12.5 pl-4 pr-4 bg-[#11131a] border border-white/[0.14] focus:border-white/40 focus:bg-[#141722] rounded-2xl text-sm text-white placeholder:text-zinc-500 outline-none transition-all duration-200"
-                      autoComplete="username"
-                      required
-                    />
-                  </div>
+                  <motion.div variants={itemVariants} className="space-y-1">
+                    <label className="block text-xs font-medium text-zinc-300 ml-1">
+                      ชื่อผู้ใช้ (Username)
+                    </label>
+                    <div className="relative group">
+                      <div className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 group-focus-within:text-blue-400 transition-colors pointer-events-none">
+                        <User className="w-4 h-4" />
+                      </div>
+                      <input
+                        type="text"
+                        value={authUsername}
+                        onChange={(e) => setAuthUsername(e.target.value)}
+                        placeholder="ตั้งชื่อผู้ใช้ของคุณ"
+                        className="w-full h-12 pl-11 pr-4 bg-[#11131a] border border-white/[0.14] focus:border-blue-500/80 focus:bg-[#141722] focus:ring-2 focus:ring-blue-500/20 rounded-2xl text-sm text-white placeholder:text-zinc-500 outline-none transition-all duration-200"
+                        autoComplete="username"
+                        required
+                      />
+                    </div>
+                  </motion.div>
 
                   {/* Field 2: อีเมล */}
-                  <div>
-                    <input
-                      type="email"
-                      value={authEmail}
-                      onChange={(e) => setAuthEmail(e.target.value)}
-                      placeholder="อีเมล"
-                      className="w-full h-12.5 pl-4 pr-4 bg-[#11131a] border border-white/[0.14] focus:border-white/40 focus:bg-[#141722] rounded-2xl text-sm text-white placeholder:text-zinc-500 outline-none transition-all duration-200"
-                      autoComplete="email"
-                      required
-                    />
-                  </div>
+                  <motion.div variants={itemVariants} className="space-y-1">
+                    <label className="block text-xs font-medium text-zinc-300 ml-1">
+                      อีเมล (Email)
+                    </label>
+                    <div className="relative group">
+                      <div className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 group-focus-within:text-blue-400 transition-colors pointer-events-none">
+                        <Mail className="w-4 h-4" />
+                      </div>
+                      <input
+                        type="email"
+                        value={authEmail}
+                        onChange={(e) => setAuthEmail(e.target.value)}
+                        placeholder="example@domain.com"
+                        className="w-full h-12 pl-11 pr-4 bg-[#11131a] border border-white/[0.14] focus:border-blue-500/80 focus:bg-[#141722] focus:ring-2 focus:ring-blue-500/20 rounded-2xl text-sm text-white placeholder:text-zinc-500 outline-none transition-all duration-200"
+                        autoComplete="email"
+                        required
+                      />
+                    </div>
+                  </motion.div>
 
-                  {/* Field 3: รหัสผ่าน (อย่างน้อย 6 ตัวอักษร) */}
-                  <div className="relative">
-                    <input
-                      type={showPassword ? "text" : "password"}
-                      value={authPassword}
-                      onChange={(e) => setAuthPassword(e.target.value)}
-                      placeholder="รหัสผ่าน (อย่างน้อย 6 ตัวอักษร)"
-                      className="w-full h-12.5 pl-4 pr-11 bg-[#11131a] border border-white/[0.14] focus:border-white/40 focus:bg-[#141722] rounded-2xl text-sm text-white placeholder:text-zinc-500 outline-none transition-all duration-200"
-                      autoComplete="new-password"
-                      required
-                      minLength={6}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-200 transition-colors p-1"
-                    >
-                      {showPassword ? (
-                        <EyeOff className="w-4 h-4" />
-                      ) : (
-                        <Eye className="w-4 h-4" />
-                      )}
-                    </button>
-                  </div>
+                  {/* Field 3: รหัสผ่าน */}
+                  <motion.div variants={itemVariants} className="space-y-1">
+                    <label className="block text-xs font-medium text-zinc-300 ml-1">
+                      รหัสผ่าน (อย่างน้อย 6 ตัวอักษร)
+                    </label>
+                    <div className="relative group">
+                      <div className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 group-focus-within:text-blue-400 transition-colors pointer-events-none">
+                        <Lock className="w-4 h-4" />
+                      </div>
+                      <input
+                        type={showPassword ? "text" : "password"}
+                        value={authPassword}
+                        onChange={(e) => setAuthPassword(e.target.value)}
+                        placeholder="••••••••"
+                        className="w-full h-12 pl-11 pr-11 bg-[#11131a] border border-white/[0.14] focus:border-blue-500/80 focus:bg-[#141722] focus:ring-2 focus:ring-blue-500/20 rounded-2xl text-sm text-white placeholder:text-zinc-500 outline-none transition-all duration-200"
+                        autoComplete="new-password"
+                        required
+                        minLength={6}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-200 transition-colors p-1 cursor-pointer"
+                      >
+                        {showPassword ? (
+                          <EyeOff className="w-4 h-4" />
+                        ) : (
+                          <Eye className="w-4 h-4" />
+                        )}
+                      </button>
+                    </div>
+                  </motion.div>
 
                   {/* Field 4: ยืนยันรหัสผ่าน */}
-                  <div className="relative">
-                    <input
-                      type={showConfirmPassword ? "text" : "password"}
-                      value={authConfirmPassword}
-                      onChange={(e) => setAuthConfirmPassword(e.target.value)}
-                      placeholder="ยืนยันรหัสผ่าน"
-                      className="w-full h-12.5 pl-4 pr-11 bg-[#11131a] border border-white/[0.14] focus:border-white/40 focus:bg-[#141722] rounded-2xl text-sm text-white placeholder:text-zinc-500 outline-none transition-all duration-200"
-                      autoComplete="new-password"
-                      required
-                      minLength={6}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-200 transition-colors p-1"
-                    >
-                      {showConfirmPassword ? (
-                        <EyeOff className="w-4 h-4" />
-                      ) : (
-                        <Eye className="w-4 h-4" />
-                      )}
-                    </button>
-                  </div>
-
-                  {/* Turnstile Widget */}
-                  {TURNSTILE_SITE_KEY && (
-                    <div className="w-full flex items-center justify-center py-1">
-                      <div className="rounded-2xl overflow-hidden flex items-center justify-center transform scale-[0.85] origin-center">
-                        <Turnstile
-                          siteKey={TURNSTILE_SITE_KEY}
-                          options={{ theme: "dark", size: "normal" }}
-                          onSuccess={(token) => setTurnstileToken(token)}
-                          onExpire={() => setTurnstileToken(null)}
-                        />
+                  <motion.div variants={itemVariants} className="space-y-1">
+                    <label className="block text-xs font-medium text-zinc-300 ml-1">
+                      ยืนยันรหัสผ่าน
+                    </label>
+                    <div className="relative group">
+                      <div className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 group-focus-within:text-blue-400 transition-colors pointer-events-none">
+                        <Lock className="w-4 h-4" />
                       </div>
+                      <input
+                        type={showConfirmPassword ? "text" : "password"}
+                        value={authConfirmPassword}
+                        onChange={(e) => setAuthConfirmPassword(e.target.value)}
+                        placeholder="••••••••"
+                        className="w-full h-12 pl-11 pr-11 bg-[#11131a] border border-white/[0.14] focus:border-blue-500/80 focus:bg-[#141722] focus:ring-2 focus:ring-blue-500/20 rounded-2xl text-sm text-white placeholder:text-zinc-500 outline-none transition-all duration-200"
+                        autoComplete="new-password"
+                        required
+                        minLength={6}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-200 transition-colors p-1 cursor-pointer"
+                      >
+                        {showConfirmPassword ? (
+                          <EyeOff className="w-4 h-4" />
+                        ) : (
+                          <Eye className="w-4 h-4" />
+                        )}
+                      </button>
                     </div>
-                  )}
+                  </motion.div>
 
-                  {/* Soft Blue Submit Button */}
-                  <button
-                    type="submit"
-                    disabled={authLoading}
-                    className="w-full h-12 mt-1 rounded-2xl bg-[#6B94FA] hover:bg-[#5a86f5] active:scale-[0.99] text-white font-medium text-sm transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 shadow-md shadow-blue-500/20"
-                  >
-                    {authLoading ? (
-                      <>
-                        <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        <span>กำลังดำเนินการ...</span>
-                      </>
-                    ) : (
-                      <span>สร้างบัญชี</span>
-                    )}
-                  </button>
+                  {/* Submit Button */}
+                  <motion.div variants={itemVariants} className="pt-2">
+                    <motion.button
+                      type="submit"
+                      disabled={authLoading}
+                      whileHover={{ scale: 1.015 }}
+                      whileTap={{ scale: 0.985 }}
+                      className="w-full h-12 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-medium text-sm transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 shadow-lg shadow-blue-500/25"
+                    >
+                      {authLoading ? (
+                        <>
+                          <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                          <span>กำลังบันทึกข้อมูล...</span>
+                        </>
+                      ) : (
+                        <span>สร้างบัญชีผู้ใช้</span>
+                      )}
+                    </motion.button>
+                  </motion.div>
 
-                  {/* Bottom Link: มีบัญชีแล้ว? */}
-                  <div className="pt-2 text-left">
-                    <button
+                  {/* Bottom Link */}
+                  <motion.div variants={itemVariants} className="pt-3 text-left border-t border-white/[0.06]">
+                    <motion.button
                       type="button"
+                      whileHover={{ x: 3 }}
                       onClick={() => {
                         setAuthMode("login");
                         setLoginStep(1);
                       }}
-                      className="text-[13px] text-[#6B94FA] hover:text-[#8cb0ff] transition-colors flex items-center gap-1 cursor-pointer"
+                      className="text-xs text-[#6B94FA] hover:text-[#8cb0ff] transition-all flex items-center gap-1 cursor-pointer"
                     >
                       <span>มีบัญชี {siteName} อยู่แล้ว? ลงชื่อเข้าใช้</span>
                       <ChevronRight className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
+                    </motion.button>
+                  </motion.div>
                 </form>
               </motion.div>
             )}
@@ -618,147 +724,227 @@ export const AuthView: React.FC<AuthViewProps> = React.memo(
             {authMode === "forgot" && (
               <motion.div
                 key="forgot-mode"
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -6 }}
-                transition={{ duration: 0.18 }}
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
               >
                 {/* Title & Subtitle */}
-                <div className="text-center mb-6">
-                  <h1 className="text-2xl sm:text-[26px] font-extrabold text-white tracking-tight mb-1">
+                <motion.div variants={itemVariants} className="text-center mb-6">
+                  <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight mb-2">
                     รีเซ็ตรหัสผ่าน
                   </h1>
-                  <p className="text-sm font-medium text-zinc-300">
-                    กู้คืนบัญชี {siteName} ของคุณ
+                  <p className="text-xs sm:text-sm font-medium text-zinc-400">
+                    กู้คืนและตั้งค่ารหัสผ่านใหม่สำหรับบัญชี {siteName}
                   </p>
-                </div>
+                </motion.div>
 
                 <form onSubmit={handleAuth} className="space-y-3.5">
                   {/* Username */}
-                  <div>
-                    <input
-                      type="text"
-                      value={authUsername}
-                      onChange={(e) => setAuthUsername(e.target.value)}
-                      placeholder="ชื่อผู้ใช้"
-                      className="w-full h-12.5 pl-4 pr-4 bg-[#11131a] border border-white/[0.14] focus:border-white/40 focus:bg-[#141722] rounded-2xl text-sm text-white placeholder:text-zinc-500 outline-none transition-all duration-200"
-                      autoComplete="username"
-                      required
-                    />
-                  </div>
+                  <motion.div variants={itemVariants} className="space-y-1">
+                    <label className="block text-xs font-medium text-zinc-300 ml-1">
+                      ชื่อผู้ใช้ (Username)
+                    </label>
+                    <div className="relative group">
+                      <div className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 group-focus-within:text-blue-400 transition-colors pointer-events-none">
+                        <User className="w-4 h-4" />
+                      </div>
+                      <input
+                        type="text"
+                        value={authUsername}
+                        onChange={(e) => setAuthUsername(e.target.value)}
+                        placeholder="ชื่อผู้ใช้ของคุณ"
+                        className="w-full h-12 pl-11 pr-4 bg-[#11131a] border border-white/[0.14] focus:border-blue-500/80 focus:bg-[#141722] focus:ring-2 focus:ring-blue-500/20 rounded-2xl text-sm text-white placeholder:text-zinc-500 outline-none transition-all duration-200"
+                        autoComplete="username"
+                        required
+                      />
+                    </div>
+                  </motion.div>
 
                   {/* Recovery Email */}
-                  <div>
-                    <input
-                      type="email"
-                      value={authEmail}
-                      onChange={(e) => setAuthEmail(e.target.value)}
-                      placeholder="อีเมลสำหรับกู้คืน"
-                      className="w-full h-12.5 pl-4 pr-4 bg-[#11131a] border border-white/[0.14] focus:border-white/40 focus:bg-[#141722] rounded-2xl text-sm text-white placeholder:text-zinc-500 outline-none transition-all duration-200"
-                      autoComplete="email"
-                      required
-                    />
-                  </div>
+                  <motion.div variants={itemVariants} className="space-y-1">
+                    <label className="block text-xs font-medium text-zinc-300 ml-1">
+                      อีเมลที่ใช้สมัคร (Recovery Email)
+                    </label>
+                    <div className="relative group">
+                      <div className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 group-focus-within:text-blue-400 transition-colors pointer-events-none">
+                        <Mail className="w-4 h-4" />
+                      </div>
+                      <input
+                        type="email"
+                        value={authEmail}
+                        onChange={(e) => setAuthEmail(e.target.value)}
+                        placeholder="example@domain.com"
+                        className="w-full h-12 pl-11 pr-4 bg-[#11131a] border border-white/[0.14] focus:border-blue-500/80 focus:bg-[#141722] focus:ring-2 focus:ring-blue-500/20 rounded-2xl text-sm text-white placeholder:text-zinc-500 outline-none transition-all duration-200"
+                        autoComplete="email"
+                        required
+                      />
+                    </div>
+                  </motion.div>
 
                   {/* New Password */}
-                  <div className="relative">
-                    <input
-                      type={showPassword ? "text" : "password"}
-                      value={authPassword}
-                      onChange={(e) => setAuthPassword(e.target.value)}
-                      placeholder="รหัสผ่านใหม่ (อย่างน้อย 6 ตัวอักษร)"
-                      className="w-full h-12.5 pl-4 pr-11 bg-[#11131a] border border-white/[0.14] focus:border-white/40 focus:bg-[#141722] rounded-2xl text-sm text-white placeholder:text-zinc-500 outline-none transition-all duration-200"
-                      autoComplete="new-password"
-                      required
-                      minLength={6}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-200 transition-colors p-1"
-                    >
-                      {showPassword ? (
-                        <EyeOff className="w-4 h-4" />
-                      ) : (
-                        <Eye className="w-4 h-4" />
-                      )}
-                    </button>
-                  </div>
+                  <motion.div variants={itemVariants} className="space-y-1">
+                    <label className="block text-xs font-medium text-zinc-300 ml-1">
+                      รหัสผ่านใหม่ (อย่างน้อย 6 ตัวอักษร)
+                    </label>
+                    <div className="relative group">
+                      <div className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 group-focus-within:text-blue-400 transition-colors pointer-events-none">
+                        <Lock className="w-4 h-4" />
+                      </div>
+                      <input
+                        type={showPassword ? "text" : "password"}
+                        value={authPassword}
+                        onChange={(e) => setAuthPassword(e.target.value)}
+                        placeholder="••••••••"
+                        className="w-full h-12 pl-11 pr-11 bg-[#11131a] border border-white/[0.14] focus:border-blue-500/80 focus:bg-[#141722] focus:ring-2 focus:ring-blue-500/20 rounded-2xl text-sm text-white placeholder:text-zinc-500 outline-none transition-all duration-200"
+                        autoComplete="new-password"
+                        required
+                        minLength={6}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-200 transition-colors p-1 cursor-pointer"
+                      >
+                        {showPassword ? (
+                          <EyeOff className="w-4 h-4" />
+                        ) : (
+                          <Eye className="w-4 h-4" />
+                        )}
+                      </button>
+                    </div>
+                  </motion.div>
 
                   {/* Confirm New Password */}
-                  <div className="relative">
-                    <input
-                      type={showConfirmPassword ? "text" : "password"}
-                      value={authConfirmPassword}
-                      onChange={(e) => setAuthConfirmPassword(e.target.value)}
-                      placeholder="ยืนยันรหัสผ่านใหม่"
-                      className="w-full h-12.5 pl-4 pr-11 bg-[#11131a] border border-white/[0.14] focus:border-white/40 focus:bg-[#141722] rounded-2xl text-sm text-white placeholder:text-zinc-500 outline-none transition-all duration-200"
-                      autoComplete="new-password"
-                      required
-                      minLength={6}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-200 transition-colors p-1"
-                    >
-                      {showConfirmPassword ? (
-                        <EyeOff className="w-4 h-4" />
-                      ) : (
-                        <Eye className="w-4 h-4" />
-                      )}
-                    </button>
-                  </div>
-
-                  {/* Turnstile Widget */}
-                  {TURNSTILE_SITE_KEY && (
-                    <div className="w-full flex items-center justify-center py-1">
-                      <div className="rounded-2xl overflow-hidden flex items-center justify-center transform scale-[0.85] origin-center">
-                        <Turnstile
-                          siteKey={TURNSTILE_SITE_KEY}
-                          options={{ theme: "dark", size: "normal" }}
-                          onSuccess={(token) => setTurnstileToken(token)}
-                          onExpire={() => setTurnstileToken(null)}
-                        />
+                  <motion.div variants={itemVariants} className="space-y-1">
+                    <label className="block text-xs font-medium text-zinc-300 ml-1">
+                      ยืนยันรหัสผ่านใหม่
+                    </label>
+                    <div className="relative group">
+                      <div className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 group-focus-within:text-blue-400 transition-colors pointer-events-none">
+                        <Lock className="w-4 h-4" />
                       </div>
+                      <input
+                        type={showConfirmPassword ? "text" : "password"}
+                        value={authConfirmPassword}
+                        onChange={(e) => setAuthConfirmPassword(e.target.value)}
+                        placeholder="••••••••"
+                        className="w-full h-12 pl-11 pr-11 bg-[#11131a] border border-white/[0.14] focus:border-blue-500/80 focus:bg-[#141722] focus:ring-2 focus:ring-blue-500/20 rounded-2xl text-sm text-white placeholder:text-zinc-500 outline-none transition-all duration-200"
+                        autoComplete="new-password"
+                        required
+                        minLength={6}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-200 transition-colors p-1 cursor-pointer"
+                      >
+                        {showConfirmPassword ? (
+                          <EyeOff className="w-4 h-4" />
+                        ) : (
+                          <Eye className="w-4 h-4" />
+                        )}
+                      </button>
                     </div>
-                  )}
+                  </motion.div>
 
-                  {/* Soft Blue Submit Button */}
-                  <button
-                    type="submit"
-                    disabled={authLoading}
-                    className="w-full h-12 mt-1 rounded-2xl bg-[#6B94FA] hover:bg-[#5a86f5] active:scale-[0.99] text-white font-medium text-sm transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 shadow-md shadow-blue-500/20"
-                  >
-                    {authLoading ? (
-                      <>
-                        <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        <span>กำลังดำเนินการ...</span>
-                      </>
-                    ) : (
-                      <span>ตั้งรหัสผ่านใหม่</span>
-                    )}
-                  </button>
+                  {/* Submit Button */}
+                  <motion.div variants={itemVariants} className="pt-2">
+                    <motion.button
+                      type="submit"
+                      disabled={authLoading}
+                      whileHover={{ scale: 1.015 }}
+                      whileTap={{ scale: 0.985 }}
+                      className="w-full h-12 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-medium text-sm transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 shadow-lg shadow-blue-500/25"
+                    >
+                      {authLoading ? (
+                        <>
+                          <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                          <span>กำลังดำเนินการ...</span>
+                        </>
+                      ) : (
+                        <span>ตั้งรหัสผ่านใหม่</span>
+                      )}
+                    </motion.button>
+                  </motion.div>
 
                   {/* Return to Login */}
-                  <div className="pt-2 text-left">
-                    <button
+                  <motion.div variants={itemVariants} className="pt-3 text-left border-t border-white/[0.06]">
+                    <motion.button
                       type="button"
+                      whileHover={{ x: 3 }}
                       onClick={() => {
                         setAuthMode("login");
                         setLoginStep(1);
                       }}
-                      className="text-[13px] text-[#6B94FA] hover:text-[#8cb0ff] transition-colors flex items-center gap-1 cursor-pointer"
+                      className="text-xs text-[#6B94FA] hover:text-[#8cb0ff] transition-all flex items-center gap-1 cursor-pointer"
                     >
                       <span>ย้อนกลับไปลงชื่อเข้าใช้</span>
                       <ChevronRight className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
+                    </motion.button>
+                  </motion.div>
                 </form>
               </motion.div>
             )}
           </AnimatePresence>
         </motion.div>
+
+        {/* Cloudflare Turnstile Verification Popup Modal */}
+        <AnimatePresence>
+          {showTurnstileModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.92, y: 8 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.92, y: 8 }}
+                transition={{ duration: 0.2, ease: "easeOut" }}
+                className="w-full max-w-sm bg-[#0e1017] border border-white/10 rounded-3xl p-6 shadow-2xl relative text-center"
+              >
+                <button
+                  type="button"
+                  onClick={() => setShowTurnstileModal(false)}
+                  className="absolute right-4 top-4 text-zinc-400 hover:text-white p-1 rounded-full hover:bg-white/10 transition-colors cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+
+                <div className="w-12 h-12 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center mx-auto mb-3 shadow-inner">
+                  <ShieldCheck className="w-6 h-6" />
+                </div>
+
+                <h3 className="text-lg font-bold text-white mb-1">
+                  การตรวจสอบความปลอดภัย
+                </h3>
+                <p className="text-xs text-zinc-400 mb-5 leading-relaxed">
+                  โปรดยืนยันว่าคุณไม่ใช่โปรแกรมอัตโนมัติ เพื่อดำเนินการต่อ
+                </p>
+
+                <div className="flex items-center justify-center py-2 min-h-[70px]">
+                  {TURNSTILE_SITE_KEY && (
+                    <Turnstile
+                      siteKey={TURNSTILE_SITE_KEY}
+                      options={{ theme: "dark", size: "normal" }}
+                      onSuccess={(token) => {
+                        setTurnstileToken(token);
+                        setShowTurnstileModal(false);
+                        executeAuth(token);
+                      }}
+                      onExpire={() => setTurnstileToken(null)}
+                    />
+                  )}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setShowTurnstileModal(false)}
+                  className="mt-4 text-xs text-zinc-500 hover:text-zinc-300 transition-colors cursor-pointer"
+                >
+                  ยกเลิก
+                </button>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
       </div>
     );
   }

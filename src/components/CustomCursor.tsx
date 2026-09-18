@@ -28,13 +28,13 @@ export const CustomCursor: React.FC = () => {
     };
 
     const handleMouseOver = (e: MouseEvent) => {
-      const target = e.target as HTMLElement;
+      const target = e.target as HTMLElement | null;
+      if (!target) {
+        isHovering = false;
+        return;
+      }
       if (
-        target.tagName.toLowerCase() === 'button' ||
-        target.tagName.toLowerCase() === 'a' ||
-        target.closest('button') ||
-        target.closest('a') ||
-        window.getComputedStyle(target).cursor === 'pointer'
+        target.closest('button, a, input, select, textarea, [role="button"], .cursor-pointer')
       ) {
         isHovering = true;
       } else {

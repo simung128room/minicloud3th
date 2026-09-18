@@ -102,7 +102,7 @@ function StatCard({
       viewport={{ once: true, margin: "-15px" }}
       transition={{ duration: 0.45, delay, ease: [0.16, 1, 0.3, 1] }}
       whileHover={{ y: -4, transition: { duration: 0.2 } }}
-      className="relative bg-[#0c0c12]/85 backdrop-blur-xl border border-white/[0.08] rounded-[24px] p-5 sm:p-6 overflow-hidden group hover:border-white/20 transition-all duration-300 shadow-xl shadow-black/40 glass-card glass-reflection"
+      className="relative bg-[#0c0c12]/85 backdrop-blur-xl border border-white/[0.08] rounded-[28px] p-5 sm:p-6 overflow-hidden group hover:border-white/20 transition-all duration-300 shadow-xl shadow-black/40 glass-card glass-reflection"
     >
       {/* Prismatic Top Edge */}
       <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none" />
@@ -160,7 +160,7 @@ function ShortcutBtn({
       whileHover={{ y: -4, transition: { duration: 0.2 } }}
       whileTap={{ scale: 0.96 }}
       onClick={onClick}
-      className="relative overflow-hidden text-left bg-[#0c0c12]/85 backdrop-blur-xl border border-white/[0.08] hover:border-white/20 rounded-[24px] p-4 sm:p-5 flex items-center gap-4 transition-all duration-300 w-full group cursor-pointer shadow-lg hover:shadow-2xl shadow-black/40 glass-card glass-reflection"
+      className="relative overflow-hidden text-left bg-[#0c0c12]/85 backdrop-blur-xl border border-white/[0.08] hover:border-white/20 rounded-[28px] p-4 sm:p-5 flex items-center gap-4 transition-all duration-300 w-full group cursor-pointer shadow-lg hover:shadow-2xl shadow-black/40 glass-card glass-reflection"
     >
       {/* Prismatic Top Edge */}
       <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none" />
@@ -226,7 +226,7 @@ function CategoryChip({
       whileHover={{ y: -5, transition: { duration: 0.25 } }}
       whileTap={{ scale: 0.98 }}
       onClick={onClick}
-      className="relative group overflow-hidden rounded-[26px] border border-white/[0.08] bg-[#0c0c12]/85 backdrop-blur-xl hover:border-white/25 transition-all duration-300 flex flex-col cursor-pointer shadow-xl shadow-black/40 glass-card glass-reflection"
+      className="relative group overflow-hidden rounded-[32px] border border-white/[0.08] bg-[#0c0c12]/85 backdrop-blur-xl hover:border-white/25 transition-all duration-300 flex flex-col cursor-pointer shadow-xl shadow-black/40 glass-card glass-reflection"
     >
       {/* Prismatic Top Edge Highlight */}
       <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent z-20 pointer-events-none" />
@@ -302,7 +302,7 @@ function ProductCard({
       viewport={{ once: true, margin: "-15px" }}
       transition={{ duration: 0.45, delay, ease: [0.16, 1, 0.3, 1] }}
       whileHover={{ y: -5, transition: { duration: 0.25 } }}
-      className="group relative bg-[#0c0c12]/85 backdrop-blur-xl border border-white/[0.08] rounded-[26px] overflow-hidden hover:border-white/25 transition-all duration-300 flex flex-col shadow-xl shadow-black/40 glass-card glass-reflection"
+      className="group relative bg-[#0c0c12]/85 backdrop-blur-xl border border-white/[0.08] rounded-[30px] overflow-hidden hover:border-white/25 transition-all duration-300 flex flex-col shadow-xl shadow-black/40 glass-card glass-reflection"
     >
       {/* Prismatic Top Edge Highlight */}
       <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent z-20 pointer-events-none" />
@@ -453,7 +453,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
           initial={{ opacity: 0, scale: 0.96 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.6, ease: "easeOut" }}
-          className="relative overflow-hidden rounded-[32px] border border-white/[0.08] mb-8 aspect-[21/6] bg-[#0d0d10] shadow-2xl shadow-red-500/10 group"
+          className="relative overflow-hidden rounded-[36px] border border-white/[0.08] mb-8 aspect-[21/6] bg-[#0d0d10] shadow-2xl shadow-red-500/10 group"
         >
           <img
             src="https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=2070&auto=format&fit=crop"
@@ -476,9 +476,9 @@ export const HomeView: React.FC<HomeViewProps> = ({
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            className="mb-8 flex items-center bg-zinc-900/50 border border-white/[0.06] rounded-xl px-4 py-2.5 overflow-hidden"
+            className="mb-8 flex items-center bg-zinc-900/50 border border-white/[0.06] rounded-full px-4 py-2.5 overflow-hidden"
           >
-            <div className="flex items-center justify-center bg-red-500/10 px-2.5 py-1.5 rounded-lg border border-red-500/20 text-red-400 shrink-0 mr-3 shadow-[0_0_15px_rgba(239,68,68,0.1)] gap-1.5 font-black text-xs select-none">
+            <div className="flex items-center justify-center bg-red-500/10 px-3 py-1.5 rounded-full border border-red-500/20 text-red-400 shrink-0 mr-3 shadow-[0_0_15px_rgba(239,68,68,0.1)] gap-1.5 font-black text-xs select-none">
               <Megaphone className="w-3.5 h-3.5 animate-bounce" />
               <span>ประกาศ</span>
             </div>
@@ -583,7 +583,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
                 <h2 className="text-base font-black text-white tracking-tight uppercase">หมวดหมู่แนะนำ</h2>
               </div>
               <button
-                className="text-xs text-white/40 hover:text-white/70 transition-colors flex items-center gap-1 font-semibold rounded-lg"
+                className="text-xs text-white/60 hover:text-white transition-all flex items-center gap-1.5 font-semibold rounded-full px-3.5 py-1.5 bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08]"
                 onClick={() => setActiveView("categories")}
               >
                 ดูทั้งหมด <ChevronRight className="w-3.5 h-3.5" />
@@ -623,7 +623,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-20px" }}
             transition={{ duration: 0.5, delay: 0.1 }}
-            className="bg-[#0c0c0e]/90 backdrop-blur-md border border-white/[0.08] rounded-[28px] overflow-hidden p-2 sm:p-3 shadow-xl shadow-black/50"
+            className="bg-[#0c0c0e]/90 backdrop-blur-md border border-white/[0.08] rounded-[32px] overflow-hidden p-2 sm:p-3 shadow-xl shadow-black/50"
           >
              <div className="max-h-64 overflow-y-auto no-scrollbar flex flex-col gap-1.5 p-1">
                {latestPurchases.length === 0 ? (
@@ -635,7 +635,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
                  latestPurchases.map((p, idx) => (
                     <div key={p.dbId || idx} className="flex items-center justify-between p-3 rounded-2xl hover:bg-white/[0.04] transition-all">
                       <div className="flex items-center gap-3 overflow-hidden pr-2">
-                        <div className="w-10 h-10 rounded-xl shrink-0 bg-white/[0.04] border border-white/[0.06] flex items-center justify-center">
+                        <div className="w-10 h-10 rounded-2xl shrink-0 bg-white/[0.04] border border-white/[0.06] flex items-center justify-center">
                           <Package className="w-4 h-4 text-white/60" />
                         </div>
                         <div className="flex flex-col overflow-hidden">
@@ -680,7 +680,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
               </div>
             </div>
             <button
-              className="text-xs text-white/40 hover:text-white/70 transition-colors flex items-center gap-1 font-semibold rounded-lg"
+              className="text-xs text-white/60 hover:text-white transition-all flex items-center gap-1.5 font-semibold rounded-full px-3.5 py-1.5 bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08]"
               onClick={() => setActiveView("categories")}
             >
               ดูทั้งหมด <ChevronRight className="w-3.5 h-3.5" />

@@ -395,12 +395,12 @@
 
 @theme inline {
   --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
-  --radius-xl: 22px;
-  --radius-2xl: 28px;
-  --radius-3xl: 36px;
-  --radius: 16px;
+  --radius-md: 16px;
+  --radius-lg: 22px;
+  --radius-xl: 28px;
+  --radius-2xl: 32px;
+  --radius-3xl: 40px;
+  --radius: 24px;
 
   --color-background: #08090d;
   --color-foreground: #f4f4f7;
@@ -558,11 +558,11 @@
   .status-error { color: oklch(0.55 0 0); }
   .status-pending { color: oklch(0.45 0 0); }
 
-  /* Soft Minimal Card (Replaces harsh brutalist styling) */
+  /* Soft Minimal Card (90% rounded aesthetic) */
   .brut-card {
     background: rgba(14, 16, 23, 0.75);
     border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 22px;
+    border-radius: 28px;
     padding: 1.5rem;
     box-shadow: 0 8px 30px -4px rgba(0, 0, 0, 0.45);
     backdrop-filter: blur(16px);
@@ -578,7 +578,7 @@
   .brut-card-highlight {
     background: rgba(18, 21, 31, 0.85);
     border: 1px solid rgba(59, 130, 246, 0.25);
-    border-radius: 22px;
+    border-radius: 28px;
     padding: 1.5rem;
     box-shadow: 0 8px 30px -4px rgba(59, 130, 246, 0.15);
     backdrop-filter: blur(16px);
@@ -662,7 +662,7 @@
     width: 100%;
     outline: none;
     transition: border-color 0.15s;
-    border-radius: 12px;
+    border-radius: 18px;
   }
 
   .brut-input:focus {
@@ -687,7 +687,7 @@
     background: transparent;
     color: oklch(0.97 0 0);
     user-select: none;
-    border-radius: 12px;
+    border-radius: 9999px;
   }
 
   .brut-btn:hover {

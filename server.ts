@@ -1,25 +1,34 @@
 import express from 'express';
 import dotenv from 'dotenv';
+import crypto from 'node:crypto';
 import { LRUCache } from 'lru-cache';
 dotenv.config({ override: true });
 
-// Mock & Simulation Defaults (remove dependency on external environment variables)
-process.env.ADMIN_EMAILS = process.env.ADMIN_EMAILS || 'abopboa.b@gmail.com,admin@apex-studio.com';
+// Environment validation & defaults
+const isProduction = process.env.NODE_ENV === 'production';
+
+if (!process.env.BACKEND_ENCRYPTION_KEY || process.env.BACKEND_ENCRYPTION_KEY === 'mock-encryption-key-32-characters') {
+  console.warn('[Security Warning] BACKEND_ENCRYPTION_KEY is not set or using mock default. Generating a secure random 32-byte key for this session.');
+  process.env.BACKEND_ENCRYPTION_KEY = crypto.randomBytes(32).toString('hex').slice(0, 32);
+}
+
+if (!process.env.ADMIN_EMAILS) {
+  process.env.ADMIN_EMAILS = 'abopboa.b@gmail.com,admin@apex-studio.com';
+}
+
 process.env.SITE_NAME = process.env.SITE_NAME || 'DEV';
 process.env.SHOP_PROMPTPAY_NUMBER = process.env.SHOP_PROMPTPAY_NUMBER || '0812345678';
 process.env.SHOP_ACCOUNT_NAME_TH = process.env.SHOP_ACCOUNT_NAME_TH || 'เดฟ';
 process.env.SHOP_ACCOUNT_NAME_EN = process.env.SHOP_ACCOUNT_NAME_EN || 'DEV';
 process.env.TRUEWALLET_PHONE = process.env.TRUEWALLET_PHONE || '0812345678';
 process.env.TURNSTILE_SECRET_KEY = process.env.TURNSTILE_SECRET_KEY || '';
-process.env.BACKEND_ENCRYPTION_KEY = process.env.BACKEND_ENCRYPTION_KEY || 'mock-encryption-key-32-characters';
 
 import path from 'path';
 import cors from 'cors';
 import axios from 'axios';
-axios.defaults.timeout = 15000; // 15 seconds global timeout
+axios.defaults.timeout = 10000; // 10 seconds global timeout (safely below Vercel 15s maxDuration)
 import CircuitBreaker from 'opossum';
 import { CookieJar } from 'tough-cookie';
-import crypto from 'node:crypto';
 import { fileURLToPath } from 'url';
 import https from 'node:https';
 import tls from 'node:tls';
@@ -33,7 +42,6 @@ import fs from 'fs';
 import readline from 'readline';
 import os from 'os';
 import zlib from 'zlib';
-import cloudscraper from 'cloudscraper';
 
 import { promisify } from 'util';
 const gzipAsync = promisify(zlib.gzip);
@@ -286,8 +294,22 @@ app.use((req: any, res: any, next: any) => {
   });
 
 app.use(helmet({
-  contentSecurityPolicy: false,
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://challenges.cloudflare.com", "https://cdn.jsdelivr.net"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://cdn.jsdelivr.net"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com", "data:"],
+      imgSrc: ["'self'", "data:", "https:", "blob:"],
+      connectSrc: ["'self'", "https:", "wss:", "ws:"],
+      frameSrc: ["'self'", "https://challenges.cloudflare.com", "*"],
+      frameAncestors: ["*"],
+      objectSrc: ["'none'"],
+      upgradeInsecureRequests: [],
+    }
+  },
   xFrameOptions: false,
+  crossOriginOpenerPolicy: false,
   crossOriginEmbedderPolicy: false,
   crossOriginResourcePolicy: { policy: "cross-origin" }
 }));
@@ -457,13 +479,21 @@ app.set('trust proxy', 1);
   // (req as any).log can be used but let's stick to simple
   
   // Health and Liveness Probes
-  app.get('/health', async (req, res) => {
+  app.get('/health', async (req: any, res: any) => {
     const used = process.memoryUsage();
     // Memory threshold alert
     if (used.heapUsed / used.heapTotal > 0.90) {
       sendAlert('High Memory Usage ⚠️', `Heap is at ${Math.round((used.heapUsed/used.heapTotal)*100)}% (${Math.round(used.heapUsed/1024/1024)}MB)`, 16753920).catch(() => {});
     }
     
+    // Provide minimal status to public probes, and detail only if authorized or in dev
+    const metricsToken = process.env.METRICS_TOKEN;
+    const isAuthorized = !isProduction || (metricsToken && req.headers['x-metrics-token'] === metricsToken);
+
+    if (!isAuthorized) {
+      return res.json({ status: 'ok', timestamp: new Date().toISOString() });
+    }
+
     res.json({ 
       status: 'ok', 
       uptime: process.uptime(), 
@@ -542,6 +572,19 @@ app.set('trust proxy', 1);
     keyGenerator: userRateLimitKeyGenerator,
     validate: { xForwardedForHeader: false, trustProxy: false },
     message: { error: 'ขออภัย คุณส่งคำร้องขอเยอะเกินไป (Anti-Bot Protection) กรุณารอสักครู่' },
+    handler: (req: any, res: any, next: any, options: any) => {
+      res.status(options.statusCode || 429).json({ ...options.message, requestId: req.id });
+    }
+  });
+
+  const keyValidationLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 20,
+    standardHeaders: true,
+    legacyHeaders: false,
+    keyGenerator: userRateLimitKeyGenerator,
+    validate: { xForwardedForHeader: false, trustProxy: false },
+    message: { error: 'ขออภัย คุณส่งคำร้องขอตรวจสอบคีย์ถี่เกินไป กรุณารอสักครู่' },
     handler: (req: any, res: any, next: any, options: any) => {
       res.status(options.statusCode || 429).json({ ...options.message, requestId: req.id });
     }
@@ -1164,8 +1207,6 @@ import healthRoute from './src/routes/health.route.js';
     }
   });
 
-  const usedSlips = new Set<string>();
-
   app.post('/api/topup/slip', mutationLimiter, requireAuth, async (req: any, res: any) => {
     try {
       const { imageBase64 } = req.body;
@@ -1176,49 +1217,11 @@ import healthRoute from './src/routes/health.route.js';
       }
 
       if (!process.env.SLIPOK_API_KEY) {
-        console.log(`[Slip] SLIPOK_API_KEY is missing. Activating Demo Sandbox mode.`);
-        
-        // Generate a random mock amount between 150 and 1500 for testing
-        const randomAmount = Math.floor(Math.random() * 1350) + 150;
-        
-        if (uid) {
-          try {
-            const userRef = admin.firestore().collection('users').doc(uid);
-            let finalBalance = 0;
-            let topupDoc: any = null;
-            await admin.firestore().runTransaction(async (t) => {
-               const uDoc = await t.get(userRef);
-               if (uDoc.exists) {
-                  const currentBalance = uDoc.data().balance || 0;
-                  finalBalance = currentBalance + randomAmount;
-                  t.update(userRef, { balance: finalBalance });
-                  
-                  topupDoc = {
-                    id: crypto.randomUUID(),
-                    userId: uDoc.data().username || 'Unknown',
-                    uid: uid,
-                    amount: randomAmount,
-                    date: new Date().toISOString(),
-                    type: 'slip_demo',
-                    money: randomAmount,
-                    title: 'เติมเงินสำเร็จ (Sandbox Mode)',
-                    image: 'https://img2.pic.in.th/IMG_6166.png'
-                  };
-                  const topupRef = admin.firestore().collection('topups').doc(topupDoc.id);
-                  t.set(topupRef, topupDoc);
-               } else {
-                  throw new Error('USER_NOT_FOUND');
-               }
-            });
-
-            console.log(`[Slip Sandbox] Updated balance for user ${uid} (+฿${randomAmount})`);
-            return res.json({ success: true, amount: randomAmount, topup: topupDoc, isSandbox: true });
-          } catch (syncErr: any) {
-             console.error(`[Slip Sandbox] Balance sync error:`, syncErr);
-             return res.json({ success: false, error: 'เกิดข้อผิดพลาดในการจําลองเติมเงินมิลเลอร์' });
-          }
-        }
-        return res.json({ success: true, amount: randomAmount });
+        console.error(`[Slip Security] Attempted slip upload but SLIPOK_API_KEY is not configured.`);
+        return res.status(503).json({
+          success: false,
+          error: 'ระบบตรวจสอบสลิปอัตโนมัติยังไม่เปิดให้บริการ (ไม่ได้ตั้งค่า SLIPOK_API_KEY) กรุณาติดต่อผู้ดูแลระบบ'
+        });
       }
 
       const imageBuffer = Buffer.from(imageBase64, 'base64');
@@ -1302,11 +1305,8 @@ import healthRoute from './src/routes/health.route.js';
              if (e.message === 'SLIP_USED') {
                 return res.json({ success: false, error: 'สลิปนี้ถูกใช้งานไปแล้ว (ตรวจสอบจากระบบ)' });
              }
-             // Fallback to local memory if DB fails (not 100% safe but better than nothing)
-             if (usedSlips.has(transRef)) {
-               return res.json({ success: false, error: 'สลิปนี้ถูกใช้งานไปแล้ว (local)' });
-             }
-             usedSlips.add(transRef);
+             console.error(`[Slip DB Error] Failed to verify or record slip:`, e);
+             return res.status(500).json({ success: false, error: 'ระบบตรวจสอบสลิปขัดข้องชั่วคราว ไม่สามารถบันทึกข้อมูลสลิปได้ กรุณาลองใหม่' });
           }
         }
 
@@ -1435,6 +1435,10 @@ import healthRoute from './src/routes/health.route.js';
          const secretKey = process.env.TURNSTILE_SECRET_KEY || '';
          
          if (!secretKey) {
+             if (isProduction) {
+               console.error('[Turnstile Security] Missing TURNSTILE_SECRET_KEY in production mode.');
+               return res.status(500).json({ error: 'ระบบตรวจสอบความปลอดภัยยังไม่ได้รับการกำหนดค่า กรุณาติดต่อผู้ดูแลระบบ' });
+             }
              turnstileCache.set(cacheKey, { time: now, uses: 1 });
          } else {
              try {
@@ -2888,7 +2892,7 @@ const diskUpload = multer({ dest: uploadDir });
   });
 
   // --- Topups Endpoints ---
-  app.get('/api/topups', async (req: any, res: any) => {
+  app.get('/api/topups', requireAuth, async (req: any, res: any) => {
     try {
       const adminDb = admin.firestore();
       let q: any = adminDb.collection('topups');
@@ -2920,11 +2924,11 @@ const diskUpload = multer({ dest: uploadDir });
         data.sort((a: any, b: any) => new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime());
         return res.json(data.slice(0, 100));
       } else {
-        return res.json([]);
+        return res.status(401).json({ error: 'Unauthorized' });
       }
     } catch (err: any) {
       console.error('Internal server error fetching topups:', err.message || err);
-      res.status(500).json({ error: String(err && err.message ? err.message : err) });
+      res.status(500).json({ error: 'เกิดข้อผิดพลาดในการดึงประวัติการเติมเงิน' });
     }
   });
 
@@ -3209,16 +3213,28 @@ const diskUpload = multer({ dest: uploadDir });
     }
   });
 
-  app.get('/api/validate_key/:key', async (req, res) => {
+  app.get('/api/validate_key/:key', requireAuth, keyValidationLimiter, async (req: any, res: any) => {
     try {
-      const snapshot = await admin.firestore().collection('license_keys').where('key', '==', req.params.key).limit(1).get();
-      if (!snapshot || !snapshot.docs || snapshot.docs.length === 0) {
-        return res.status(404).json({ error: 'Key not found' });
+      const { key } = req.params;
+      if (!key || typeof key !== 'string' || key.length > 128) {
+        return res.status(400).json({ error: 'รูปแบบคีย์ไม่ถูกต้อง' });
       }
-      res.json({ id: snapshot.docs[0].id, ...snapshot.docs[0].data() });
+      const snapshot = await admin.firestore().collection('license_keys').where('key', '==', key).limit(1).get();
+      if (!snapshot || !snapshot.docs || snapshot.docs.length === 0) {
+        return res.status(404).json({ error: 'ไม่พบคีย์ในระบบ หรือคีย์ไม่ถูกต้อง' });
+      }
+      const keyData = snapshot.docs[0].data();
+      // Whitelist only safe verification fields to prevent leaking internal database schema or customer identifiers
+      res.json({
+        valid: keyData.status === 'active' || !keyData.status,
+        type: keyData.type || 'standard',
+        status: keyData.status || 'active',
+        is_lifetime: Boolean(keyData.is_lifetime),
+        expires_at: keyData.expires_at || null
+      });
     } catch (err) {
       console.error('Internal server error validating key:', err);
-      res.status(500).json({ error: String(err && err.message ? err.message : err) });
+      res.status(500).json({ error: 'เกิดข้อผิดพลาดในการตรวจสอบคีย์' });
     }
   });
 
@@ -3315,13 +3331,13 @@ const diskUpload = multer({ dest: uploadDir });
     }
   });
 
-  app.get('/api/check_ip/:ip', async (req, res) => {
+  app.get('/api/check_ip/:ip', requireAdmin, async (req: any, res: any) => {
     try {
       const doc = await admin.firestore().collection('blocked_ips').doc(req.params.ip).get();
       res.json({ blocked: !!doc.exists });
     } catch (err) {
       console.error('Internal server error checking IP:', err);
-      res.status(500).json({ error: String(err && err.message ? err.message : err) });
+      res.status(500).json({ error: 'เกิดข้อผิดพลาดในการตรวจสอบ IP' });
     }
   });
 
@@ -3751,16 +3767,21 @@ const diskUpload = multer({ dest: uploadDir });
               const voucherCode = giftLink.split('v=')[1]?.split('&')[0];
               if (!voucherCode) return { success: false, message: 'INVALID_CODE' };
 
-              const response: any = await (cloudscraper as any).post(
+              const res = await axios.post(
                   `https://gift.truemoney.com/campaign/vouchers/${voucherCode}/redeem`,
+                  { mobile: this.phoneNumber, voucher_hash: voucherCode },
                   {
-                      json: { mobile: this.phoneNumber, voucher_hash: voucherCode },
                       headers: {
+                          'Content-Type': 'application/json',
                           'Referer': `https://gift.truemoney.com/campaign/?v=${voucherCode}`,
-                          'Origin': 'https://gift.truemoney.com'
-                      }
+                          'Origin': 'https://gift.truemoney.com',
+                          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                      },
+                      timeout: 8000
                   }
               );
+
+              const response = res.data;
 
               if (response?.status?.code === 'SUCCESS') {
                   return {
@@ -3799,6 +3820,7 @@ const diskUpload = multer({ dest: uploadDir });
 
   const tgSessions = new Map<string, {
       client: any,
+      ownerUid: string,
       status: 'idle' | 'pending_otp' | 'pending_password' | 'connected' | 'error',
       encryptedPhone: string,
       truemoneyPhone: string,
@@ -3851,7 +3873,9 @@ const diskUpload = multer({ dest: uploadDir });
           let sessionId = tgPhoneHashToSessionId.get(phoneHash);
           let sess = sessionId ? tgSessions.get(sessionId) : null;
           if (sess && sess.status === 'connected') {
-             // Already running?
+             if (sess.ownerUid !== (req as any).user.uid && !req.isAdmin) {
+               return res.status(403).json({ error: 'เบอร์นี้กำลังทำงานอยู่ในเซสชั่นของผู้ใช้อื่น' });
+             }
              return res.json({ status: 'connected', sessionId });
           }
 
@@ -3863,7 +3887,8 @@ const diskUpload = multer({ dest: uploadDir });
           const client = new TelegramClient(new StringSession(''), 2040, 'b18441a1ff607e10a989891a5462e627', { connectionRetries: 3 });
           
           sess = { 
-              client, 
+              client,
+              ownerUid: (req as any).user.uid,
               status: 'idle', 
               encryptedPhone: encrypt(telegramPhone),
               truemoneyPhone,
@@ -3965,10 +3990,13 @@ const diskUpload = multer({ dest: uploadDir });
       }
   });
 
-  app.post('/api/telegram/catcher/submit', async (req, res) => {
+  app.post('/api/telegram/catcher/submit', requireAuth, async (req: any, res: any) => {
       const { sessionId, type, value } = req.body;
       const sess = tgSessions.get(sessionId);
       if (!sess) return res.status(400).json({ error: 'ไม่พบเซสชั่น' });
+      if (sess.ownerUid !== (req as any).user.uid && !req.isAdmin) {
+          return res.status(403).json({ error: 'คุณไม่มีสิทธิ์เข้าถึงเซสชั่นนี้' });
+      }
 
       if (type === 'otp' && sess.resolveOtp) {
           sess.resolveOtp(value);
@@ -3981,10 +4009,13 @@ const diskUpload = multer({ dest: uploadDir });
       res.json({ success: true });
   });
 
-  app.post('/api/telegram/catcher/status', async (req, res) => {
+  app.post('/api/telegram/catcher/status', requireAuth, async (req: any, res: any) => {
       const { sessionId } = req.body;
       const sess = tgSessions.get(sessionId);
       if (!sess) return res.json({ status: 'none', logs: [] });
+      if (sess.ownerUid !== (req as any).user.uid && !req.isAdmin) {
+          return res.status(403).json({ error: 'คุณไม่มีสิทธิ์เข้าถึงเซสชั่นนี้' });
+      }
       res.json({ status: sess.status, logs: sess.logs });
   });
 
@@ -3992,6 +4023,9 @@ const diskUpload = multer({ dest: uploadDir });
       const { sessionId } = req.body;
       const sess = tgSessions.get(sessionId);
       if (sess) {
+          if (sess.ownerUid !== (req as any).user.uid && !req.isAdmin) {
+              return res.status(403).json({ error: 'คุณไม่มีสิทธิ์เข้าถึงเซสชั่นนี้' });
+          }
           try { await sess.client.disconnect(); } catch (e) {}
           tgSessions.delete(sessionId);
           for (const [hash, sid] of tgPhoneHashToSessionId.entries()) {
@@ -4018,12 +4052,15 @@ const diskUpload = multer({ dest: uploadDir });
   // --- Discord Token On Service ---
   const discordTokenOnSessions = new Map<string, {
       ws: WebSocket,
+      ownerUid: string,
       status: 'idle' | 'connected' | 'error',
       logs: string[]
   }>();
 
-  function pushDiscordOnLog(token: string, msg: string) {
-      const sess = discordTokenOnSessions.get(token);
+  const discordTokenToSessionId = new Map<string, string>();
+
+  function pushDiscordOnLog(sessionId: string, msg: string) {
+      const sess = discordTokenOnSessions.get(sessionId);
       if (sess) {
           sess.logs.push(`[${new Date().toLocaleTimeString()}] ${msg}`);
           if (sess.logs.length > 50) sess.logs.shift();
@@ -4045,25 +4082,38 @@ const diskUpload = multer({ dest: uploadDir });
           if (discordTokenOnSessions.size >= 50) {
               return res.status(503).json({ error: 'Server reached maximum concurrent active connections. Please try again later.' });
           }
-          let sess = discordTokenOnSessions.get(discordToken);
+
+          const tokenHash = crypto.createHash('sha256').update(discordToken).digest('hex');
+          let sessionId = discordTokenToSessionId.get(tokenHash);
+          let sess = sessionId ? discordTokenOnSessions.get(sessionId) : null;
           if (sess && sess.status === 'connected') {
-             return res.json({ status: 'connected' });
+             if (sess.ownerUid !== (req as any).user.uid && !req.isAdmin) {
+               return res.status(403).json({ error: 'โทเค็นนี้กำลังทำงานอยู่ในเซสชั่นของผู้ใช้อื่น' });
+             }
+             return res.json({ status: 'connected', sessionId });
+          }
+
+          if (!sessionId) {
+             sessionId = crypto.randomUUID();
+             discordTokenToSessionId.set(tokenHash, sessionId);
           }
 
           const ws = new WebSocket('wss://gateway.discord.gg/?encoding=json&v=9&compress=json');
           
           sess = { 
-              ws, 
+              ws,
+              ownerUid: (req as any).user.uid,
               status: 'idle', 
               logs: ['🎯 เริ่มระบบ Token On (24/7)...']
           };
-          discordTokenOnSessions.set(discordToken, sess);
+          discordTokenOnSessions.set(sessionId, sess);
 
           let hbInterval: NodeJS.Timeout | null = null;
 
           ws.on('open', () => {
-              sess!.status = 'connected';
-              pushDiscordOnLog(discordToken, '✅ เชื่อมต่อ Discord Gateway สำเร็จ! ไอดีของคุณออนไลน์แล้ว');
+              const curSess = discordTokenOnSessions.get(sessionId!);
+              if (curSess) curSess.status = 'connected';
+              pushDiscordOnLog(sessionId!, '✅ เชื่อมต่อ Discord Gateway สำเร็จ! ไอดีของคุณออนไลน์แล้ว');
               // Identify Payload
               ws.send(JSON.stringify({
                   "op": 2,
@@ -4110,29 +4160,29 @@ const diskUpload = multer({ dest: uploadDir });
               }
               
               if (payload.t === 'READY') {
-                  pushDiscordOnLog(discordToken, `✅ ยืนยันตัวตนสำเร็จ: ${payload.d.user.username}#${payload.d.user.discriminator}`);
+                  pushDiscordOnLog(sessionId!, `✅ ยืนยันตัวตนสำเร็จ: ${payload.d.user.username}#${payload.d.user.discriminator}`);
               }
           });
 
           ws.on('close', () => {
               if (hbInterval) clearInterval(hbInterval);
-              const curSess = discordTokenOnSessions.get(discordToken);
+              const curSess = discordTokenOnSessions.get(sessionId!);
               if (curSess) {
                  curSess.status = 'error';
-                 pushDiscordOnLog(discordToken, '❌ ตัดการเชื่อมต่อจาก Discord Gateway แล้ว');
+                 pushDiscordOnLog(sessionId!, '❌ ตัดการเชื่อมต่อจาก Discord Gateway แล้ว');
               }
           });
 
           ws.on('error', (err: any) => {
-              const curSess = discordTokenOnSessions.get(discordToken);
+              const curSess = discordTokenOnSessions.get(sessionId!);
               if (curSess) {
                   curSess.status = 'error';
-                  pushDiscordOnLog(discordToken, `❌ ข้อผิดพลาด WebSocket: ${err.message}`);
+                  pushDiscordOnLog(sessionId!, `❌ ข้อผิดพลาด WebSocket: ${err.message}`);
               }
           });
 
           // Respond immediately
-          res.json({ success: true, status: 'idle' });
+          res.json({ success: true, status: 'idle', sessionId });
           
       } catch (err: any) {
           res.status(500).json({ error: String(err) });
@@ -4140,19 +4190,44 @@ const diskUpload = multer({ dest: uploadDir });
   });
 
   app.get('/api/discord/token-on/status', requireAuth, async (req: any, res: any) => {
-      const token = req.query.token as string;
-      if (!token) return res.status(400).json({ error: 'Missing token' });
-      const sess = discordTokenOnSessions.get(token);
+      const sessionId = (req.query.sessionId || req.query.token) as string;
+      if (!sessionId) return res.status(400).json({ error: 'Missing sessionId' });
+      // Lookup by direct sessionId or hash
+      let sess = discordTokenOnSessions.get(sessionId);
+      if (!sess) {
+         const tokenHash = crypto.createHash('sha256').update(sessionId).digest('hex');
+         const sid = discordTokenToSessionId.get(tokenHash);
+         if (sid) sess = discordTokenOnSessions.get(sid);
+      }
       if (!sess) return res.json({ status: 'none', logs: [] });
+      if (sess.ownerUid !== (req as any).user.uid && !req.isAdmin) {
+          return res.status(403).json({ error: 'คุณไม่มีสิทธิ์เข้าถึงเซสชั่นนี้' });
+      }
       res.json({ status: sess.status, logs: sess.logs });
   });
 
   app.post('/api/discord/token-on/stop', requireAuth, async (req: any, res: any) => {
-      const { discordToken } = req.body;
-      const sess = discordTokenOnSessions.get(discordToken);
+      const { discordToken, sessionId: sidParam } = req.body;
+      let sessionId = sidParam;
+      if (!sessionId && discordToken) {
+          const tokenHash = crypto.createHash('sha256').update(discordToken).digest('hex');
+          sessionId = discordTokenToSessionId.get(tokenHash);
+      }
+      if (!sessionId) return res.status(400).json({ error: 'Missing sessionId' });
+
+      const sess = discordTokenOnSessions.get(sessionId);
       if (sess) {
+          if (sess.ownerUid !== (req as any).user.uid && !req.isAdmin) {
+              return res.status(403).json({ error: 'คุณไม่มีสิทธิ์เข้าถึงเซสชั่นนี้' });
+          }
           try { sess.ws.close(); } catch (e) {}
-          discordTokenOnSessions.delete(discordToken);
+          discordTokenOnSessions.delete(sessionId);
+          for (const [hash, sid] of discordTokenToSessionId.entries()) {
+              if (sid === sessionId) {
+                  discordTokenToSessionId.delete(hash);
+                  break;
+              }
+          }
       }
       res.json({ success: true });
   });
@@ -4160,6 +4235,7 @@ const diskUpload = multer({ dest: uploadDir });
   // --- Discord Gift Catcher Service ---
   const discordSessions = new Map<string, {
       ws: WebSocket,
+      ownerUid: string,
       status: 'idle' | 'connected' | 'error',
       encryptedToken: string,
       truemoneyPhone: string,
@@ -4207,6 +4283,9 @@ const diskUpload = multer({ dest: uploadDir });
           let sessionId = discordTokenHashToSessionId.get(tokenHash);
           let sess = sessionId ? discordSessions.get(sessionId) : null;
           if (sess && sess.status === 'connected') {
+             if (sess.ownerUid !== (req as any).user.uid && !req.isAdmin) {
+               return res.status(403).json({ error: 'โทเค็นนี้กำลังทำงานอยู่ในเซสชั่นของผู้ใช้อื่น' });
+             }
              return res.json({ status: 'connected', sessionId });
           }
 
@@ -4218,7 +4297,8 @@ const diskUpload = multer({ dest: uploadDir });
           const ws = new WebSocket('wss://gateway.discord.gg/?encoding=json&v=9&compress=json');
           
           sess = { 
-              ws, 
+              ws,
+              ownerUid: (req as any).user.uid,
               status: 'idle', 
               encryptedToken: encrypt(discordToken),
               truemoneyPhone,
@@ -4321,10 +4401,13 @@ const diskUpload = multer({ dest: uploadDir });
       }
   });
 
-  app.post('/api/discord/catcher/status', async (req, res) => {
+  app.post('/api/discord/catcher/status', requireAuth, async (req: any, res: any) => {
       const { sessionId } = req.body;
       const sess = discordSessions.get(sessionId);
       if (!sess) return res.json({ status: 'none', logs: [] });
+      if (sess.ownerUid !== (req as any).user.uid && !req.isAdmin) {
+          return res.status(403).json({ error: 'คุณไม่มีสิทธิ์เข้าถึงเซสชั่นนี้' });
+      }
       res.json({ status: sess.status, logs: sess.logs });
   });
 
@@ -4332,6 +4415,9 @@ const diskUpload = multer({ dest: uploadDir });
       const { sessionId } = req.body;
       const sess = discordSessions.get(sessionId);
       if (sess) {
+          if (sess.ownerUid !== (req as any).user.uid && !req.isAdmin) {
+              return res.status(403).json({ error: 'คุณไม่มีสิทธิ์เข้าถึงเซสชั่นนี้' });
+          }
           try { sess.ws.close(); } catch (e) {}
           discordSessions.delete(sessionId);
           for (const [hash, sid] of discordTokenHashToSessionId.entries()) {

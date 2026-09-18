@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Folder, Lock, Search, Download, FileText, Image as ImageIcon, ChevronRight, Gift } from 'lucide-react';
+import { Folder, Lock, Search, Download, FileText, Image as ImageIcon, ChevronRight, Gift, X, Copy, Check } from 'lucide-react';
 import Swal from 'sweetalert2';
 import axios from 'axios';
 import { LogCategory, ContentItem, AdminToolsManagement } from './AdminToolsManagement';
@@ -12,6 +12,15 @@ interface LogCategoriesViewProps {
   isAdmin?: boolean;
 }
 
+function getSafeUrl(url: string | undefined): string | null {
+  if (!url) return null;
+  const trimmed = url.trim();
+  if (/^https?:\/\//i.test(trimmed) || /^data:image\/(png|jpeg|jpg|webp|gif);base64,/i.test(trimmed)) {
+    return trimmed;
+  }
+  return null;
+}
+
 export const LogCategoriesView: React.FC<LogCategoriesViewProps> = ({ userPlan, filterType = 'all', isAdmin = false }) => {
   const [categories, setCategories] = useState<LogCategory[]>([]);
   const [items, setItems] = useState<ContentItem[]>([]);
@@ -19,6 +28,8 @@ export const LogCategoriesView: React.FC<LogCategoriesViewProps> = ({ userPlan, 
   const [search, setSearch] = useState('');
   const [isVip, setIsVip] = useState(false);
   const [showAdmin, setShowAdmin] = useState(false);
+  const [activeModalItem, setActiveModalItem] = useState<ContentItem | null>(null);
+  const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -59,29 +70,13 @@ export const LogCategoriesView: React.FC<LogCategoriesViewProps> = ({ userPlan, 
         return;
     }
 
-    // Modal to display attachments with HTML Injection & XSS prevention
-    const htmlAttachments = item.attachments.map((att: any) => {
-        const cleanData = (att.data || '').trim().replace(/"/g, '&quot;');
-        // Prevent javascript: protocol execution in URLs
-        const safeUrl = /^javascript:/i.test(cleanData) ? '#' : cleanData;
-        
-        if (att.type === 'image') {
-          return `<img loading="lazy" src="${safeUrl}" class="w-full rounded-lg mb-2" />`;
-        }
-        if (att.type === 'file') {
-          return `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer" class="block w-full py-2 bg-[#2563EB] text-white rounded-lg text-center font-bold mb-2">ดาวน์โหลดไฟล์</a>`;
-        }
-        return `<div class="bg-[#0a0a0a] border border-white/10 p-3 rounded-lg mb-2 text-left text-sm text-zinc-300 break-all select-all font-mono max-h-48 overflow-y-auto">${(att.data || '').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>`;
-    }).join('');
+    setActiveModalItem(item);
+  };
 
-    Swal.fire({
-        title: item.title,
-        html: `<div class="mt-4">${htmlAttachments}</div>`,
-        background: '#09090b',
-        color: '#fff',
-        confirmButtonText: 'ปิด',
-        confirmButtonColor: '#333'
-    });
+  const handleCopyText = (text: string, index: number) => {
+    navigator.clipboard.writeText(text);
+    setCopiedIndex(index);
+    setTimeout(() => setCopiedIndex(null), 2000);
   };
 
   useEffect(() => {
@@ -190,6 +185,118 @@ export const LogCategoriesView: React.FC<LogCategoriesViewProps> = ({ userPlan, 
            </AnimatePresence>
          </div>
        )}
+
+       {/* Safe React Attachment Modal (Immune to DOM XSS) */}
+       <AnimatePresence>
+         {activeModalItem && (
+           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm" role="dialog" aria-modal="true">
+             <motion.div 
+               initial={{ opacity: 0, scale: 0.95 }}
+               animate={{ opacity: 1, scale: 1 }}
+               exit={{ opacity: 0, scale: 0.95 }}
+               className="bg-[#09090b] border border-white/10 rounded-2xl w-full max-w-xl max-h-[85vh] flex flex-col overflow-hidden shadow-2xl"
+             >
+               {/* Header */}
+               <div className="flex items-center justify-between p-5 border-b border-white/10">
+                 <h2 className="text-lg font-bold text-white truncate pr-4">{activeModalItem.title}</h2>
+                 <button 
+                   onClick={() => setActiveModalItem(null)} 
+                   className="text-zinc-400 hover:text-white p-1 rounded-lg hover:bg-white/10 transition-all"
+                   aria-label="ปิด"
+                 >
+                   <X className="w-5 h-5" />
+                 </button>
+               </div>
+
+               {/* Attachments list */}
+               <div className="p-5 overflow-y-auto space-y-4 flex-1">
+                 {activeModalItem.attachments?.map((att: any, idx: number) => {
+                   const safeUrl = getSafeUrl(att.data);
+                   
+                   if (att.type === 'image') {
+                     return (
+                       <div key={idx} className="rounded-xl overflow-hidden border border-white/10 bg-black/40">
+                         {safeUrl ? (
+                           <img 
+                             loading="lazy" 
+                             src={safeUrl} 
+                             alt={activeModalItem.title} 
+                             className="w-full object-contain max-h-80"
+                             referrerPolicy="no-referrer"
+                           />
+                         ) : (
+                           <div className="p-4 text-xs text-zinc-500 text-center">URL รูปภาพไม่ปลอดภัยหรือไม่ถูกต้อง</div>
+                         )}
+                       </div>
+                     );
+                   }
+
+                   if (att.type === 'file') {
+                     return (
+                       <div key={idx}>
+                         {safeUrl ? (
+                           <a 
+                             href={safeUrl} 
+                             target="_blank" 
+                             rel="noopener noreferrer"
+                             className="flex items-center justify-center gap-2 w-full py-3 bg-[#2563EB] hover:bg-blue-500 text-white rounded-xl text-center font-bold transition-all shadow-lg shadow-blue-600/20"
+                           >
+                             <Download className="w-4 h-4" /> ดาวน์โหลดไฟล์
+                           </a>
+                         ) : (
+                           <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-400 text-xs rounded-xl text-center font-medium">
+                             ลิงก์ไฟล์ไม่ถูกต้อง
+                           </div>
+                         )}
+                       </div>
+                     );
+                   }
+
+                   // Plain text / Account data
+                   return (
+                     <div key={idx} className="relative bg-[#0d0d10] border border-white/10 rounded-xl p-4">
+                       <div className="flex items-center justify-between mb-2">
+                         <span className="text-xs font-semibold text-zinc-400 flex items-center gap-1.5">
+                           <FileText className="w-3.5 h-3.5 text-blue-400" /> ข้อมูลเนื้อหา
+                         </span>
+                         <button
+                           onClick={() => handleCopyText(att.data || '', idx)}
+                           className="flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-zinc-300 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg transition-all"
+                         >
+                           {copiedIndex === idx ? (
+                             <>
+                               <Check className="w-3.5 h-3.5 text-green-400" />
+                               <span className="text-green-400">คัดลอกแล้ว</span>
+                             </>
+                           ) : (
+                             <>
+                               <Copy className="w-3.5 h-3.5" />
+                               <span>คัดลอก</span>
+                             </>
+                           )}
+                         </button>
+                       </div>
+                       <pre className="text-xs font-mono text-zinc-200 whitespace-pre-wrap break-all select-all max-h-48 overflow-y-auto bg-black/40 p-3 rounded-lg border border-white/5">
+                         {att.data || '(ไม่มีข้อมูล)'}
+                       </pre>
+                     </div>
+                   );
+                 })}
+               </div>
+
+               {/* Footer */}
+               <div className="p-4 border-t border-white/10 bg-black/20 flex justify-end">
+                 <button 
+                   onClick={() => setActiveModalItem(null)}
+                   className="px-5 py-2 bg-white/10 hover:bg-white/20 text-white font-medium text-xs rounded-xl transition-all"
+                 >
+                   ปิด
+                 </button>
+               </div>
+             </motion.div>
+           </div>
+         )}
+       </AnimatePresence>
     </div>
   );
 };

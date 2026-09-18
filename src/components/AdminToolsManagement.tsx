@@ -145,21 +145,21 @@ export const AdminToolsManagement = () => {
   return (
     <div className="space-y-6">
       {/* Top Header */}
-      <div className="bg-[#0f121a] border border-white/[0.08] rounded-2xl p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
+      <div className="bg-[#0f121a] border border-white/[0.08] rounded-[28px] p-6 sm:p-7 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-xl">
+        <div className="flex items-center gap-3.5">
+          <div className="w-11 h-11 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 shrink-0">
             <Gift className="w-5 h-5" />
           </div>
           <div>
             <h2 className="text-base font-bold text-white">ระบบแจกไฟล์และเนื้อหา (Content & Rewards)</h2>
-            <p className="text-xs text-zinc-400">จัดการไฟล์ดาวน์โหลด โค้ดฟรี และสิทธิพิเศษสมาชิก</p>
+            <p className="text-xs text-zinc-400 mt-0.5">จัดการไฟล์ดาวน์โหลด โค้ดฟรี และสิทธิพิเศษสมาชิก</p>
           </div>
         </div>
 
-        <div className="flex items-center bg-[#151926] p-1 rounded-xl border border-white/[0.08]">
+        <div className="flex items-center bg-[#151926] p-1 rounded-full border border-white/[0.08]">
           <button 
             onClick={() => setActiveTab('items')} 
-            className={`px-4 py-1.5 text-xs font-semibold rounded-lg transition-all ${
+            className={`px-5 py-2 text-xs font-semibold rounded-full transition-all cursor-pointer ${
               activeTab === 'items' ? 'bg-blue-600 text-white shadow-sm' : 'text-zinc-400 hover:text-white'
             }`}
           >
@@ -167,7 +167,7 @@ export const AdminToolsManagement = () => {
           </button>
           <button 
             onClick={() => setActiveTab('categories')} 
-            className={`px-4 py-1.5 text-xs font-semibold rounded-lg transition-all ${
+            className={`px-5 py-2 text-xs font-semibold rounded-full transition-all cursor-pointer ${
               activeTab === 'categories' ? 'bg-blue-600 text-white shadow-sm' : 'text-zinc-400 hover:text-white'
             }`}
           >
@@ -183,7 +183,7 @@ export const AdminToolsManagement = () => {
             {!isAddingCategory && (
               <button 
                 onClick={() => setIsAddingCategory(true)} 
-                className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition-all shadow-md shadow-blue-500/20 flex items-center gap-1.5"
+                className="px-5 py-2.5 rounded-full bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition-all shadow-md shadow-blue-500/20 flex items-center gap-1.5 cursor-pointer active:scale-95"
               >
                 <Plus className="w-4 h-4"/> เพิ่มหมวดหมู่
               </button>
@@ -191,7 +191,7 @@ export const AdminToolsManagement = () => {
           </div>
 
           {isAddingCategory && (
-            <div className="bg-[#0f121a] border border-white/[0.08] rounded-2xl p-6">
+            <div className="bg-[#0f121a] border border-white/[0.08] rounded-[28px] p-6 sm:p-7 shadow-xl">
               <h3 className="text-sm font-bold text-white mb-4 flex items-center gap-2">
                 <Folder className="w-4 h-4 text-blue-400" /> สร้างหมวดหมู่ใหม่
               </h3>
@@ -201,7 +201,7 @@ export const AdminToolsManagement = () => {
                   <input 
                     value={catName} 
                     onChange={e => setCatName(e.target.value)} 
-                    className="w-full bg-[#151926] border border-white/[0.08] rounded-xl px-4 py-2.5 text-xs text-white placeholder:text-zinc-600 focus:outline-none focus:border-blue-500" 
+                    className="w-full bg-[#151926] border border-white/[0.08] rounded-full px-5 py-2.5 text-xs text-white placeholder:text-zinc-600 focus:outline-none focus:border-blue-500" 
                     placeholder="เช่น VIP แจกไฟล์ฟรี, อักษรพิเศษ" 
                   />
                 </div>
@@ -210,13 +210,13 @@ export const AdminToolsManagement = () => {
                   <input 
                     value={catSubtitle} 
                     onChange={e => setCatSubtitle(e.target.value)} 
-                    className="w-full bg-[#151926] border border-white/[0.08] rounded-xl px-4 py-2.5 text-xs text-white placeholder:text-zinc-600 focus:outline-none focus:border-blue-500" 
+                    className="w-full bg-[#151926] border border-white/[0.08] rounded-full px-5 py-2.5 text-xs text-white placeholder:text-zinc-600 focus:outline-none focus:border-blue-500" 
                     placeholder="คำอธิบายสั้นๆ..." 
                   />
                 </div>
               </div>
               
-              <div className="flex flex-wrap items-center gap-6 p-3 rounded-xl bg-[#151926]/50 border border-white/[0.06] mb-4">
+              <div className="flex flex-wrap items-center gap-6 p-4 rounded-2xl bg-[#151926]/50 border border-white/[0.06] mb-4">
                 <label className="flex items-center gap-2 text-xs font-semibold text-amber-400 cursor-pointer">
                   <input 
                     type="checkbox" 
@@ -240,13 +240,13 @@ export const AdminToolsManagement = () => {
               <div className="flex justify-end gap-2.5">
                 <button 
                   onClick={() => setIsAddingCategory(false)} 
-                  className="px-4 py-2 text-xs font-semibold text-zinc-400 hover:text-white"
+                  className="px-5 py-2.5 rounded-full border border-white/[0.08] hover:bg-white/[0.05] text-xs font-semibold text-zinc-400 hover:text-white cursor-pointer"
                 >
                   ยกเลิก
                 </button>
                 <button 
                   onClick={handleSaveCategory} 
-                  className="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition-all shadow-md shadow-blue-500/20 flex items-center gap-1.5"
+                  className="px-6 py-2.5 rounded-full bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition-all shadow-md shadow-blue-500/20 flex items-center gap-1.5 cursor-pointer active:scale-95"
                 >
                   <Check className="w-4 h-4"/> บันทึกหมวดหมู่
                 </button>
@@ -256,12 +256,12 @@ export const AdminToolsManagement = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {categories.map((c) => (
-              <div key={c.id} className="bg-[#0f121a] border border-white/[0.08] rounded-2xl p-5 relative hover:border-white/[0.12] transition-colors">
+              <div key={c.id} className="bg-[#0f121a] border border-white/[0.08] rounded-[24px] p-5 relative hover:border-white/[0.12] transition-colors shadow-sm">
                 <div className="flex justify-between items-start mb-2">
                   <div className="flex items-center gap-2">
                     <h3 className="text-sm font-bold text-white">{c.name}</h3>
                     {c.isVip && (
-                      <span className="text-[10px] font-bold bg-amber-500/15 text-amber-400 border border-amber-500/25 px-2 py-0.5 rounded-full uppercase">
+                      <span className="text-[10px] font-bold bg-amber-500/15 text-amber-400 border border-amber-500/25 px-2.5 py-0.5 rounded-full uppercase">
                         VIP
                       </span>
                     )}
@@ -269,7 +269,7 @@ export const AdminToolsManagement = () => {
                   <div className="flex items-center gap-1.5">
                     <button 
                       onClick={() => toggleCategoryVisibility(c.id)} 
-                      className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border transition-colors ${
+                      className={`px-3 py-1 rounded-full text-[10px] font-bold border transition-colors cursor-pointer ${
                         c.isVisible 
                           ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/25' 
                           : 'bg-white/[0.04] text-zinc-500 border-white/[0.06]'
@@ -279,7 +279,7 @@ export const AdminToolsManagement = () => {
                     </button>
                     <button 
                       onClick={() => handleDeleteCategory(c.id)} 
-                      className="text-zinc-500 hover:text-rose-400 p-1 rounded-lg hover:bg-rose-500/10 transition-colors"
+                      className="text-zinc-500 hover:text-rose-400 p-1.5 rounded-full hover:bg-rose-500/10 transition-colors cursor-pointer"
                     >
                       <Trash2 className="w-3.5 h-3.5"/>
                     </button>
@@ -299,7 +299,7 @@ export const AdminToolsManagement = () => {
             {!isAddingItem && (
               <button 
                 onClick={() => setIsAddingItem(true)} 
-                className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition-all shadow-md shadow-blue-500/20 flex items-center gap-1.5"
+                className="px-5 py-2.5 rounded-full bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition-all shadow-md shadow-blue-500/20 flex items-center gap-1.5 cursor-pointer active:scale-95"
               >
                 <Plus className="w-4 h-4"/> เพิ่มเนื้อหาใหม่
               </button>
@@ -307,7 +307,7 @@ export const AdminToolsManagement = () => {
           </div>
 
           {isAddingItem && (
-            <div className="bg-[#0f121a] border border-white/[0.08] rounded-2xl p-6">
+            <div className="bg-[#0f121a] border border-white/[0.08] rounded-[28px] p-6 sm:p-7 shadow-xl">
               <h3 className="text-sm font-bold text-white mb-4 flex items-center gap-2">
                 <Sparkles className="w-4 h-4 text-blue-400" /> สร้างรายการเนื้อหาใหม่
               </h3>
@@ -318,7 +318,7 @@ export const AdminToolsManagement = () => {
                   <input 
                     value={title} 
                     onChange={e => setTitle(e.target.value)} 
-                    className="w-full bg-[#151926] border border-white/[0.08] rounded-xl px-4 py-2.5 text-xs text-white placeholder:text-zinc-600 focus:outline-none focus:border-blue-500" 
+                    className="w-full bg-[#151926] border border-white/[0.08] rounded-full px-5 py-2.5 text-xs text-white placeholder:text-zinc-600 focus:outline-none focus:border-blue-500" 
                     placeholder="เช่น แจกสกินปืน, สคริปต์ฟาร์ม..." 
                   />
                 </div>
@@ -327,7 +327,7 @@ export const AdminToolsManagement = () => {
                   <select 
                     value={itemCategoryId} 
                     onChange={e => setItemCategoryId(e.target.value)} 
-                    className="w-full bg-[#151926] border border-white/[0.08] rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-blue-500"
+                    className="w-full bg-[#151926] border border-white/[0.08] rounded-full px-5 py-2.5 text-xs text-white focus:outline-none focus:border-blue-500"
                   >
                     <option value="">-- เลือกหมวดหมู่ --</option>
                     {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
@@ -338,7 +338,7 @@ export const AdminToolsManagement = () => {
                   <select 
                     value={itemType} 
                     onChange={e => setItemType(e.target.value as any)} 
-                    className="w-full bg-[#151926] border border-white/[0.08] rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-blue-500"
+                    className="w-full bg-[#151926] border border-white/[0.08] rounded-full px-5 py-2.5 text-xs text-white focus:outline-none focus:border-blue-500"
                   >
                     <option value="free">ฟรี (ทุกคนดาวน์โหลดได้)</option>
                     <option value="premium">พรีเมียม (เฉพาะสมาชิก Premium / VIP)</option>
@@ -349,21 +349,21 @@ export const AdminToolsManagement = () => {
                   <input 
                     value={keyword} 
                     onChange={e => setKeyword(e.target.value)} 
-                    className="w-full bg-[#151926] border border-white/[0.08] rounded-xl px-4 py-2.5 text-xs text-white placeholder:text-zinc-600 focus:outline-none focus:border-blue-500" 
+                    className="w-full bg-[#151926] border border-white/[0.08] rounded-full px-5 py-2.5 text-xs text-white placeholder:text-zinc-600 focus:outline-none focus:border-blue-500" 
                     placeholder="เช่น Font, Script, Mod" 
                   />
                 </div>
               </div>
 
               {/* Attachments Section */}
-              <div className="bg-[#121622]/60 border border-white/[0.08] rounded-2xl p-4 mb-4">
+              <div className="bg-[#121622]/60 border border-white/[0.08] rounded-[24px] p-5 mb-4">
                 <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-400 mb-3">
                   ไฟล์แนบ / เนื้อหาดาวน์โหลด
                 </h4>
                 {attachments.length > 0 && (
                   <div className="space-y-2 mb-3">
                     {attachments.map((a, i) => (
-                      <div key={i} className="flex items-center justify-between bg-[#151926] border border-white/[0.06] p-2.5 px-3 rounded-xl text-xs text-zinc-300">
+                      <div key={i} className="flex items-center justify-between bg-[#151926] border border-white/[0.06] p-3 px-4 rounded-2xl text-xs text-zinc-300">
                         <div className="flex items-center gap-2.5 truncate">
                           {a.type === 'text' && <FileText className="w-4 h-4 text-blue-400 shrink-0"/>}
                           {a.type === 'image' && <ImageIcon className="w-4 h-4 text-indigo-400 shrink-0"/>}
@@ -372,7 +372,7 @@ export const AdminToolsManagement = () => {
                         </div>
                         <button 
                           onClick={() => setAttachments(attachments.filter((_, idx) => idx !== i))} 
-                          className="text-zinc-500 hover:text-rose-400 p-1"
+                          className="text-zinc-500 hover:text-rose-400 p-1.5 rounded-full cursor-pointer"
                         >
                           <Trash2 className="w-3.5 h-3.5"/>
                         </button>
@@ -384,7 +384,7 @@ export const AdminToolsManagement = () => {
                   <select 
                     value={attType} 
                     onChange={e => setAttType(e.target.value as any)} 
-                    className="bg-[#151926] border border-white/[0.08] rounded-xl px-3 py-2 text-xs text-white focus:outline-none"
+                    className="bg-[#151926] border border-white/[0.08] rounded-full px-4 py-2.5 text-xs text-white focus:outline-none"
                   >
                     <option value="text">ข้อความ/สคริปต์</option>
                     <option value="image">รูปภาพ (URL)</option>
@@ -393,7 +393,7 @@ export const AdminToolsManagement = () => {
                   <input 
                     value={attData} 
                     onChange={e => setAttData(e.target.value)} 
-                    className="flex-1 bg-[#151926] border border-white/[0.08] rounded-xl px-3 py-2 text-xs text-white placeholder:text-zinc-600 focus:outline-none" 
+                    className="flex-1 bg-[#151926] border border-white/[0.08] rounded-full px-5 py-2.5 text-xs text-white placeholder:text-zinc-600 focus:outline-none" 
                     placeholder={attType === 'text' ? "กรอกข้อความที่นี่..." : "วาง URL ลิงก์ดาวน์โหลด..."} 
                   />
                   <button 
@@ -404,7 +404,7 @@ export const AdminToolsManagement = () => {
                         setAttData(''); 
                       } 
                     }} 
-                    className="px-4 py-2 rounded-xl bg-white/[0.06] hover:bg-white/[0.1] text-white text-xs font-semibold transition-colors flex items-center justify-center gap-1 shrink-0"
+                    className="px-5 py-2.5 rounded-full bg-white/[0.06] hover:bg-white/[0.1] text-white text-xs font-semibold transition-colors flex items-center justify-center gap-1 shrink-0 cursor-pointer"
                   >
                     <Plus className="w-3.5 h-3.5"/> เพิ่มไฟล์
                   </button>
@@ -414,13 +414,13 @@ export const AdminToolsManagement = () => {
               <div className="flex justify-end gap-2.5">
                 <button 
                   onClick={() => setIsAddingItem(false)} 
-                  className="px-4 py-2 text-xs font-semibold text-zinc-400 hover:text-white"
+                  className="px-5 py-2.5 rounded-full border border-white/[0.08] hover:bg-white/[0.05] text-xs font-semibold text-zinc-400 hover:text-white cursor-pointer"
                 >
                   ยกเลิก
                 </button>
                 <button 
                   onClick={handleSaveItem} 
-                  className="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition-all shadow-md shadow-blue-500/20 flex items-center gap-1.5"
+                  className="px-6 py-2.5 rounded-full bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition-all shadow-md shadow-blue-500/20 flex items-center gap-1.5 cursor-pointer active:scale-95"
                 >
                   <Check className="w-4 h-4"/> บันทึกเนื้อหา
                 </button>
@@ -432,7 +432,7 @@ export const AdminToolsManagement = () => {
             {items.map((item) => {
               const cat = categories.find(c => c.id === item.categoryId);
               return (
-                <div key={item.id} className="bg-[#0f121a] border border-white/[0.08] rounded-2xl p-5 relative overflow-hidden group hover:border-white/[0.12] transition-colors">
+                <div key={item.id} className="bg-[#0f121a] border border-white/[0.08] rounded-[24px] p-5 relative overflow-hidden group hover:border-white/[0.12] transition-colors shadow-sm">
                   <div className="flex justify-between items-start mb-3">
                     <div className="flex gap-2">
                       <span className="text-[10px] font-bold bg-white/[0.04] text-zinc-300 border border-white/[0.06] px-2.5 py-0.5 rounded-full">
@@ -448,14 +448,14 @@ export const AdminToolsManagement = () => {
                     </div>
                     <button 
                       onClick={() => handleDeleteItem(item.id)} 
-                      className="text-zinc-500 hover:text-rose-400 p-1 rounded-lg hover:bg-rose-500/10 transition-colors"
+                      className="text-zinc-500 hover:text-rose-400 p-1.5 rounded-full hover:bg-rose-500/10 transition-colors cursor-pointer"
                       title="ลบรายการนี้"
                     >
                       <Trash2 className="w-4 h-4"/>
                     </button>
                   </div>
                   <h3 className="text-sm font-bold text-white mb-2">{item.title}</h3>
-                  <div className="bg-[#121622]/60 border border-white/[0.06] rounded-xl p-3 space-y-1.5 max-h-32 overflow-y-auto">
+                  <div className="bg-[#121622]/60 border border-white/[0.06] rounded-2xl p-3.5 space-y-1.5 max-h-32 overflow-y-auto">
                     {(item.attachments || []).map((att: any, i: number) => (
                       <div key={i} className="text-[11px] text-zinc-400 truncate flex items-center gap-1.5">
                         <span className="font-semibold text-zinc-500 uppercase text-[10px]">{att.type}:</span>
@@ -467,7 +467,7 @@ export const AdminToolsManagement = () => {
               );
             })}
             {items.length === 0 && (
-              <div className="col-span-full py-16 text-center text-xs text-zinc-500 bg-[#0f121a] border border-white/[0.08] rounded-2xl">
+              <div className="col-span-full py-16 text-center text-xs text-zinc-500 bg-[#0f121a] border border-white/[0.08] rounded-[28px]">
                 ยังไม่มีรายการเนื้อหาในระบบ
               </div>
             )}

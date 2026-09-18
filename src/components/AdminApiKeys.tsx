@@ -129,27 +129,27 @@ export const AdminApiKeys: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-[#0f121a] border border-white/[0.08] rounded-2xl p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
+      <div className="bg-[#0f121a] border border-white/[0.08] rounded-[28px] p-6 sm:p-7 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-xl">
+        <div className="flex items-center gap-3.5">
+          <div className="w-11 h-11 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 shrink-0">
             <Key className="w-5 h-5" />
           </div>
           <div>
             <h2 className="text-base font-bold text-white">จัดการ API Keys (Access Tokens)</h2>
-            <p className="text-xs text-zinc-400">สร้าง Access Token สำหรับเชื่อมต่อ API ภายนอกหรือระบบบอท</p>
+            <p className="text-xs text-zinc-400 mt-0.5">สร้าง Access Token สำหรับเชื่อมต่อ API ภายนอกหรือระบบบอท</p>
           </div>
         </div>
 
         <button
           onClick={() => setIsAdding(true)}
-          className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition-all shadow-md shadow-blue-500/20 flex items-center gap-1.5 shrink-0"
+          className="px-5 py-2.5 rounded-full bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition-all shadow-md shadow-blue-500/20 flex items-center gap-1.5 shrink-0 cursor-pointer active:scale-95"
         >
           <Plus className="w-4 h-4" /> สร้าง API Key ใหม่
         </button>
       </div>
 
       {/* API Keys Table */}
-      <div className="bg-[#0f121a] border border-white/[0.08] rounded-2xl overflow-hidden">
+      <div className="bg-[#0f121a] border border-white/[0.08] rounded-[28px] overflow-hidden shadow-xl">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse text-sm text-zinc-300">
             <thead>
@@ -186,11 +186,11 @@ export const AdminApiKeys: React.FC = () => {
                     </td>
                     <td className="px-5 py-3.5 font-bold text-white text-xs">{k.name}</td>
                     <td className="px-5 py-3.5">
-                      <div className="flex items-center gap-1.5 font-mono text-xs bg-white/[0.03] border border-white/[0.06] px-2.5 py-1 rounded-lg w-max">
+                      <div className="flex items-center gap-1.5 font-mono text-xs bg-white/[0.03] border border-white/[0.06] px-3 py-1 rounded-full w-max">
                         <span className="text-blue-400">{k.key.substring(0, 16)}...</span>
                         <button
                           onClick={() => copyKey(k.key)}
-                          className="text-zinc-500 hover:text-white p-0.5"
+                          className="text-zinc-500 hover:text-white p-0.5 cursor-pointer"
                           title="คัดลอกคีย์"
                         >
                           {copiedKey === k.key ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
@@ -210,7 +210,7 @@ export const AdminApiKeys: React.FC = () => {
                       <div className="flex items-center justify-end gap-1.5">
                         <button
                           onClick={() => handleToggleStatus(k.key, k.status)}
-                          className={`p-2 rounded-xl transition-all ${
+                          className={`p-2 rounded-full transition-all cursor-pointer ${
                             k.status === 'active' 
                               ? 'text-amber-400 hover:bg-amber-500/10' 
                               : 'text-emerald-400 hover:bg-emerald-500/10'
@@ -221,7 +221,7 @@ export const AdminApiKeys: React.FC = () => {
                         </button>
                         <button
                           onClick={() => handleDelete(k.key)}
-                          className="p-2 rounded-xl text-zinc-400 hover:text-rose-400 hover:bg-rose-500/10 transition-all"
+                          className="p-2 rounded-full text-zinc-400 hover:text-rose-400 hover:bg-rose-500/10 transition-all cursor-pointer"
                           title="ลบ Key"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -240,12 +240,12 @@ export const AdminApiKeys: React.FC = () => {
       {isAdding && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-[100]" onClick={() => setIsAdding(false)}>
           <div 
-            className="bg-[#0f121a] border border-white/[0.1] w-full max-w-md rounded-2xl shadow-2xl overflow-hidden"
+            className="bg-[#0f121a] border border-white/[0.1] w-full max-w-md rounded-[28px] shadow-2xl overflow-hidden"
             onClick={e => e.stopPropagation()}
           >
             <div className="p-6 border-b border-white/[0.08] flex items-center justify-between bg-[#121622]/60">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
+                <div className="w-10 h-10 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
                   <Key className="w-5 h-5" />
                 </div>
                 <div>
@@ -255,7 +255,7 @@ export const AdminApiKeys: React.FC = () => {
               </div>
               <button 
                 onClick={() => setIsAdding(false)} 
-                className="w-9 h-9 rounded-xl flex items-center justify-center text-zinc-400 hover:text-white hover:bg-white/[0.06]"
+                className="w-9 h-9 rounded-full flex items-center justify-center text-zinc-400 hover:text-white hover:bg-white/[0.06] cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -272,11 +272,11 @@ export const AdminApiKeys: React.FC = () => {
                   value={newKeyName}
                   onChange={e => setNewKeyName(e.target.value)}
                   placeholder="เช่น บอท Discord ตรวจสอบยอด, สคริปต์ Python"
-                  className="w-full bg-[#151926] border border-white/[0.08] rounded-xl px-4 py-2.5 text-xs text-white placeholder:text-zinc-600 focus:outline-none focus:border-blue-500"
+                  className="w-full bg-[#151926] border border-white/[0.08] rounded-full px-5 py-2.5 text-xs text-white placeholder:text-zinc-600 focus:outline-none focus:border-blue-500"
                 />
               </div>
 
-              <div className="flex items-center gap-3 p-3.5 rounded-xl bg-[#151926] border border-white/[0.06]">
+              <div className="flex items-center gap-3 p-3.5 rounded-2xl bg-[#151926] border border-white/[0.06]">
                 <input
                   type="checkbox"
                   id="isLifetime"
@@ -300,7 +300,7 @@ export const AdminApiKeys: React.FC = () => {
                     required
                     value={expireDays}
                     onChange={e => setExpireDays(e.target.value)}
-                    className="w-full bg-[#151926] border border-white/[0.08] rounded-xl px-4 py-2.5 text-xs text-white placeholder:text-zinc-600 focus:outline-none focus:border-blue-500 font-mono"
+                    className="w-full bg-[#151926] border border-white/[0.08] rounded-full px-5 py-2.5 text-xs text-white placeholder:text-zinc-600 focus:outline-none focus:border-blue-500 font-mono"
                   />
                 </div>
               )}
@@ -309,13 +309,13 @@ export const AdminApiKeys: React.FC = () => {
                 <button 
                   type="button" 
                   onClick={() => setIsAdding(false)}
-                  className="px-5 py-2.5 rounded-xl border border-white/[0.08] hover:bg-white/[0.05] text-zinc-300 text-xs font-semibold"
+                  className="px-5 py-2.5 rounded-full border border-white/[0.08] hover:bg-white/[0.05] text-zinc-300 text-xs font-semibold cursor-pointer"
                 >
                   ยกเลิก
                 </button>
                 <button 
                   type="submit"
-                  className="px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition-all shadow-md shadow-blue-500/20"
+                  className="px-6 py-2.5 rounded-full bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition-all shadow-md shadow-blue-500/20 cursor-pointer active:scale-95"
                 >
                   สร้าง Key ทันที
                 </button>

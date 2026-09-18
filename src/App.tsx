@@ -617,14 +617,11 @@ function AppContent() {
   useEffect(() => {
     if (isMobileMenuOpen) {
       document.body.style.overflow = "hidden";
-      document.documentElement.style.overflow = "hidden";
     } else {
       document.body.style.overflow = "";
-      document.documentElement.style.overflow = "";
     }
     return () => {
       document.body.style.overflow = "";
-      document.documentElement.style.overflow = "";
     };
   }, [isMobileMenuOpen]);
 
@@ -801,13 +798,8 @@ function AppContent() {
       const currentUser: any = session?.user || null;
       if (currentUser) currentUser.uid = currentUser.id;
       setUser(currentUser);
-      if (
-        currentUser &&
-        (currentUser.email === "abopboa.b@gmail.com" ||
-          currentUser.email === "admin_apex@apex-studio.com" ||
-          currentUser.email === "admin@apex-studio.com")
-      ) {
-        setIsAdmin(true);
+      if (!currentUser) {
+        setIsAdmin(false);
       }
     });
 
@@ -824,15 +816,9 @@ function AppContent() {
       const currentUser: any = session?.user || null;
       if (currentUser) currentUser.uid = currentUser.id;
       setUser(currentUser);
-      if (
-        currentUser &&
-        (currentUser.email === "abopboa.b@gmail.com" ||
-          currentUser.email === "admin_apex@apex-studio.com" ||
-          currentUser.email === "admin@apex-studio.com")
-      ) {
-        setIsAdmin(true);
-      } else {
+      if (!currentUser) {
         setIsAdmin(false);
+        setUserPlan(null);
       }
 
       if (currentUser && !currentUser.isAnonymous && currentUser.email) {
@@ -841,9 +827,11 @@ function AppContent() {
           const res = await axios.get(`/api/users/${currentUser.uid}`);
           if (res.data) {
             setUserPlan(res.data);
-            if (res.data.role === "Admin" || res.data.role === "admin") {
-              setIsAdmin(true);
-            }
+            setIsAdmin(
+              res.data.role === "Admin" ||
+              res.data.role === "admin" ||
+              Boolean(res.data.isAdmin)
+            );
           } else {
             // First time user registration on backend
             const initialPlan = {
@@ -853,15 +841,10 @@ function AppContent() {
               premiumExpireDate: null,
               balance: 0,
               email: currentUser.email,
-              role:
-                currentUser.email === "abopboa.b@gmail.com" ||
-                currentUser.email === "admin_apex@apex-studio.com" ||
-                currentUser.email === "admin@apex-studio.com"
-                  ? "Admin"
-                  : "Member",
+              role: "Member",
             };
             setUserPlan(initialPlan);
-            if (initialPlan.role === "Admin") setIsAdmin(true);
+            setIsAdmin(false);
             await axios.post(`/api/users/${currentUser.uid}`, initialPlan);
           }
         } catch (err: any) {
@@ -873,15 +856,10 @@ function AppContent() {
               premiumExpireDate: null,
               balance: 0,
               email: currentUser.email,
-              role:
-                currentUser.email === "abopboa.b@gmail.com" ||
-                currentUser.email === "admin_apex@apex-studio.com" ||
-                currentUser.email === "admin@apex-studio.com"
-                  ? "Admin"
-                  : "Member",
+              role: "Member",
             };
             setUserPlan(initialPlan);
-            if (initialPlan.role === "Admin") setIsAdmin(true);
+            setIsAdmin(false);
             try {
               await axios.post(`/api/users/${currentUser.uid}`, initialPlan);
             } catch (postErr) {
@@ -2197,27 +2175,26 @@ function AppContent() {
         historyImport={historyImport}
       />
 
+      {/* Mobile Menu Dropdown Drawer */}
+      <MobileDrawer
+        isOpen={isMobileMenuOpen}
+        onClose={() => setIsMobileMenuOpen(false)}
+        activeView={activeView}
+        setActiveView={setActiveView}
+        user={user}
+        userPlan={userPlan}
+        isAdmin={isAdmin}
+        onLogout={handleLogout}
+        onOpenContact={() => setShowContactUs(true)}
+        isUserMenuOpen={isUserMenuOpen}
+        setIsUserMenuOpen={setIsUserMenuOpen}
+        settingsImport={settingsImport}
+        historyImport={historyImport}
+        onOpenSearch={() => setActiveView("search")}
+      />
+
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-h-screen min-w-0 relative overflow-x-hidden">
-        {/* Mobile Menu Slide-out Drawer */}
-        <MobileDrawer
-          isOpen={isMobileMenuOpen}
-          onClose={() => setIsMobileMenuOpen(false)}
-          activeView={activeView}
-          setActiveView={setActiveView}
-          user={user}
-          userPlan={userPlan}
-          isAdmin={isAdmin}
-          onLogout={handleLogout}
-          onOpenContact={() => setShowContactUs(true)}
-          isUserMenuOpen={isUserMenuOpen}
-          setIsUserMenuOpen={setIsUserMenuOpen}
-          settingsImport={settingsImport}
-          historyImport={historyImport}
-        />
-
-        {/* Verification Banner Removed */}
-
         {/* Global Page Header (Based on activeView) for Mobile */}
         {activeView !== "home" && (
           <div className="lg:hidden px-5 py-3.5 flex gap-3 items-center shrink-0 border-b border-white/[0.08] bg-[#0c0d12]/90 backdrop-blur-md">
@@ -2507,6 +2484,9 @@ function AppContent() {
                 categories={categories}
                 setCategories={setCategories}
                 usersList={usersList}
+                purchaseHistory={purchaseHistory}
+                topupHistory={topupHistory}
+                onBackToStore={() => setActiveView("home")}
                 onRefreshData={refreshAllSystemData}
               />
             )}

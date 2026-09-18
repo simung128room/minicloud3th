@@ -2,13 +2,21 @@ import fs from 'fs';
 import path from 'path';
 import os from 'os';
 import crypto from 'crypto';
+import { createClient } from '@supabase/supabase-js';
 
-// Local disk persistence path for mock data
-const localDataDir = path.join(os.tmpdir(), 'apex_store_mock_db');
-if (!fs.existsSync(localDataDir)) {
-  try {
+// Persistent disk storage path for database with tmp fallback for serverless/read-only environments
+let localDataDir = process.env.DATA_DIR || (process.env.VERCEL ? path.join(os.tmpdir(), '.local_db') : path.join(process.cwd(), '.local_db'));
+try {
+  if (!fs.existsSync(localDataDir)) {
     fs.mkdirSync(localDataDir, { recursive: true });
-  } catch (e) {}
+  }
+} catch (e) {
+  localDataDir = path.join(os.tmpdir(), '.local_db');
+  try {
+    if (!fs.existsSync(localDataDir)) {
+      fs.mkdirSync(localDataDir, { recursive: true });
+    }
+  } catch (err) {}
 }
 
 const seedData: Record<string, any[]> = {
@@ -136,36 +144,7 @@ const seedData: Record<string, any[]> = {
       createdAt: new Date(Date.now() - 86400000 * 5).toISOString()
     }
   ],
-  users: [
-    {
-      id: 'mock-admin-id',
-      uid: 'mock-admin-id',
-      username: 'abopboa',
-      email: 'abopboa.b@gmail.com',
-      fullName: 'Abopboa Admin',
-      balance: 999999,
-      role: 'Admin',
-      rank: 'premium',
-      isPremium: true,
-      premiumExpireDate: '2099-12-31T23:59:59.000Z',
-      registeredAt: new Date(Date.now() - 86400000 * 30).toISOString(),
-      updatedAt: new Date().toISOString()
-    },
-    {
-      id: 'mock-user-id',
-      uid: 'mock-user-id',
-      username: 'member',
-      email: 'user@apex-studio.com',
-      fullName: 'Demo Member',
-      balance: 1500,
-      role: 'User',
-      rank: 'basic',
-      isPremium: false,
-      premiumExpireDate: null,
-      registeredAt: new Date(Date.now() - 86400000 * 15).toISOString(),
-      updatedAt: new Date().toISOString()
-    }
-  ],
+  users: [],
   settings: [
     {
       key: 'site',
@@ -174,7 +153,7 @@ const seedData: Record<string, any[]> = {
       contact_line: '@dev',
       truewallet_phone: '0812345678',
       discord_link: 'https://discord.gg',
-      announcement_text: 'ระบบจำลอง Mock Simulation ทำงาน 100% สมบูรณ์แบบ ไม่ต้องตั้งค่า Environment Variable',
+      announcement_text: 'ยินดีต้อนรับสู่ระบบ Apex Store ระบบพร้อมให้บริการ',
       banners: [
         'https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=1200&q=80',
         'https://images.unsplash.com/photo-1538481199705-c710c4e965fc?auto=format&fit=crop&w=1200&q=80'
@@ -220,34 +199,9 @@ const seedData: Record<string, any[]> = {
       })
     }
   ],
-  topups: [
-    {
-      id: 'topup-001',
-      userId: 'mock-admin-id',
-      username: 'abopboa',
-      amount: 1000,
-      status: 'approved',
-      channel: 'PromptPay',
-      createdAt: new Date(Date.now() - 86400000 * 2).toISOString()
-    }
-  ],
-  purchases: [
-    {
-      id: 'order-001',
-      billNumber: 'ORD-20260901',
-      userId: 'mock-admin-id',
-      username: 'abopboa',
-      productName: 'Discord Nitro 1 Month (Gift)',
-      price: 139,
-      status: 'success',
-      itemData: 'https://discord.gift/mock-nitro-1',
-      createdAt: new Date(Date.now() - 86400000).toISOString()
-    }
-  ],
-  admins: [
-    { id: 'admin-1', email: 'abopboa.b@gmail.com' },
-    { id: 'admin-2', email: 'admin@apex-studio.com' }
-  ],
+  topups: [],
+  purchases: [],
+  admins: [],
   blocked_ips: [],
   idempotency_keys: [],
   product_stock_chunks: [],
@@ -647,19 +601,37 @@ export class MockSupabaseQueryBuilder {
   }
 }
 
-export const supabaseAdmin = {
+const hasRealSupabase = Boolean(
+  process.env.SUPABASE_URL && 
+  process.env.SUPABASE_SERVICE_ROLE_KEY &&
+  !process.env.SUPABASE_URL.includes('placeholder')
+);
+
+const realSupabaseAdmin = hasRealSupabase
+  ? createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      }
+    })
+  : null;
+
+export const supabaseAdmin: any = realSupabaseAdmin || {
   from: (table: string) => new MockSupabaseQueryBuilder(table),
   auth: {
     getUser: async (token: string) => {
       const users = loadCollection('users');
-      const adminUser = users.find((u: any) => u.role === 'Admin') || users[0];
+      const matched = users.find((u: any) => u.id === token || u.uid === token);
+      if (!matched) {
+        return { data: { user: null }, error: new Error('User not found') };
+      }
       return {
         data: {
-          user: adminUser ? {
-            id: adminUser.id,
-            email: adminUser.email,
-            user_metadata: { full_name: adminUser.fullName || adminUser.username }
-          } : null
+          user: {
+            id: matched.id,
+            email: matched.email,
+            user_metadata: { full_name: matched.fullName || matched.username }
+          }
         },
         error: null
       };
@@ -673,7 +645,7 @@ export const supabaseAdmin = {
           email: opts.email,
           username: opts.email.split('@')[0],
           fullName: opts.user_metadata?.full_name || opts.email.split('@')[0],
-          balance: 100,
+          balance: 0,
           role: 'User',
           rank: 'basic',
           isPremium: false,
@@ -709,51 +681,84 @@ export const supabaseAdmin = {
     }
   },
   storage: {
-    createBucket: async (name: string, opts?: any) => {
-      return { data: { name }, error: null };
-    },
+    createBucket: async (name: string) => ({ data: { name }, error: null }),
     from: (bucket: string) => ({
-      upload: async (pathStr: string, fileData: any, opts?: any) => {
-        return { data: { path: pathStr }, error: null };
-      },
-      getPublicUrl: (pathStr: string) => {
-        return { data: { publicUrl: `https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=400&q=80` } };
-      },
-      createBucket: async (name?: string, opts?: any) => ({ error: null })
+      upload: async (pathStr: string) => ({ data: { path: pathStr }, error: null }),
+      getPublicUrl: (pathStr: string) => ({ data: { publicUrl: pathStr } }),
+      createBucket: async () => ({ error: null })
     })
   }
 };
 
+let transactionQueue = Promise.resolve();
+
 const db = {
   collection: (name: string) => new MockCollection(name),
   runTransaction: async (updateFunction: (t: any) => Promise<any>) => {
-    const writes: (() => Promise<void>)[] = [];
-    const t = {
-      get: async (queryOrDoc: any) => await queryOrDoc.get(),
-      update: (docRef: any, data: any) => writes.push(async () => { await docRef.update(data); }),
-      set: (docRef: any, data: any, options?: any) => writes.push(async () => { await docRef.set(data, options); }),
-      delete: (docRef: any) => writes.push(async () => { await docRef.delete(); })
+    const run = async () => {
+      // Snapshot memoryTables before transaction
+      const memorySnapshot: Record<string, string> = {};
+      for (const key of Object.keys(memoryTables)) {
+        memorySnapshot[key] = JSON.stringify(memoryTables[key]);
+      }
+
+      const writes: (() => Promise<void>)[] = [];
+      const t = {
+        get: async (queryOrDoc: any) => await queryOrDoc.get(),
+        update: (docRef: any, data: any) => writes.push(async () => { await docRef.update(data); }),
+        set: (docRef: any, data: any, options?: any) => writes.push(async () => { await docRef.set(data, options); }),
+        delete: (docRef: any) => writes.push(async () => { await docRef.delete(); })
+      };
+
+      try {
+        const result = await updateFunction(t);
+        for (const writeOp of writes) {
+          await writeOp();
+        }
+        return result;
+      } catch (err) {
+        // Rollback on any failure
+        for (const [key, val] of Object.entries(memorySnapshot)) {
+          memoryTables[key] = JSON.parse(val);
+        }
+        throw err;
+      }
     };
 
-    const result = await updateFunction(t);
-    for (const writeOp of writes) {
-      await writeOp();
-    }
-    return result;
+    const nextPromise = transactionQueue.then(run, run);
+    transactionQueue = nextPromise.catch(() => {});
+    return nextPromise;
   }
 };
 
 const auth = {
   verifyIdToken: async (token: string) => {
+    if (realSupabaseAdmin) {
+      const { data, error } = await realSupabaseAdmin.auth.getUser(token);
+      if (error || !data?.user) {
+        throw new Error('Invalid or expired authentication token');
+      }
+      return {
+        uid: data.user.id,
+        id: data.user.id,
+        email: data.user.email
+      };
+    }
     const users = loadCollection('users');
-    const adminUser = users.find((u: any) => u.role === 'Admin') || users[0];
+    const matched = users.find((u: any) => u.id === token || u.uid === token);
+    if (!matched) {
+      throw new Error('Invalid authentication token');
+    }
     return {
-      uid: adminUser ? adminUser.id : 'mock-admin-id',
-      id: adminUser ? adminUser.id : 'mock-admin-id',
-      email: adminUser ? adminUser.email : 'abopboa.b@gmail.com'
+      uid: matched.id,
+      id: matched.id,
+      email: matched.email
     };
   },
   updateUser: async (uid: string, props: any) => {
+    if (realSupabaseAdmin && props.password) {
+      await realSupabaseAdmin.auth.admin.updateUserById(uid, { password: props.password });
+    }
     const users = loadCollection('users');
     const user = users.find(u => u.id === uid);
     if (user) {
@@ -764,6 +769,9 @@ const auth = {
     return { id: uid, ...props };
   },
   deleteUser: async (uid: string) => {
+    if (realSupabaseAdmin) {
+      await realSupabaseAdmin.auth.admin.deleteUser(uid).catch(() => {});
+    }
     let users = loadCollection('users');
     memoryTables['users'] = users.filter(u => u.id !== uid);
     persistCollection('users');
