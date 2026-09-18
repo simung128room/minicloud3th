@@ -1,0 +1,14 @@
+[
+  {
+    "id": "page-sys-site",
+    "slug": "sys_site",
+    "title": "sys_site",
+    "content": "{\"site_name\":\"DEV\",\"announcement_text\":\"ระบบจำลอง Mock Mode ทำงานเต็มรูปแบบ พร้อมใช้งานทุกฟังก์ชัน\",\"contact_line\":\"@dev\",\"truewallet_phone\":\"0812345678\",\"banners\":[\"https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=1200&q=80\"]}"
+  },
+  {
+    "id": "page-sys-site-dev",
+    "slug": "sys_site_dev",
+    "title": "sys_site_dev",
+    "content": "{\"site_name\":\"DEV\",\"announcement_text\":\"ระบบจำลอง Mock Mode ทำงานเต็มรูปแบบ\",\"contact_line\":\"@dev\",\"truewallet_phone\":\"0812345678\"}"
+  }
+]

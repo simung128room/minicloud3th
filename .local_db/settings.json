@@ -1,0 +1,27 @@
+[
+  {
+    "key": "site",
+    "id": "site",
+    "site_name": "DEV",
+    "contact_line": "@dev",
+    "truewallet_phone": "0812345678",
+    "discord_link": "https://discord.gg",
+    "announcement_text": "ยินดีต้อนรับสู่ระบบ Apex Store ระบบพร้อมให้บริการ",
+    "banners": [
+      "https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1538481199705-c710c4e965fc?auto=format&fit=crop&w=1200&q=80"
+    ],
+    "popup_enabled": false,
+    "popup_img_url": "",
+    "popup_link": "",
+    "auto_proxy": false
+  },
+  {
+    "key": "payment",
+    "id": "payment",
+    "promptpayNumber": "0812345678",
+    "accountNameTh": "เดฟ",
+    "accountNameEn": "DEV",
+    "truewalletPhone": "0812345678"
+  }
+]
