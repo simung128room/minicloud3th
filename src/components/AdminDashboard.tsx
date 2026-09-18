@@ -18,7 +18,6 @@ import { AdminPagesManagement } from './AdminPagesManagement';
 import { AdminCategoriesManagement } from './AdminCategoriesManagement';
 import { AdminToolsManagement } from './AdminToolsManagement';
 import AdminStockManagement from './AdminStockManagement';
-import { AdminApiKeys } from './AdminApiKeys';
 import { AdminOrdersManagement } from './AdminOrdersManagement';
 
 interface AdminDashboardProps {
@@ -937,7 +936,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       history: 'ประวัติการใช้งาน',
       ips: 'ความปลอดภัย & แบน IP',
       tools: 'ตัวช่วยแจกของ',
-      api_keys: 'จัดการ API Keys',
       settings: 'ตั้งค่าเว็บไซต์',
       system: 'สถานะเซิร์ฟเวอร์'
     };
@@ -1043,7 +1041,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider px-3 mb-2">ระบบเสริม & ตั้งค่า</p>
             <div className="space-y-1">
               <NavItem id="tools" label="ตัวช่วยแจกของ" icon={Gift} />
-              <NavItem id="api_keys" label="จัดการ API Keys" icon={Key} />
               <NavItem id="settings" label="ตั้งค่าเว็บไซต์" icon={Settings} />
             </div>
           </div>
@@ -1108,7 +1105,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 <option value="keys">⚡ License Keys</option>
                 <option value="ips">⚡ ความปลอดภัย & แบน IP (Security)</option>
                 <option value="settings">⚡ ตั้งค่าเว็บไซต์ (Settings)</option>
-                <option value="system">⚡ สถานะเซิร์ฟเวอร์ (System)</option>
+                <option value="system">⚡ สถานะเซิร์ฟเวอ���์ (System)</option>
               </select>
             </div>
 
@@ -2034,20 +2031,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   exit={{ opacity: 0, y: -8 }}
                 >
                   <AdminToolsManagement />
-                </motion.div>
-              )}
-
-              {/* ==============================================================
-                  Tab: API Keys
-                  ============================================================== */}
-              {adminTab === 'api_keys' && (
-                <motion.div 
-                  key="api_keys"
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -8 }}
-                >
-                  <AdminApiKeys />
                 </motion.div>
               )}
 

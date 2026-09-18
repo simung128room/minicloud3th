@@ -208,7 +208,6 @@ const seedData: Record<string, any[]> = {
   license_keys: [],
   vouchers: [],
   slips: [],
-  api_keys: [],
   sys_audit_logs: []
 };
 

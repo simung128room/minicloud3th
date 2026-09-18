@@ -388,9 +388,6 @@
 }
 
 
-@import "tailwindcss";
-@import "tw-animate-css";
-
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
@@ -816,7 +813,6 @@
     text-transform: uppercase;
     color: oklch(0.45 0 0);
   }
-}
 
 /* ==================== ANIMATIONS ==================== */
 @keyframes glitch-1 {
